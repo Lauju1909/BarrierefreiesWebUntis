@@ -19,17 +19,20 @@ Mit integriertem **GitHub Auto-Updater**: Die Anwendung aktualisiert sich bei je
 
 | Taste | Funktion |
 | :---: | :--- |
-| **1** | Springe zu **Reiter 1: Übersicht & Tagesnachrichten** |
+| **1** | Springe zu **Reiter 1: Übersicht** |
 | **2** | Springe zu **Reiter 2: Stundenplan & Vertretungsplan** |
 | **3** | Springe zu **Reiter 3: Prüfungen & Termine** |
 | **4** | Springe zu **Reiter 4: Hausaufgaben & Klassenbuch** |
-| **5** | Springe zu **Reiter 5: Fehlzeiten** |
+| **5** | Springe zu **Reiter 5: Fehlzeiten & Entschuldigungen** |
 | **6** | Springe zu **Reiter 6: Tagesnachrichten & Mitteilungen** |
 | **7** | Springe zu **Reiter 7: Noten & Leistungen** |
 | **8** | Springe zu **Reiter 8: Mensa & Speisepläne** *(LWL-Campus Soest)* |
+| **9** | Springe zu **Reiter 9: Konto & Einstellungen** *(IServ-Integration)* |
 | **H** | Stundenplan: Sofort zum heutigen Tag (**Heute**) springen |
 | **W** | Stundenplan: Sofort zur aktuellen Schulwoche zurückspringen |
-| **A** | **Aktualisieren:** Stundenplan jetzt sofort von WebUntis neu laden |
+| **K** | Fehlzeiten: **Krankmeldung / Fehlzeit erfassen** |
+| **N** | Hausaufgaben: **Neue Hausaufgabe eintragen** |
+| **A** | **Aktualisieren:** Daten jetzt sofort neu laden (WebUntis & IServ) |
 | **V** | **Vorlesen:** Liest den aktuellen Bereich per Sprachausgabe laut vor |
 
 ---
