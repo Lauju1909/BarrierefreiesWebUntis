@@ -1,10 +1,13 @@
 {
-  "version": "1.9.23",
+  "version": "1.9.24",
   "name": "Barrierefreies WebUntis",
-  "buildDate": "2026-09-15",
+  "buildDate": "2026-09-21",
   "repository": "https://github.com/Lauju1909/BarrierefreiesWebUntis",
   "executable": "Barrierefreies_WebUntis.exe",
   "features": [
+    "Mitteilungen & Tagesnachrichten (Reiter 6) komplett behoben: Vollständige Zwei-Wege-Synchronisation von offiziellen WebUntis-Mitteilungen (inkl. Posteingang, Lesebestätigungen, Betreff, Lehrkraft-Klarnamen und Datum) und IServ-Schulserver-E-Mails. Aktualisieren-Taste 'A' synchronisiert jetzt zuverlässig WebUntis REST-Nachrichten, Tages-Ticker und IServ gemeinsam. Fehlerhafte Filterung gelöschter IDs korrigiert, sodass keine echten Nachrichten mehr verschwinden.",
+    "Strikte Datumszuordnung von Hausaufgaben im Stundenplan (Reiter 2): Hausaufgaben werden in den Unterrichtskarten der Stundenplan-Woche nur noch an dem exakten Fälligkeitstag angezeigt, an dem sie tatsächlich fällig sind. Keine fehlerhafte Dauer-Verknüpfung von Hausaufgaben über alle Stunden und Wochen desselben Fachs mehr.",
+    "Automatische Bereinigung alter Hausaufgaben früherer Schuljahre (Reiter 4): Altlasten und synthetische Einträge aus vergangenen Schuljahren (2024, 2025 etc.) werden beim Laden und Synchronisieren automatisch rückstandslos bereinigt. Nur noch offizielle Aufgaben des laufenden Schuljahres 2026/2027 und persönliche Hausaufgaben werden angezeigt.",
     "IServ-Schulserver-Integration (E-Mails, Kalender & Aufgabenliste): Vollständige, optionale Einbindung des offiziellen IServ-Schulservers (z. B. lwl-bk-soest.de). In den Einstellungen (Reiter 9) per Schalter aktivierbar mit komfortabler Zugangsdaten-Eingabe und Verbindungstest. E-Mails werden in Reiter 6 (Tagesnachrichten) mit Ungelesen-Status, Absender und Textvorschau dargestellt und per Taste V vorgelesen. IServ-Kalendertermine werden in Reiter 3 (Prüfungen & Termine) nahtlos in den Schuljahreskalender integriert. IServ-Aufgaben werden in Reiter 4 (Hausaufgaben & Klassenbuch) mit eigenem Schnellfilter, Fälligkeitsdatum und Status angezeigt. 100% barrierefrei nach WCAG 2.2 AAA für NVDA, JAWS und Braillezeilen.",
     "Cache-Busting & perfekte Fehlzeiten-Darstellung: HTTP No-Cache Header fuer WebView2 und Cache-Parameter (?v=1.9.22). Fehlzeiten-Karte zeigt Wochentag, Datum und saubere Uhrzeit mit \"bis\" (z. B. Dienstag, 15.09.2026 (Heute) • 07:45 bis 09:15 Uhr (2 Fehlstunden)). Grund ohne redundantes \"ohne Grund\". Button beschreibt direkt die Aktion (\"Als entschuldigt markieren\").",
     "Doppelansagen in Fehlzeiten-Karten beseitigt: aria-label und tabindex von Artikeln entfernt, redundant wiederholter Status im Button auf eine klare Handlungsaufforderung umgestellt und Begruendung bereinigt, sodass Datum, Uhrzeit, Status und Grund genau einmal barrierefrei vorgelesen werden.",

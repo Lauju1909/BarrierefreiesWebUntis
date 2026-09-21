@@ -701,11 +701,32 @@ function loadAppData() {
         iservTasks: (parsed.iservTasks && Array.isArray(parsed.iservTasks)) ? parsed.iservTasks : []
       };
 
-      // Gelöschte Nachrichten aus dem Speicher filtern
+      // Gelöschte Nachrichten aus dem Speicher filtern (exakte ID-Prüfung)
       if (appData.deletedMessageIds && appData.deletedMessageIds.length > 0) {
+        // Bereinige fehlerhafte einstellige/ungültige Alt-IDs
+        appData.deletedMessageIds = appData.deletedMessageIds.filter(d => typeof d === 'string' && d.length > 3);
+        const delSet = new Set(appData.deletedMessageIds.map(String));
         appData.messages = (appData.messages || []).filter(m => {
           const sId = String(m.id || '');
-          return !appData.deletedMessageIds.includes(sId) && !appData.deletedMessageIds.some(d => sId.includes(d));
+          const rawId = sId.replace(/^webuntis-(inbox|news)-/, '');
+          return !delSet.has(sId) && !delSet.has(rawId);
+        });
+      }
+
+      // Veraltete Hausaufgaben aus vergangenen Schuljahren (2024, 2025 etc.) bereinigen
+      if (appData.homework && Array.isArray(appData.homework)) {
+        const sy = getSchoolYearRange();
+        const minDateStr = `${sy.startYear}-08-01`; // 2026-08-01
+        const maxDateStr = `${sy.endYear}-07-31`;   // 2027-07-31
+        appData.homework = appData.homework.filter(h => {
+          if (!h) return false;
+          // Eigene Hausaufgaben ohne Frist beibehalten
+          if (!h.dueDate || h.dueDate === 'Ohne Frist') {
+            return h.isCustom === true;
+          }
+          const d = String(h.dueDate).slice(0, 10);
+          // Nur Hausaufgaben des aktuellen Schuljahres (ab August 2026) behalten
+          return d >= minDateStr && d <= maxDateStr;
         });
       }
 
@@ -731,9 +752,14 @@ function loadAppData() {
         }
       }
 
-      // Falsch gecachte Räume und Perioden bereinigen
+      // Falsch gecachte Räume, Perioden und fehlerhafte Stundenplan-Hausaufgaben bereinigen
       if (appData.timetable && Array.isArray(appData.timetable)) {
         appData.timetable.forEach(l => {
+          // Veraltete fehlerhaft verknüpfte Hausaufgabentexte auf Stunden bereinigen
+          if (l.homework) {
+            const match = (appData.homework || []).find(h => !h.completed && h.dueDate === l.dateStr && ((h.subject && l.subject && (h.subject.toLowerCase().includes(l.subject.toLowerCase()) || l.subject.toLowerCase().includes(h.subject.toLowerCase())))));
+            l.homework = match ? match.text : '';
+          }
           if (l.room) {
             const rNorm = l.room.toLowerCase().replace(/^raum\s+/i, '').trim();
             const tNorm = (l.teacher || '').toLowerCase().trim();
@@ -761,6 +787,22 @@ function loadAppData() {
           }
         });
       }
+      // Bestehende Alt-Passwörter aus dem persistenten LocalStorage bereinigen
+      if (parsed && parsed.config && (parsed.config.password || parsed.config.iservPassword)) {
+        if (!sessionStorage.getItem('lwl_session_pass') && parsed.config.password) {
+          sessionStorage.setItem('lwl_session_pass', parsed.config.password);
+        }
+        if (!sessionStorage.getItem('lwl_session_iserv_pass') && parsed.config.iservPassword) {
+          sessionStorage.setItem('lwl_session_iserv_pass', parsed.config.iservPassword);
+        }
+        delete parsed.config.password;
+        delete parsed.config.iservPassword;
+        try {
+          localStorage.setItem('lwl_stundenplan_data_v2', JSON.stringify(parsed));
+        } catch (e) {}
+      }
+      appData.config.password = sessionStorage.getItem('lwl_session_pass') || '';
+      appData.config.iservPassword = sessionStorage.getItem('lwl_session_iserv_pass') || '';
     }
   } catch (e) {
     console.error('Fehler beim Laden der Daten aus dem LocalStorage:', e);
@@ -770,7 +812,13 @@ function loadAppData() {
 
 function saveAppData() {
   try {
-    localStorage.setItem('lwl_stundenplan_data_v2', JSON.stringify(appData));
+    // SECURITY: Niemals Klartext-Passwörter im persistenten LocalStorage ablegen
+    const clone = JSON.parse(JSON.stringify(appData));
+    if (clone && clone.config) {
+      delete clone.config.password;
+      delete clone.config.iservPassword;
+    }
+    localStorage.setItem('lwl_stundenplan_data_v2', JSON.stringify(clone));
   } catch (e) {
     console.error('Fehler beim Speichern:', e);
   }
@@ -1227,9 +1275,11 @@ async function handleLoginSubmit(e) {
     if (success || webuntisSessionId) {
       appData.config.username = userVal;
       if (remVal) {
+        sessionStorage.setItem('lwl_session_pass', passVal);
         appData.config.password = passVal;
         appData.config.rememberLogin = true;
       } else {
+        sessionStorage.removeItem('lwl_session_pass');
         appData.config.password = '';
         appData.config.rememberLogin = false;
       }
@@ -2456,6 +2506,12 @@ async function performWebUntisSync(userOverride, passOverride) {
       const subjName = (item.su && item.su[0]) ? (subjectsMap[item.su[0].id] || item.su[0].name || item.su[0].longname || '') : '';
       const dStr = String(item.date || '').replace(/[-T:\s].*$/, '').replace(/-/g, '').trim().slice(0, 8);
       if (dStr.length !== 8) return;
+
+      // Streng auf das aktuelle Schuljahr beschränken, keine Altlasten aus früheren Jahren übernehmen!
+      const sy = appData.schoolYear || getSchoolYearRange();
+      const dNum = parseInt(dStr, 10);
+      if (dNum < sy.startDateNum || dNum > sy.endDateNum) return;
+
       const isoDate = `${dStr.slice(0, 4)}-${dStr.slice(4, 6)}-${dStr.slice(6, 8)}`;
       const teach = (item.te && item.te[0]) ? (teachersMap[item.te[0].id] || item.te[0].name || 'Fachlehrkraft') : 'Fachlehrkraft';
 
@@ -2516,13 +2572,14 @@ async function performWebUntisSync(userOverride, passOverride) {
         }
       }
 
-      // 2. Texte in lstext, lessonText, substText, info scannen nach Hausaufgaben
+      // 2. Texte in lstext, lessonText, substText, info scannen nach EXPLIZITEN Hausaufgaben-Hinweisen
       const candidateTexts = [item.lstext, item.lessonText, item.info, item.substText, item.text].filter(t => typeof t === 'string' && t.trim());
       candidateTexts.forEach((cText, cIdx) => {
         // Nicht als Hausaufgabe einstufen, wenn es eine reine Klausurankündigung ist
         if (/\b(klausur|klassenarbeit|klausuren|klassenarbeiten|nachschreibklausur)\b/i.test(cText)) return;
 
-        const hwMatch = cText.match(/\b(?:ha:|h\.a\.:|hausaufgabe:|hausaufgaben:|hausaufgabe|hausaufgaben|aufgabe:|aufgaben:|übung:|übungen:|zu\s+erledigen:|erledigen\s+bis|bearbeiten:|buch\s+s\.|s\.\s*\d+|ab\s+\d+|arbeitsblatt|vokabeln\s+lernen|lernen:|vorbereitung:)\s*[:\-]?\s*(.+)/i);
+        // Nur explizite Hausaufgaben-Hinweise matchen (keine reinen Unterrichtsnotizen wie 'Buch S.' oder 'Arbeitsblatt')
+        const hwMatch = cText.match(/\b(?:ha:|h\.a\.:|hausaufgabe:|hausaufgaben:|hausaufgabe\b|hausaufgaben\b|zu\s+erledigen\s+bis|erledigen\s+bis|abgabe\s+bis|aufgabe\s+bis)\s*[:\-]?\s*(.+)/i);
         if (hwMatch) {
           const hwContent = hwMatch[1] ? hwMatch[1].trim() : cText.trim();
           if (hwContent.length > 2) {
@@ -3369,15 +3426,8 @@ async function performWebUntisSync(userOverride, passOverride) {
       });
     }
 
-    if (newHomework.length > 0 || !appData.homework || appData.homework.length === 0) {
-      appData.homework = newHomework;
-    } else {
-      newHomework.forEach(nh => {
-        if (!appData.homework.some(h => h.id === nh.id || (h.dueDate === nh.dueDate && h.text === nh.text))) {
-          appData.homework.push(nh);
-        }
-      });
-    }
+    // Hausaufgaben direkt aus den aktuellen Quellen des Schuljahres übernehmen
+    appData.homework = newHomework;
 
     // 13. Fehlzeiten parsen & aggregieren
     const newAbsences = [];
@@ -3743,21 +3793,56 @@ async function performWebUntisSync(userOverride, passOverride) {
     // Echte WebUntis-Mitteilungen verarbeiten
     if (restMessagesRes && restMessagesRes.incomingMessages && Array.isArray(restMessagesRes.incomingMessages)) {
       if (!appData.messages) appData.messages = [];
-      const deletedIds = appData.deletedMessageIds || [];
+      const delSet = new Set((appData.deletedMessageIds || []).map(String));
+      const teachersList = appData.teachers || [];
+      
       restMessagesRes.incomingMessages.forEach(m => {
+        const sId = String(m.id);
         const id = `webuntis-inbox-${m.id}`;
-        // Gelöschte Nachrichten nicht wieder einfügen
-        if (deletedIds.includes(String(m.id)) || deletedIds.includes(id)) {
+        // Gelöschte Nachrichten nicht wieder einfügen (exakter ID-Abgleich)
+        if (delSet.has(sId) || delSet.has(id)) {
           return;
         }
+
+        let msgDateIso = '';
+        const rawDate = m.sentDateTime || m.sentDate || m.date || m.createDate || m.dateTime || m.createDateTime;
+        if (rawDate) {
+          if (typeof rawDate === 'string' && rawDate.includes('T')) {
+            msgDateIso = rawDate;
+          } else if (typeof rawDate === 'string' && rawDate.length >= 10) {
+            msgDateIso = new Date(rawDate).toISOString();
+          } else if (typeof rawDate === 'number') {
+            if (rawDate > 1000000000000) msgDateIso = new Date(rawDate).toISOString();
+            else if (rawDate > 10000000) {
+              const sNum = String(rawDate);
+              msgDateIso = `${sNum.slice(0,4)}-${sNum.slice(4,6)}-${sNum.slice(6,8)}T08:00:00Z`;
+            }
+          }
+        }
         const existingIdx = appData.messages.findIndex(x => x.id === id);
+        if (!msgDateIso) {
+          msgDateIso = (existingIdx >= 0 && appData.messages[existingIdx].date) ? appData.messages[existingIdx].date : new Date().toISOString();
+        }
+
+        let senderName = '';
+        if (m.sender && typeof m.sender === 'object') {
+          senderName = m.sender.displayName || m.sender.name || m.sender.longName || '';
+        } else if (typeof m.sender === 'string') {
+          senderName = m.sender;
+        }
+        if (!senderName) senderName = 'Schulleitung / Lehrkraft';
+        const matchedT = teachersList.find(t => t.name && senderName && t.name.toUpperCase() === senderName.toUpperCase());
+        if (matchedT && matchedT.longName) {
+          senderName = `${matchedT.longName} (${matchedT.name})`;
+        }
+
         const msgObj = {
           id: id,
           type: 'inbox',
-          sender: (m.sender && (m.sender.displayName || m.sender.userId)) || 'Lehrkraft / Schule',
+          sender: senderName,
           subject: m.subject || 'Mitteilung',
           text: m.contentPreview || m.content || m.body || '',
-          date: m.sentDateTime || new Date().toISOString()
+          date: msgDateIso
         };
         if (existingIdx >= 0) {
           appData.messages[existingIdx] = msgObj;
@@ -3803,17 +3888,24 @@ async function performWebUntisSync(userOverride, passOverride) {
     }
 
 
-    // 15. Hausaufgaben mit Stunden im aktuellen Stundenplan verknüpfen
-    if (appData.timetable && appData.timetable.length > 0 && appData.homework.length > 0) {
+    // 15. Hausaufgaben STRENG nach Fälligkeitstag mit Stunden im aktuellen Stundenplan verknüpfen
+    if (appData.timetable && appData.timetable.length > 0) {
       appData.timetable.forEach(l => {
-        const matchingHw = appData.homework.find(h => {
-          if (!h.subject || !l.subject) return false;
-          const s1 = h.subject.toLowerCase().trim();
-          const s2 = l.subject.toLowerCase().trim();
-          return s1.includes(s2) || s2.includes(s1);
-        });
-        if (matchingHw) {
-          l.homework = matchingHw.text;
+        l.homework = '';
+        if (appData.homework && appData.homework.length > 0 && l.dateStr) {
+          const matchingHw = appData.homework.find(h => {
+            if (!h || h.completed) return false;
+            if (!h.dueDate || h.dueDate === 'Ohne Frist') return false;
+            const hDue = String(h.dueDate).slice(0, 10);
+            if (hDue !== l.dateStr) return false;
+            if (!h.subject || !l.subject) return false;
+            const s1 = h.subject.toLowerCase().trim();
+            const s2 = l.subject.toLowerCase().trim();
+            return s1.includes(s2) || s2.includes(s1);
+          });
+          if (matchingHw) {
+            l.homework = matchingHw.text;
+          }
         }
       });
     }
@@ -4528,8 +4620,22 @@ function renderTimetable() {
             <div style="display: block; line-height: 1.8;"><span class="emoji-icon" aria-hidden="true">👨‍🏫 </span><strong>Lehrer:</strong> ${cleanTeacher}</div>
             ${l.klasse ? `<div style="display: block; line-height: 1.8;"><span class="emoji-icon" aria-hidden="true">🏫 </span><strong>Klasse:</strong> ${escHtml(l.klasse)}</div>` : ''}
           </div>
-          ${l.lstext ? `<div style="display: block; font-size: 13px; color: var(--accent-info); font-weight: 600; margin-top: 6px;"><span class="emoji-icon" aria-hidden="true">📖 </span><strong>Lehrstoff:</strong> ${escapeHTML(l.lstext)}</div>` : ''}
-          ${l.homework ? `<div style="display: block; font-size: 13px; color: var(--accent-warn); font-weight: bold; margin-top: 4px;"><span class="emoji-icon" aria-hidden="true">📝 </span><strong>Hausaufgabe:</strong> ${escapeHTML(l.homework)}</div>` : ''}
+          ${(() => {
+            let activeLessonHw = '';
+            if (appData.homework && Array.isArray(appData.homework) && l.dateStr) {
+              const mHw = appData.homework.find(h => {
+                if (!h || h.completed) return false;
+                if (!h.dueDate || h.dueDate === 'Ohne Frist') return false;
+                const hDue = String(h.dueDate).slice(0, 10);
+                if (hDue !== l.dateStr) return false;
+                const s1 = (h.subject || '').toLowerCase().trim();
+                const s2 = (l.subject || '').toLowerCase().trim();
+                return s1 && s2 && (s1.includes(s2) || s2.includes(s1));
+              });
+              if (mHw) activeLessonHw = mHw.text;
+            }
+            return activeLessonHw ? `<div style="display: block; font-size: 13px; color: var(--accent-warn); font-weight: bold; margin-top: 4px;"><span class="emoji-icon" aria-hidden="true">📝 </span><strong>Hausaufgabe:</strong> ${escapeHTML(activeLessonHw)}</div>` : '';
+          })()}
           ${l.notes && l.notes !== l.lstext ? `<div style="display: block; font-size: 13px; font-weight: bold; color: var(--accent-warn); margin-top: 4px;"><span class="emoji-icon" aria-hidden="true">ℹ️ </span>${escapeHTML(l.notes)}</div>` : ''}
         </div>
         <div class="lesson-badge-wrap">
@@ -4974,7 +5080,9 @@ function renderExams() {
 
 function formatGermanDate(d) {
   if (!d) return '';
-  return d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  const dateObj = (d instanceof Date) ? d : new Date(d);
+  if (isNaN(dateObj.getTime())) return '';
+  return dateObj.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
 function readAllExamsAndEvents() {
@@ -7607,10 +7715,10 @@ async function deleteMessage(msgId) {
     appData.deletedMessageIds.push(untisId);
   }
 
-  // 3. Aus lokalem Speicher entfernen
+  // 3. Aus lokalem Speicher entfernen (exakte ID-Prüfung)
   appData.messages = (appData.messages || []).filter(m => {
     const curId = String(m.id || '');
-    return curId !== sId && (!untisId || !curId.includes(untisId));
+    return curId !== sId && (!untisId || (curId !== untisId && curId !== ('webuntis-inbox-' + untisId) && curId !== ('webuntis-news-' + untisId)));
   });
   saveAppData();
 
@@ -7730,36 +7838,116 @@ function readMessagesSummary() {
 }
 
 async function syncMessagesAndNews() {
-  announceSR('Synchronisiere Tagesnachrichten aus WebUntis...', 'polite');
+  announceSR('Synchronisiere Mitteilungen und Nachrichten...', 'polite');
   try {
-    const todayNum = parseInt(new Date().toISOString().slice(0,10).replace(/-/g, ''), 10);
-    const res = await callWebUntisApi('getMessagesOfDay2017', [{ date: todayNum }]);
-    if (res && res.result && res.result.messages && Array.isArray(res.result.messages)) {
-      if (!appData.messages) appData.messages = [];
-      const deletedIds = appData.deletedMessageIds || [];
-      res.result.messages.forEach(m => {
-        const id = `webuntis-news-${m.id || Date.now()}`;
-        if (deletedIds.includes(String(m.id)) || deletedIds.includes(id)) {
-          return;
-        }
-        if (!appData.messages.some(x => x.id === id)) {
-          appData.messages.unshift({
+    // 1. WebUntis REST-Mitteilungen (/api/rest/view/v1/messages) abrufen
+    try {
+      const msgsRes = await callWebUntisRest('/api/rest/view/v1/messages', null);
+      if (msgsRes && msgsRes.incomingMessages && Array.isArray(msgsRes.incomingMessages)) {
+        if (!appData.messages) appData.messages = [];
+        const delSet = new Set((appData.deletedMessageIds || []).map(String));
+        const teachersList = appData.teachers || [];
+        
+        msgsRes.incomingMessages.forEach(m => {
+          const sId = String(m.id);
+          const id = `webuntis-inbox-${m.id}`;
+          if (delSet.has(sId) || delSet.has(id)) return;
+
+          let msgDateIso = '';
+          const rawDate = m.sentDateTime || m.sentDate || m.date || m.createDate || m.dateTime || m.createDateTime;
+          if (rawDate) {
+            if (typeof rawDate === 'string' && rawDate.includes('T')) {
+              msgDateIso = rawDate;
+            } else if (typeof rawDate === 'string' && rawDate.length >= 10) {
+              msgDateIso = new Date(rawDate).toISOString();
+            } else if (typeof rawDate === 'number') {
+              if (rawDate > 1000000000000) msgDateIso = new Date(rawDate).toISOString();
+              else if (rawDate > 10000000) {
+                const sNum = String(rawDate);
+                msgDateIso = `${sNum.slice(0,4)}-${sNum.slice(4,6)}-${sNum.slice(6,8)}T08:00:00Z`;
+              }
+            }
+          }
+          const existingIdx = appData.messages.findIndex(x => x.id === id);
+          if (!msgDateIso) {
+            msgDateIso = (existingIdx >= 0 && appData.messages[existingIdx].date) ? appData.messages[existingIdx].date : new Date().toISOString();
+          }
+
+          let senderName = '';
+          if (m.sender && typeof m.sender === 'object') {
+            senderName = m.sender.displayName || m.sender.name || m.sender.longName || '';
+          } else if (typeof m.sender === 'string') {
+            senderName = m.sender;
+          }
+          if (!senderName) senderName = 'Schulleitung / Lehrkraft';
+          const matchedT = teachersList.find(t => t.name && senderName && t.name.toUpperCase() === senderName.toUpperCase());
+          if (matchedT && matchedT.longName) {
+            senderName = `${matchedT.longName} (${matchedT.name})`;
+          }
+
+          const msgObj = {
             id: id,
-            type: 'news',
-            sender: 'Schulleitung / WebUntis',
-            subject: m.subject || m.title || 'Tagesnachricht',
-            text: m.text || m.body || m.content || '',
-            date: new Date().toISOString()
-          });
-        }
-      });
-      saveAppData();
+            type: 'inbox',
+            sender: senderName,
+            subject: m.subject || 'Mitteilung',
+            text: m.contentPreview || m.content || m.body || '',
+            date: msgDateIso
+          };
+          if (existingIdx >= 0) {
+            appData.messages[existingIdx] = msgObj;
+          } else {
+            appData.messages.unshift(msgObj);
+          }
+        });
+      }
+    } catch (errMsgs) {
+      console.warn('syncMessagesAndNews REST Messages Warnung:', errMsgs);
     }
-  } catch (e) {}
+
+    // 2. WebUntis getMessagesOfDay2017
+    try {
+      const todayNum = parseInt(new Date().toISOString().slice(0,10).replace(/-/g, ''), 10);
+      const res = await callWebUntisApi('getMessagesOfDay2017', [{ date: todayNum }]);
+      if (res && res.result && res.result.messages && Array.isArray(res.result.messages)) {
+        if (!appData.messages) appData.messages = [];
+        const delSet = new Set((appData.deletedMessageIds || []).map(String));
+        res.result.messages.forEach(m => {
+          const sId = String(m.id || Date.now());
+          const id = `webuntis-news-${sId}`;
+          if (delSet.has(sId) || delSet.has(id)) return;
+          if (!appData.messages.some(x => x.id === id)) {
+            appData.messages.unshift({
+              id: id,
+              type: 'news',
+              sender: 'Schulleitung / WebUntis',
+              subject: m.subject || m.title || 'Tagesnachricht',
+              text: m.text || m.body || m.content || '',
+              date: new Date().toISOString()
+            });
+          }
+        });
+      }
+    } catch (errNews) {
+      console.warn('syncMessagesAndNews NewsOfDay Warnung:', errNews);
+    }
+
+    // 3. IServ E-Mails synchronisieren (wenn aktiviert)
+    if (appData.config && appData.config.iservEnabled) {
+      try {
+        await syncIServData(false);
+      } catch (errIserv) {
+        console.warn('syncMessagesAndNews IServ Warnung:', errIserv);
+      }
+    }
+
+    saveAppData();
+  } catch (e) {
+    console.warn('syncMessagesAndNews Fehler:', e);
+  }
 
   renderMessagesView();
   renderUrgentNotificationBanner();
-  announceSR('Tagesnachrichten aktualisiert.', 'polite');
+  announceSR('Mitteilungen und Nachrichten aktualisiert.', 'polite');
 }
 
 // =============================================================================
