@@ -1,10 +1,12 @@
 {
-  "version": "1.9.24",
+  "version": "1.9.25",
   "name": "Barrierefreies WebUntis",
-  "buildDate": "2026-09-21",
+  "buildDate": "2026-09-24",
   "repository": "https://github.com/Lauju1909/BarrierefreiesWebUntis",
   "executable": "Barrierefreies_WebUntis.exe",
   "features": [
+    "Dauerhaftes Merken der Zugangsdaten (Auto-Login behoben): Passwörter für WebUntis und IServ werden bei aktiviertem Häkchen 'Zugangsdaten merken' wieder zuverlässig im lokalen Speicher gesichert. Beim Starten der App wird die Anmeldung vollautomatisch durchgeführt, ohne erneute Passworteingabe.",
+    "Zuverlässige Erkennung von Vertretungsunterricht (Reiter 2): Unterrichtsstunden mit Vertretungslehrkräften (z. B. Büngeler), Raum- oder Fachänderungen werden nun anhand von Originallehrkraft (orgte), Vertretungstext (substText), Aktivitätstyp und Notizen zuverlässig als 'VERTRETUNG' markiert und barrierefrei für Screenreader angesagt (statt fehlerhaft als 'REGULÄR'). Im Stunden-Details-Dialog wird der genaue Vertretungshinweis mit ursprünglicher Lehrkraft gut lesbar dargestellt.",
     "Mitteilungen & Tagesnachrichten (Reiter 6) komplett behoben: Vollständige Zwei-Wege-Synchronisation von offiziellen WebUntis-Mitteilungen (inkl. Posteingang, Lesebestätigungen, Betreff, Lehrkraft-Klarnamen und Datum) und IServ-Schulserver-E-Mails. Aktualisieren-Taste 'A' synchronisiert jetzt zuverlässig WebUntis REST-Nachrichten, Tages-Ticker und IServ gemeinsam. Fehlerhafte Filterung gelöschter IDs korrigiert, sodass keine echten Nachrichten mehr verschwinden.",
     "Strikte Datumszuordnung von Hausaufgaben im Stundenplan (Reiter 2): Hausaufgaben werden in den Unterrichtskarten der Stundenplan-Woche nur noch an dem exakten Fälligkeitstag angezeigt, an dem sie tatsächlich fällig sind. Keine fehlerhafte Dauer-Verknüpfung von Hausaufgaben über alle Stunden und Wochen desselben Fachs mehr.",
     "Automatische Bereinigung alter Hausaufgaben früherer Schuljahre (Reiter 4): Altlasten und synthetische Einträge aus vergangenen Schuljahren (2024, 2025 etc.) werden beim Laden und Synchronisieren automatisch rückstandslos bereinigt. Nur noch offizielle Aufgaben des laufenden Schuljahres 2026/2027 und persönliche Hausaufgaben werden angezeigt.",

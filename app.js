@@ -787,22 +787,48 @@ function loadAppData() {
           }
         });
       }
-      // Bestehende Alt-Passwörter aus dem persistenten LocalStorage bereinigen
-      if (parsed && parsed.config && (parsed.config.password || parsed.config.iservPassword)) {
-        if (!sessionStorage.getItem('lwl_session_pass') && parsed.config.password) {
-          sessionStorage.setItem('lwl_session_pass', parsed.config.password);
+      // Passwörter und Zugangsdaten wiederherstellen
+      if (parsed && parsed.config) {
+        if (parsed.config.rememberLogin !== false && parsed.config.password) {
+          appData.config.password = parsed.config.password;
+          try { sessionStorage.setItem('lwl_session_pass', parsed.config.password); } catch (e) {}
+        } else {
+          appData.config.password = sessionStorage.getItem('lwl_session_pass') || '';
         }
-        if (!sessionStorage.getItem('lwl_session_iserv_pass') && parsed.config.iservPassword) {
-          sessionStorage.setItem('lwl_session_iserv_pass', parsed.config.iservPassword);
+
+        if (parsed.config.iservPassword) {
+          appData.config.iservPassword = parsed.config.iservPassword;
+          try { sessionStorage.setItem('lwl_session_iserv_pass', parsed.config.iservPassword); } catch (e) {}
+        } else {
+          appData.config.iservPassword = sessionStorage.getItem('lwl_session_iserv_pass') || '';
         }
-        delete parsed.config.password;
-        delete parsed.config.iservPassword;
-        try {
-          localStorage.setItem('lwl_stundenplan_data_v2', JSON.stringify(parsed));
-        } catch (e) {}
       }
-      appData.config.password = sessionStorage.getItem('lwl_session_pass') || '';
-      appData.config.iservPassword = sessionStorage.getItem('lwl_session_iserv_pass') || '';
+
+      // Sanitize bestehende Stunden im Cache auf Vertretungsstatus
+      if (Array.isArray(appData.timetable)) {
+        appData.timetable.forEach(l => {
+          if (l.status === 'normal') {
+            const combined = [l.notes, l.lstext, l.teacher].filter(Boolean).join(' ');
+            if (/\b(vertretung|vertritt|vertreter|lehrerwechsel|verlegung|statt\b|eva\b)\b/i.test(combined)) {
+              l.status = 'substitute';
+            }
+          }
+        });
+      }
+      if (appData.timetableCache && typeof appData.timetableCache === 'object') {
+        Object.values(appData.timetableCache).forEach(list => {
+          if (Array.isArray(list)) {
+            list.forEach(l => {
+              if (l.status === 'normal') {
+                const combined = [l.notes, l.lstext, l.teacher].filter(Boolean).join(' ');
+                if (/\b(vertretung|vertritt|vertreter|lehrerwechsel|verlegung|statt\b|eva\b)\b/i.test(combined)) {
+                  l.status = 'substitute';
+                }
+              }
+            });
+          }
+        });
+      }
     }
   } catch (e) {
     console.error('Fehler beim Laden der Daten aus dem LocalStorage:', e);
@@ -812,11 +838,16 @@ function loadAppData() {
 
 function saveAppData() {
   try {
-    // SECURITY: Niemals Klartext-Passwörter im persistenten LocalStorage ablegen
     const clone = JSON.parse(JSON.stringify(appData));
     if (clone && clone.config) {
-      delete clone.config.password;
-      delete clone.config.iservPassword;
+      // Wenn "Zugangsdaten merken" abgewählt ist, Passwort nicht persistent speichern
+      if (clone.config.rememberLogin === false) {
+        delete clone.config.password;
+      }
+      // IServ-Passwort nur speichern wenn IServ konfiguriert/aktiv ist
+      if (!clone.config.iservEnabled && !clone.config.iservPassword) {
+        delete clone.config.iservPassword;
+      }
     }
     localStorage.setItem('lwl_stundenplan_data_v2', JSON.stringify(clone));
   } catch (e) {
@@ -1208,6 +1239,11 @@ function showLoginView() {
   const passInp = document.getElementById('login-password');
   if (passInp) {
     passInp.value = appData.config.password || '';
+  }
+
+  const remInp = document.getElementById('login-remember');
+  if (remInp) {
+    remInp.checked = appData.config.rememberLogin !== false;
   }
 
   const statusEl = document.getElementById('sync-status-text');
@@ -4308,12 +4344,89 @@ function parseUntisTimetableItems(items) {
       rm = cleanRm;
     }
 
+    const hasOrgTe = item.orgte && Array.isArray(item.orgte) && item.orgte.length > 0;
+    const hasTe = item.te && Array.isArray(item.te) && item.te.length > 0;
+    let isTeacherChanged = false;
+    let origTeName = '';
+    if (hasOrgTe) {
+      const oT = item.orgte[0];
+      origTeName = teachersMap[oT.id] || oT.name || oT.longname || '';
+      if (!hasTe || item.orgte[0].id !== item.te[0].id || (origTeName && teach && !teach.toLowerCase().includes(origTeName.toLowerCase()))) {
+        isTeacherChanged = true;
+      }
+    }
+
+    const hasOrgSu = item.orgsu && Array.isArray(item.orgsu) && item.orgsu.length > 0;
+    const hasSu = item.su && Array.isArray(item.su) && item.su.length > 0;
+    let isSubjectChanged = false;
+    let origSuName = '';
+    if (hasOrgSu) {
+      const oS = item.orgsu[0];
+      origSuName = subjectsMap[oS.id] || oS.name || oS.longname || '';
+      if (!hasSu || item.orgsu[0].id !== item.su[0].id || (origSuName && subj && !subj.toLowerCase().includes(origSuName.toLowerCase()))) {
+        isSubjectChanged = true;
+      }
+    }
+
+    const hasOrgRo = item.orgro && Array.isArray(item.orgro) && item.orgro.length > 0;
+    const hasRo = item.ro && Array.isArray(item.ro) && item.ro.length > 0;
+    let isRoomChanged = false;
+    let origRoName = '';
+    if (hasOrgRo) {
+      origRoName = extractRoomFromObj(item.orgro[0]);
+      if (!hasRo || item.orgro[0].id !== item.ro[0].id || (origRoName && rm && !rm.toLowerCase().includes(origRoName.toLowerCase()))) {
+        isRoomChanged = true;
+      }
+    }
+
+    const codeStr = String(item.code || '').toLowerCase();
+    const actStr = String(item.activityType || '').toLowerCase();
+    const typeStr = String(item.type || '').toLowerCase();
+    const cellStateStr = String(item.cellState || '').toUpperCase();
+    const substTextClean = (item.substText || '').trim();
+    const infoClean = (item.info || '').trim();
+    const textClean = (item.text || '').trim();
+    const lessonTopic = (item.lstext || item.lessonText || '').trim();
+
+    const isCancelled = codeStr === 'cancelled' || item.isCancelled === true || cellStateStr === 'CANCEL' || /entfall|fällt aus|abgesagt/i.test(codeStr);
+
+    const combinedAllText = [substTextClean, infoClean, textClean, lessonTopic].filter(Boolean).join(' ');
+    const mentionsSubst = /\b(vertretung|vertritt|vertreter|lehrerwechsel|unterrichtsvertretung|stundentausch|tausch|fachwechsel|verlegung|statt\b|eva\b|eigenverantwortliches\s+arbeiten)\b/i.test(combinedAllText);
+
+    const isSubstIndicator = codeStr === 'irregular' || codeStr === 'substitute' || codeStr === 'substitution' || codeStr === 'vt' ||
+      /vertretung|subst|verlegung|sondereinsatz|betreuung|eva|mitbetreuung/i.test(actStr) ||
+      /vertretung|subst|verlegung/i.test(typeStr) ||
+      cellStateStr === 'SUBSTITUTION' || cellStateStr === 'SUBST' || cellStateStr === 'IRREGULAR' ||
+      substTextClean.length > 0 ||
+      isTeacherChanged || isSubjectChanged || mentionsSubst;
+
     let st = 'normal';
-    if (item.code === 'cancelled') st = 'cancelled';
-    else if (item.code === 'irregular') st = 'substitute';
+    if (isCancelled) {
+      st = 'cancelled';
+    } else if (isSubstIndicator) {
+      st = 'substitute';
+    } else if (isRoomChanged) {
+      st = 'roomchange';
+    }
+
+    const noteParts = [];
+    if (isTeacherChanged && origTeName) {
+      noteParts.push(`Vertretung für ${cleanTeacherName(origTeName)}`);
+    } else if (isSubjectChanged && origSuName) {
+      noteParts.push(`Statt ${origSuName}`);
+    }
+    if (substTextClean && !noteParts.some(p => p.toLowerCase() === substTextClean.toLowerCase())) {
+      noteParts.push(substTextClean);
+    }
+    if (infoClean && !noteParts.some(p => p.toLowerCase() === infoClean.toLowerCase()) && infoClean !== substTextClean) {
+      noteParts.push(infoClean);
+    }
+    if (isRoomChanged && origRoName && !substTextClean.toLowerCase().includes(origRoName.toLowerCase())) {
+      noteParts.push(`Raumwechsel (urspr. ${origRoName})`);
+    }
+    const finalNotes = noteParts.join(' • ');
 
     const dateIso = `${dStr.slice(0, 4)}-${dStr.slice(4, 6)}-${dStr.slice(6, 8)}`;
-    const lessonTopic = (item.lstext || item.lessonText || '').trim();
 
     result.push({
       id: `untis-${item.id || idx}-${dStr}`,
@@ -4329,7 +4442,7 @@ function parseUntisTimetableItems(items) {
       klasse: klasse,
       room: rm,
       status: st,
-      notes: item.substText || item.info || '',
+      notes: finalNotes || item.substText || item.info || '',
       lstext: lessonTopic,
       homework: item.homework || ''
     });
@@ -5231,6 +5344,23 @@ function openLessonDetails(lessonId) {
           <dt class="modal-detail-label"><span class="emoji-icon" aria-hidden="true">👤 </span>Lehrer</dt>
           <dd class="modal-detail-content" data-key="teacher">${escHtml(cleanTeacher)}</dd>
         </div>
+        ${lesson.status === 'substitute' ? `
+        <div class="modal-detail-row" style="background: rgba(234, 179, 8, 0.12); border-left: 4px solid var(--accent-warn); padding: 8px 12px; border-radius: 4px; margin-bottom: 8px;">
+          <dt class="modal-detail-label" style="color: var(--accent-warn); font-weight: bold;"><span class="emoji-icon" aria-hidden="true">⚠️ </span>Status</dt>
+          <dd class="modal-detail-content" style="color: var(--accent-warn); font-weight: bold;">Vertretungsunterricht${lesson.notes ? `<div style="font-size: 13px; font-weight: normal; margin-top: 2px;">${escHtml(lesson.notes)}</div>` : ''}</dd>
+        </div>` : lesson.status === 'cancelled' ? `
+        <div class="modal-detail-row" style="background: rgba(239, 68, 68, 0.12); border-left: 4px solid var(--accent-danger); padding: 8px 12px; border-radius: 4px; margin-bottom: 8px;">
+          <dt class="modal-detail-label" style="color: var(--accent-danger); font-weight: bold;"><span class="emoji-icon" aria-hidden="true">❌ </span>Status</dt>
+          <dd class="modal-detail-content" style="color: var(--accent-danger); font-weight: bold;">Unterricht entfällt${lesson.notes ? `<div style="font-size: 13px; font-weight: normal; margin-top: 2px;">${escHtml(lesson.notes)}</div>` : ''}</dd>
+        </div>` : lesson.status === 'roomchange' ? `
+        <div class="modal-detail-row" style="background: rgba(59, 130, 246, 0.12); border-left: 4px solid var(--accent-info); padding: 8px 12px; border-radius: 4px; margin-bottom: 8px;">
+          <dt class="modal-detail-label" style="color: var(--accent-info); font-weight: bold;"><span class="emoji-icon" aria-hidden="true">🔄 </span>Status</dt>
+          <dd class="modal-detail-content" style="color: var(--accent-info); font-weight: bold;">Raumwechsel${lesson.notes ? `<div style="font-size: 13px; font-weight: normal; margin-top: 2px;">${escHtml(lesson.notes)}</div>` : ''}</dd>
+        </div>` : (lesson.notes ? `
+        <div class="modal-detail-row">
+          <dt class="modal-detail-label"><span class="emoji-icon" aria-hidden="true">ℹ️ </span>Hinweis</dt>
+          <dd class="modal-detail-content">${escHtml(lesson.notes)}</dd>
+        </div>` : '')}
         <div class="modal-detail-row">
           <dt class="modal-detail-label"><span class="emoji-icon" aria-hidden="true">📝 </span>Lehrstoff</dt>
           <dd class="modal-detail-content" data-key="lstext" id="modal-lesson-lstext">${initialLsText}</dd>
