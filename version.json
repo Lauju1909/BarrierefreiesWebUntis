@@ -1,10 +1,11 @@
 {
-  "version": "1.9.25",
+  "version": "1.9.26",
   "name": "Barrierefreies WebUntis",
-  "buildDate": "2026-09-24",
+  "buildDate": "2026-09-27",
   "repository": "https://github.com/Lauju1909/BarrierefreiesWebUntis",
   "executable": "Barrierefreies_WebUntis.exe",
   "features": [
+    "Bereinigung von Altlasten früherer Schulklassen (Reiter 4): Hausaufgaben werden ab sofort strikt auf die aktuell im Stundenplan aktive Klasse (BFW2B) begrenzt. Veraltete Klassen aus der WebUntis-Historie (wie BFW1B aus dem Vorjahr) und zugehörige Altaufgaben (z. B. FB PBP (BWO) 'Test Eigenschaften und Fähigkeiten') werden nicht mehr abgefragt und automatisch ausgefiltert. Zusätzlich wurde ein barrierefreier 'Ausblenden'-Button für jede WebUntis-Hausaufgabe ergänzt.",
     "Dauerhaftes Merken der Zugangsdaten (Auto-Login behoben): Passwörter für WebUntis und IServ werden bei aktiviertem Häkchen 'Zugangsdaten merken' wieder zuverlässig im lokalen Speicher gesichert. Beim Starten der App wird die Anmeldung vollautomatisch durchgeführt, ohne erneute Passworteingabe.",
     "Zuverlässige Erkennung von Vertretungsunterricht (Reiter 2): Unterrichtsstunden mit Vertretungslehrkräften (z. B. Büngeler), Raum- oder Fachänderungen werden nun anhand von Originallehrkraft (orgte), Vertretungstext (substText), Aktivitätstyp und Notizen zuverlässig als 'VERTRETUNG' markiert und barrierefrei für Screenreader angesagt (statt fehlerhaft als 'REGULÄR'). Im Stunden-Details-Dialog wird der genaue Vertretungshinweis mit ursprünglicher Lehrkraft gut lesbar dargestellt.",
     "Mitteilungen & Tagesnachrichten (Reiter 6) komplett behoben: Vollständige Zwei-Wege-Synchronisation von offiziellen WebUntis-Mitteilungen (inkl. Posteingang, Lesebestätigungen, Betreff, Lehrkraft-Klarnamen und Datum) und IServ-Schulserver-E-Mails. Aktualisieren-Taste 'A' synchronisiert jetzt zuverlässig WebUntis REST-Nachrichten, Tages-Ticker und IServ gemeinsam. Fehlerhafte Filterung gelöschter IDs korrigiert, sodass keine echten Nachrichten mehr verschwinden.",

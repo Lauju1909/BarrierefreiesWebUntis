@@ -679,6 +679,7 @@ function loadAppData() {
         classregEvents: (parsed.classregEvents && Array.isArray(parsed.classregEvents) && parsed.classregEvents.length > 0) ? parsed.classregEvents : [...DEFAULT_CLASSREG_EVENTS],
         messages: (parsed.messages && Array.isArray(parsed.messages)) ? parsed.messages : [],
         deletedMessageIds: (parsed.deletedMessageIds && Array.isArray(parsed.deletedMessageIds)) ? parsed.deletedMessageIds : [],
+        hiddenHomeworkIds: (parsed.hiddenHomeworkIds && Array.isArray(parsed.hiddenHomeworkIds)) ? parsed.hiddenHomeworkIds : [],
         metadata: (parsed.metadata && typeof parsed.metadata === 'object') ? parsed.metadata : null,
         customHomework: (parsed.customHomework && Array.isArray(parsed.customHomework)) ? parsed.customHomework : [],
         grades: (parsed.grades && typeof parsed.grades === 'object') ? parsed.grades : {},
@@ -713,13 +714,18 @@ function loadAppData() {
         });
       }
 
-      // Veraltete Hausaufgaben aus vergangenen Schuljahren (2024, 2025 etc.) bereinigen
+      // Veraltete Hausaufgaben aus vergangenen Schuljahren (2024, 2025 etc.) und alten Klassen (wie BWO aus BFW1B) bereinigen
       if (appData.homework && Array.isArray(appData.homework)) {
         const sy = getSchoolYearRange();
         const minDateStr = `${sy.startYear}-08-01`; // 2026-08-01
         const maxDateStr = `${sy.endYear}-07-31`;   // 2027-07-31
+        const hideSet = new Set((appData.hiddenHomeworkIds || []).map(String));
         appData.homework = appData.homework.filter(h => {
           if (!h) return false;
+          if (hideSet.has(String(h.id))) return false;
+          // Alt-Kurse vergangener Klassen ausfiltern (z.B. FB PBP (BWO) aus der früheren Klasse BFW1B)
+          if (h.subject && /\(BWO\)/i.test(h.subject)) return false;
+          if (h.text && /Eigenschaften und Fähigkeiten/i.test(h.text)) return false;
           // Eigene Hausaufgaben ohne Frist beibehalten
           if (!h.dueDate || h.dueDate === 'Ohne Frist') {
             return h.isCustom === true;
@@ -2058,7 +2064,7 @@ async function performWebUntisSync(userOverride, passOverride) {
       }
     }).catch(() => ({}));
 
-    // 4b. Schüler- und Klassen-IDs vollständig erfassen (für personenbezogene UND klassenweite Abfragen)
+    // 4b. Schüler- und Klassen-IDs erfassen (NUR aktuelle Klassen aus dem aktuellen Stundenplan!)
     const detectedKlasseIds = new Set();
     const detectedStudentIds = new Set();
 
@@ -2067,27 +2073,34 @@ async function performWebUntisSync(userOverride, passOverride) {
       else detectedStudentIds.add(personId);
     }
     if (mobilePersonId) detectedStudentIds.add(mobilePersonId);
-    if (authRes.result) {
-      if (authRes.result.klasseId) detectedKlasseIds.add(authRes.result.klasseId);
-      if (authRes.result.classId) detectedKlasseIds.add(authRes.result.classId);
-    }
-    if (userDataRes && userDataRes.result && userDataRes.result.userData) {
-      const ud = userDataRes.result.userData;
-      if (ud.elemType === 'STUDENT' && ud.elemId) detectedStudentIds.add(ud.elemId);
-      if (ud.elemType === 'CLASS' && ud.elemId) detectedKlasseIds.add(ud.elemId);
-      if (ud.klassenIds && Array.isArray(ud.klassenIds)) {
-        ud.klassenIds.forEach(kId => { if (kId) detectedKlasseIds.add(kId); });
-      }
-      if (ud.children && Array.isArray(ud.children)) {
-        ud.children.forEach(ch => { if (ch && ch.id) detectedStudentIds.add(ch.id); });
-      }
-    }
+
+    // Aktuelle Klasse primär und vorrangig aus dem aktuellen Live-Stundenplan ermitteln
     if (ttRes && ttRes.result && Array.isArray(ttRes.result)) {
       ttRes.result.forEach(item => {
         if (item.kl && Array.isArray(item.kl)) {
           item.kl.forEach(k => { if (k && k.id) detectedKlasseIds.add(k.id); });
         }
       });
+    }
+
+    // Falls Stundenplan leer war: Fallback auf authRes
+    if (detectedKlasseIds.size === 0 && authRes.result) {
+      if (authRes.result.klasseId) detectedKlasseIds.add(authRes.result.klasseId);
+      if (authRes.result.classId) detectedKlasseIds.add(authRes.result.classId);
+    }
+
+    if (userDataRes && userDataRes.result && userDataRes.result.userData) {
+      const ud = userDataRes.result.userData;
+      if (ud.elemType === 'STUDENT' && ud.elemId) detectedStudentIds.add(ud.elemId);
+      if (ud.elemType === 'CLASS' && ud.elemId && detectedKlasseIds.size === 0) detectedKlasseIds.add(ud.elemId);
+      if (ud.children && Array.isArray(ud.children)) {
+        ud.children.forEach(ch => { if (ch && ch.id) detectedStudentIds.add(ch.id); });
+      }
+      // Hinweis: ud.klassenIds enthält die Historie ALLER Klassen aller Schuljahre (AV, BFW1B etc.).
+      // Nicht pauschal hinzufügen, um keine alten Klassen-Hausaufgaben (wie BWO aus BFW1B) abzufragen!
+      if (detectedKlasseIds.size === 0 && ud.klassenIds && Array.isArray(ud.klassenIds) && ud.klassenIds.length > 0) {
+        detectedKlasseIds.add(ud.klassenIds[ud.klassenIds.length - 1]);
+      }
     }
     let detectedKlasseId = detectedKlasseIds.size > 0 ? Array.from(detectedKlasseIds)[0] : (personType === 1 ? personId : null);
 
@@ -2540,6 +2553,7 @@ async function performWebUntisSync(userOverride, passOverride) {
     function scanItemForHomework(item, idx) {
       if (!item) return;
       const subjName = (item.su && item.su[0]) ? (subjectsMap[item.su[0].id] || item.su[0].name || item.su[0].longname || '') : '';
+      if (subjName && /\(BWO\)/i.test(subjName)) return;
       const dStr = String(item.date || '').replace(/[-T:\s].*$/, '').replace(/-/g, '').trim().slice(0, 8);
       if (dStr.length !== 8) return;
 
@@ -3239,6 +3253,11 @@ async function performWebUntisSync(userOverride, passOverride) {
 
     function addUniqueHomework(hwItem) {
       if (!hwItem || !hwItem.text) return;
+
+      // Filter: Alte Fächer/Kurse aus früheren Klassen (wie (BWO) aus BFW1B) oder verborgene Aufgaben ignorieren
+      if (hwItem.subject && /\(BWO\)/i.test(hwItem.subject)) return;
+      if (hwItem.text && /Eigenschaften und Fähigkeiten/i.test(hwItem.text)) return;
+      if (appData.hiddenHomeworkIds && Array.isArray(appData.hiddenHomeworkIds) && appData.hiddenHomeworkIds.includes(String(hwItem.id))) return;
 
       const sTrim = String(hwItem.subject || '').trim();
       if (subjectsMap[sTrim]) {
@@ -5782,7 +5801,7 @@ function renderHomework() {
             </label>
             <div style="display: flex; gap: 8px; align-items: center;">
               ${hw.isCustom ? (hw.scope === 'class' ? '<span class="urgent-badge" style="background: #ecfdf5; color: #065f46; font-weight: bold; font-size: 12px;"><span class="emoji-icon" aria-hidden="true">👥 </span>Klasse</span>' : '<span class="urgent-badge" style="background: #eff6ff; color: #1e40af; font-weight: bold; font-size: 12px;"><span class="emoji-icon" aria-hidden="true">🔒 </span>Nur für mich</span>') : ''}
-              ${hw.isCustom ? `<button type="button" class="btn btn-secondary" style="font-size: 12px; padding: 3px 8px; color: var(--accent-error);" onclick="deleteCustomHomework('${hw.id}')" aria-label="Hausaufgabe ${escHtml(hw.subject)} löschen"><span class="emoji-icon" aria-hidden="true">🗑️ </span>Löschen</button>` : ''}
+              ${hw.isCustom ? `<button type="button" class="btn btn-secondary" style="font-size: 12px; padding: 3px 8px; color: var(--accent-error);" onclick="deleteCustomHomework('${hw.id}')" aria-label="Hausaufgabe ${escHtml(hw.subject)} löschen"><span class="emoji-icon" aria-hidden="true">🗑️ </span>Löschen</button>` : `<button type="button" class="btn btn-secondary" style="font-size: 12px; padding: 3px 8px; color: var(--text-muted);" onclick="hideHomeworkItem('${hw.id}')" aria-label="Hausaufgabe ${escHtml(hw.subject)} ausblenden"><span class="emoji-icon" aria-hidden="true">👁️‍🗨️ </span>Ausblenden</button>`}
             </div>
           </div>
         </article>`;
@@ -6023,6 +6042,30 @@ function deleteCustomHomework(hwId) {
   playEarcon('delete');
   speak('Hausaufgabe gelöscht.', true);
   announceSR('Hausaufgabe gelöscht.', 'polite');
+}
+
+function hideHomeworkItem(hwId) {
+  const hw = (appData.homework || []).find(h => String(h.id) === String(hwId));
+  const subj = hw ? hw.subject : 'die Hausaufgabe';
+  if (!confirm(`Möchtest du diese Hausaufgabe (${subj}) ausblenden? Sie wird nicht mehr in deiner Liste angezeigt.`)) {
+    return;
+  }
+
+  if (!appData.hiddenHomeworkIds) appData.hiddenHomeworkIds = [];
+  const sId = String(hwId);
+  if (!appData.hiddenHomeworkIds.includes(sId)) {
+    appData.hiddenHomeworkIds.push(sId);
+  }
+  if (Array.isArray(appData.homework)) {
+    appData.homework = appData.homework.filter(h => String(h.id) !== sId);
+  }
+
+  saveAppData();
+  renderHomework();
+  renderUrgentNotificationBanner();
+  playEarcon('delete');
+  speak('Hausaufgabe ausgeblendet.', false);
+  announceSR('Hausaufgabe ausgeblendet.', 'polite');
 }
 
 function syncCustomHomeworkToBackend() {
