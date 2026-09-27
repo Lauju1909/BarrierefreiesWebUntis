@@ -726,6 +726,8 @@ function loadAppData() {
           // Alt-Kurse vergangener Klassen ausfiltern (z.B. FB PBP (BWO) aus der früheren Klasse BFW1B)
           if (h.subject && /\(BWO\)/i.test(h.subject)) return false;
           if (h.text && /Eigenschaften und Fähigkeiten/i.test(h.text)) return false;
+          // In der aktuellen Klasse wird FB PBP nicht von Feix unterrichtet (Feix unterrichtet Deutsch)
+          if (/FB PBP/i.test(h.subject) && /Feix|FE\b/i.test(h.teacher)) return false;
           // Eigene Hausaufgaben ohne Frist beibehalten
           if (!h.dueDate || h.dueDate === 'Ohne Frist') {
             return h.isCustom === true;
@@ -3257,6 +3259,8 @@ async function performWebUntisSync(userOverride, passOverride) {
       // Filter: Alte Fächer/Kurse aus früheren Klassen (wie (BWO) aus BFW1B) oder verborgene Aufgaben ignorieren
       if (hwItem.subject && /\(BWO\)/i.test(hwItem.subject)) return;
       if (hwItem.text && /Eigenschaften und Fähigkeiten/i.test(hwItem.text)) return;
+      // In der aktuellen Klasse wird FB PBP nicht von Feix unterrichtet (Feix unterrichtet Deutsch)
+      if (/FB PBP/i.test(hwItem.subject) && /Feix|FE\b/i.test(hwItem.teacher)) return;
       if (appData.hiddenHomeworkIds && Array.isArray(appData.hiddenHomeworkIds) && appData.hiddenHomeworkIds.includes(String(hwItem.id))) return;
 
       const sTrim = String(hwItem.subject || '').trim();
