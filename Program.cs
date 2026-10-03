@@ -637,7 +637,7 @@ namespace BarrierefreierStundenplan
                                     for (int i = 0; i < json.Length; i++)
                                     {
                                         char c = json[i];
-                                        if (c == '"') sb.Append('\'').Append('"');
+                                        if (c == '"') sb.Append('\\').Append('"');
                                         else if (c == '\\') sb.Append('\\').Append('\\');
                                         else if (c == '\r') { }
                                         else if (c == '\n') sb.Append('\\').Append('n');

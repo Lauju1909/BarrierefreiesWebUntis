@@ -11,3 +11,4 @@ __pycache__/
 # Local config cache if any
 *.suo
 *.user
+cloud_token.txt

@@ -699,8 +699,24 @@ function loadAppData() {
         messagesFilter: 'all',
         iservEmails: (parsed.iservEmails && Array.isArray(parsed.iservEmails)) ? parsed.iservEmails : [],
         iservEvents: (parsed.iservEvents && Array.isArray(parsed.iservEvents)) ? parsed.iservEvents : [],
-        iservTasks: (parsed.iservTasks && Array.isArray(parsed.iservTasks)) ? parsed.iservTasks : []
+        iservTasks: (parsed.iservTasks && Array.isArray(parsed.iservTasks)) ? parsed.iservTasks : [],
+        completedHomeworkIds: (parsed.completedHomeworkIds && Array.isArray(parsed.completedHomeworkIds)) ? parsed.completedHomeworkIds : []
       };
+
+      // Erledigte Hausaufgaben aus persistentem Speicher anwenden
+      if (Array.isArray(appData.completedHomeworkIds) && appData.completedHomeworkIds.length > 0) {
+        const cSet = new Set(appData.completedHomeworkIds.map(String));
+        if (Array.isArray(appData.homework)) {
+          appData.homework.forEach(h => {
+            if (cSet.has(String(h.id))) h.completed = true;
+          });
+        }
+        if (Array.isArray(appData.customHomework)) {
+          appData.customHomework.forEach(c => {
+            if (cSet.has(String(c.id))) c.completed = true;
+          });
+        }
+      }
 
       // Gelöschte Nachrichten aus dem Speicher filtern (exakte ID-Prüfung)
       if (appData.deletedMessageIds && appData.deletedMessageIds.length > 0) {
@@ -3247,7 +3263,12 @@ async function performWebUntisSync(userOverride, passOverride) {
     const preservedCompletedMap = {};
     if (appData.homework && Array.isArray(appData.homework)) {
       appData.homework.forEach(hw => {
-        if (hw.completed) preservedCompletedMap[hw.id] = true;
+        if (hw.completed) preservedCompletedMap[String(hw.id)] = true;
+      });
+    }
+    if (appData.completedHomeworkIds && Array.isArray(appData.completedHomeworkIds)) {
+      appData.completedHomeworkIds.forEach(id => {
+        preservedCompletedMap[String(id)] = true;
       });
     }
 
@@ -3487,6 +3508,16 @@ async function performWebUntisSync(userOverride, passOverride) {
 
     // Hausaufgaben direkt aus den aktuellen Quellen des Schuljahres übernehmen
     appData.homework = newHomework;
+
+    // Erledigt-Status aus persistentem Speicher für alle Hausaufgaben anwenden
+    if (appData.completedHomeworkIds && Array.isArray(appData.completedHomeworkIds)) {
+      const cSet = new Set(appData.completedHomeworkIds.map(String));
+      appData.homework.forEach(h => {
+        if (cSet.has(String(h.id))) {
+          h.completed = true;
+        }
+      });
+    }
 
     // 13. Fehlzeiten parsen & aggregieren
     const newAbsences = [];
@@ -6111,25 +6142,53 @@ function loadCustomHomeworkFromBackend() {
 }
 
 function exportHomeworkJson() {
+  const allCompleted = Array.from(new Set([
+    ...((appData.completedHomeworkIds || []).map(String)),
+    ...((appData.homework || []).filter(h => h.completed).map(h => String(h.id)))
+  ]));
+
   const exportData = {
-    version: '1.9.13',
+    version: '1.9.27',
     exportDate: new Date().toISOString(),
     klasse: appData.config.klasse || 'BFW2B',
     customHomework: appData.customHomework || [],
-    completedHomeworkIds: (appData.homework || []).filter(h => h.completed).map(h => h.id)
+    completedHomeworkIds: allCompleted
   };
 
   const jsonStr = JSON.stringify(exportData, null, 2);
+  const fileName = `hausaufgaben_export_${formatGermanDate(new Date()).replace(/\s+/g, '_')}.json`;
   const blob = new Blob([jsonStr], { type: 'application/json' });
+
+  // Web Share API auf Mobilgeräten (Android) anbieten
+  if (navigator.share && navigator.canShare) {
+    try {
+      const file = new File([blob], fileName, { type: 'application/json' });
+      if (navigator.canShare({ files: [file] })) {
+        navigator.share({
+          title: 'Hausaufgaben & Erledigt-Status',
+          text: 'Hausaufgaben-Export aus Barrierefreies WebUntis',
+          files: [file]
+        }).catch(() => {
+          triggerFileDownload(blob, fileName);
+        });
+        return;
+      }
+    } catch (e) {}
+  }
+
+  triggerFileDownload(blob, fileName);
+  speak('Hausaufgaben erfolgreich exportiert.', true);
+}
+
+function triggerFileDownload(blob, fileName) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `hausaufgaben_export_${formatGermanDate(new Date()).replace(/\s+/g, '_')}.json`;
+  a.download = fileName;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
-  speak('Hausaufgaben erfolgreich exportiert.', true);
 }
 
 function importHomeworkJson(event) {
@@ -6154,16 +6213,21 @@ function importHomeworkJson(event) {
         });
       }
       if (Array.isArray(parsed.completedHomeworkIds)) {
+        if (!Array.isArray(appData.completedHomeworkIds)) appData.completedHomeworkIds = [];
         parsed.completedHomeworkIds.forEach(id => {
-          const matched = (appData.homework || []).find(h => String(h.id) === String(id));
+          const sId = String(id);
+          if (!appData.completedHomeworkIds.includes(sId)) {
+            appData.completedHomeworkIds.push(sId);
+          }
+          const matched = (appData.homework || []).find(h => String(h.id) === sId);
           if (matched) matched.completed = true;
-          const matchedCustom = (appData.customHomework || []).find(h => String(h.id) === String(id));
+          const matchedCustom = (appData.customHomework || []).find(h => String(h.id) === sId);
           if (matchedCustom) matchedCustom.completed = true;
         });
       }
       saveAppData();
       pushCloudHomeworkUpdate();
-  syncCloudHomework();
+      syncCloudHomework();
       renderHomework();
       speak(`${count} Hausaufgabe(n) erfolgreich importiert.`, true);
       alert(`${count} Hausaufgabe(n) erfolgreich importiert.`);
@@ -6216,9 +6280,10 @@ function syncCloudHomework(showNotification = false) {
 
   const keys = getCloudKeys();
 
-  // 1. Zuerst aus Cloud abrufen
-  fetch(`https://api.github.com/gists/${CLOUD_GIST_ID}`, {
-    headers: { 'Accept': 'application/vnd.github.v3+json' }
+  // 1. Zuerst aus Cloud abrufen (ohne Cache)
+  fetch(`https://api.github.com/gists/${CLOUD_GIST_ID}?t=${Date.now()}`, {
+    headers: { 'Accept': 'application/vnd.github.v3+json' },
+    cache: 'no-store'
   })
     .then(r => r.json())
     .then(data => {
@@ -6257,30 +6322,62 @@ function syncCloudHomework(showNotification = false) {
       }
 
       // C. Lokale Daten mit Cloud-Daten zusammenführen
-      const classHw = cloudContent.classes[keys.classKey].homework || [];
-      const userHw = cloudContent.users[keys.userKey].homework || [];
-      const completedIds = new Set(cloudContent.users[keys.userKey].completedHomeworkIds || []);
+      const classHw = (cloudContent.classes[keys.classKey] && cloudContent.classes[keys.classKey].homework) || [];
+      const userHw = (cloudContent.users[keys.userKey] && cloudContent.users[keys.userKey].homework) || [];
 
+      // Alle erledigten IDs aus der Cloud sammeln
+      const cloudCompletedSet = new Set();
+      if (cloudContent.users[keys.userKey] && Array.isArray(cloudContent.users[keys.userKey].completedHomeworkIds)) {
+        cloudContent.users[keys.userKey].completedHomeworkIds.forEach(id => cloudCompletedSet.add(String(id)));
+      }
+      // Fallback: alle Benutzer nach erledigten IDs durchsuchen (z.B. schneilau / schueler)
+      if (cloudContent.users) {
+        Object.keys(cloudContent.users).forEach(uK => {
+          const uObj = cloudContent.users[uK];
+          if (uObj && Array.isArray(uObj.completedHomeworkIds)) {
+            if (uK.toLowerCase().includes(keys.user) || keys.user === 'schueler' || keys.user === 'allgemein' || cloudCompletedSet.size === 0) {
+              uObj.completedHomeworkIds.forEach(id => cloudCompletedSet.add(String(id)));
+            }
+          }
+        });
+      }
+
+      if (!Array.isArray(appData.completedHomeworkIds)) appData.completedHomeworkIds = [];
       if (!Array.isArray(appData.customHomework)) appData.customHomework = [];
       if (!Array.isArray(appData.homework)) appData.homework = [];
 
       // Lokale erledigte Aufgaben in die Cloud-Menge aufnehmen
       appData.homework.forEach(h => {
-        if (h.completed) completedIds.add(h.id);
+        if (h.completed) cloudCompletedSet.add(String(h.id));
       });
-      cloudContent.users[keys.userKey].completedHomeworkIds = Array.from(completedIds);
+      appData.completedHomeworkIds.forEach(id => cloudCompletedSet.add(String(id)));
+
+      // In appData.completedHomeworkIds persistent sichern
+      appData.completedHomeworkIds = Array.from(cloudCompletedSet);
+      if (cloudContent.users[keys.userKey]) {
+        cloudContent.users[keys.userKey].completedHomeworkIds = appData.completedHomeworkIds;
+      }
+
+      // WICHTIG: Alle Hausaufgaben in appData.homework & customHomework als erledigt markieren!
+      let newlyMarked = 0;
+      appData.homework.forEach(h => {
+        if (cloudCompletedSet.has(String(h.id))) {
+          if (!h.completed) newlyMarked++;
+          h.completed = true;
+        }
+      });
 
       // Klassen-Hausaufgaben synchronisieren
       classHw.forEach(ch => {
-        const isDone = completedIds.has(ch.id);
-        const existingCustom = appData.customHomework.find(c => c.id === ch.id);
+        const isDone = cloudCompletedSet.has(String(ch.id)) || !!ch.completed;
+        const existingCustom = appData.customHomework.find(c => String(c.id) === String(ch.id));
         if (existingCustom) {
           existingCustom.completed = isDone;
         } else {
           appData.customHomework.push({ ...ch, completed: isDone, isCustom: true, scope: 'class' });
         }
 
-        const existingHw = appData.homework.find(h => h.id === ch.id);
+        const existingHw = appData.homework.find(h => String(h.id) === String(ch.id));
         if (existingHw) {
           existingHw.completed = isDone;
         } else {
@@ -6290,15 +6387,15 @@ function syncCloudHomework(showNotification = false) {
 
       // Persönliche Hausaufgaben synchronisieren
       userHw.forEach(uh => {
-        const isDone = completedIds.has(uh.id);
-        const existingCustom = appData.customHomework.find(c => c.id === uh.id);
+        const isDone = cloudCompletedSet.has(String(uh.id)) || !!uh.completed;
+        const existingCustom = appData.customHomework.find(c => String(c.id) === String(uh.id));
         if (existingCustom) {
           existingCustom.completed = isDone;
         } else {
           appData.customHomework.push({ ...uh, completed: isDone, isCustom: true, scope: 'private' });
         }
 
-        const existingHw = appData.homework.find(h => h.id === uh.id);
+        const existingHw = appData.homework.find(h => String(h.id) === String(uh.id));
         if (existingHw) {
           existingHw.completed = isDone;
         } else {
@@ -6324,18 +6421,24 @@ function syncCloudHomework(showNotification = false) {
 
       saveAppData();
       renderHomework();
+      renderUrgentNotificationBanner();
+      updateTodayBadge();
       lastCloudSyncTime = new Date();
 
-      // Wenn Änderungen vorhanden sind, im Backend sichern
+      // Wenn Änderungen vorhanden sind, im Backend sichern (Desktop)
       pushCloudHomeworkUpdate(cloudContent);
 
       if (showNotification) {
-        speak('Hausaufgaben erfolgreich mit der Internet-Cloud synchronisiert.', true);
-        announceSR('Hausaufgaben mit Internet synchronisiert.', 'polite');
+        const detail = cloudCompletedSet.size > 0 ? ` (${cloudCompletedSet.size} Aufgaben abgehakt)` : '';
+        speak(`Hausaufgaben erfolgreich mit der Internet-Cloud synchronisiert.${detail}`, true);
+        announceSR(`Hausaufgaben mit Internet synchronisiert.${detail}`, 'polite');
       }
     })
     .catch(err => {
       console.warn('Cloud sync offline or error:', err);
+      if (showNotification) {
+        speak('Internet-Synchronisation nicht verfügbar. Bitte prüfe die Internetverbindung.', true);
+      }
     })
     .finally(() => {
       isCloudSyncing = false;
@@ -6357,7 +6460,10 @@ function buildFullCloudPayload() {
   const keys = getCloudKeys();
   const classHw = (appData.customHomework || []).filter(h => h.scope === 'class');
   const userHw = (appData.customHomework || []).filter(h => h.scope === 'private');
-  const completedIds = (appData.homework || []).filter(h => h.completed).map(h => h.id);
+  const completedIds = Array.from(new Set([
+    ...((appData.completedHomeworkIds || []).map(String)),
+    ...((appData.homework || []).filter(h => h.completed).map(h => String(h.id)))
+  ]));
 
   const payload = {
     version: '1.0',
@@ -6390,9 +6496,19 @@ function toggleHomeworkCompleted(hwId) {
   if (!hw) return;
   hw.completed = !hw.completed;
 
+  if (!Array.isArray(appData.completedHomeworkIds)) appData.completedHomeworkIds = [];
+  const sId = String(hwId);
+  if (hw.completed) {
+    if (!appData.completedHomeworkIds.includes(sId)) {
+      appData.completedHomeworkIds.push(sId);
+    }
+  } else {
+    appData.completedHomeworkIds = appData.completedHomeworkIds.filter(id => String(id) !== sId);
+  }
+
   // In appData.customHomework ebenfalls aktualisieren
   if (Array.isArray(appData.customHomework)) {
-    const ch = appData.customHomework.find(c => String(c.id) === String(hwId));
+    const ch = appData.customHomework.find(c => String(c.id) === sId);
     if (ch) ch.completed = hw.completed;
   }
 

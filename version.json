@@ -1,10 +1,11 @@
 {
-  "version": "1.9.26",
+  "version": "1.9.27",
   "name": "Barrierefreies WebUntis",
-  "buildDate": "2026-09-27",
+  "buildDate": "2026-10-03",
   "repository": "https://github.com/Lauju1909/BarrierefreiesWebUntis",
   "executable": "Barrierefreies_WebUntis.exe",
   "features": [
+    "Zwei-Wege-Synchronisation von Hausaufgaben & Erledigt-Haken zwischen PC und Handy behoben: Als erledigt markierte Hausaufgaben (inkl. offizieller WebUntis-Aufgaben) werden ab sofort zuverlässig in der Internet-Cloud (Gist) und lokal gesichert. Beim Start der Android-App oder Klick auf 'Internet-Sync' werden alle auf dem PC abgehakten Hausaufgaben sofort auf dem Smartphone als erledigt markiert und bleiben auch nach Stundenplan-Aktualisierungen dauerhaft bestehen. JSON-Übertragung der Desktop-App repariert, fehlendes Schließen des Internet-Sync-Buttons korrigiert und Web-Share-Funktion für Mobilgeräte ergänzt.",
     "Bereinigung von Altlasten früherer Schulklassen (Reiter 4): Hausaufgaben werden ab sofort strikt auf die aktuell im Stundenplan aktive Klasse (BFW2B) begrenzt. Veraltete Klassen aus der WebUntis-Historie (wie BFW1B aus dem Vorjahr) und zugehörige Altaufgaben (z. B. FB PBP (BWO) 'Test Eigenschaften und Fähigkeiten') werden nicht mehr abgefragt und automatisch ausgefiltert. Zusätzlich wurde ein barrierefreier 'Ausblenden'-Button für jede WebUntis-Hausaufgabe ergänzt.",
     "Dauerhaftes Merken der Zugangsdaten (Auto-Login behoben): Passwörter für WebUntis und IServ werden bei aktiviertem Häkchen 'Zugangsdaten merken' wieder zuverlässig im lokalen Speicher gesichert. Beim Starten der App wird die Anmeldung vollautomatisch durchgeführt, ohne erneute Passworteingabe.",
     "Zuverlässige Erkennung von Vertretungsunterricht (Reiter 2): Unterrichtsstunden mit Vertretungslehrkräften (z. B. Büngeler), Raum- oder Fachänderungen werden nun anhand von Originallehrkraft (orgte), Vertretungstext (substText), Aktivitätstyp und Notizen zuverlässig als 'VERTRETUNG' markiert und barrierefrei für Screenreader angesagt (statt fehlerhaft als 'REGULÄR'). Im Stunden-Details-Dialog wird der genaue Vertretungshinweis mit ursprünglicher Lehrkraft gut lesbar dargestellt.",
