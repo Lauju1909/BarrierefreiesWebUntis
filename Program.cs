@@ -43,6 +43,7 @@ namespace BarrierefreierStundenplan
 
         // State für automatisches Beenden bei Alt+F4 / Fensterschließen
         private static readonly object _shutdownLock = new object();
+        private static bool _updateAttempted = false;
         private static System.Threading.Timer _closingTimer = null;
         private static bool _closingPending = false;
         private static DateTime _lastActivity = DateTime.UtcNow;
@@ -79,8 +80,13 @@ namespace BarrierefreierStundenplan
         }
 
         [STAThread]
-        static void Main()
+        static void Main(string[] args)
         {
+            if (args != null && Array.Exists(args, a => a == "--updated"))
+            {
+                _updateAttempted = true;
+            }
+
             // 1. Konsole sofort unsichtbar machen
             try
             {
@@ -130,8 +136,12 @@ namespace BarrierefreierStundenplan
 
                 if (isHealthy)
                 {
-                    LogUntis("Port " + DEFAULT_PORT + " is already in use and active, opening browser and exiting secondary instance");
-                    LaunchBestBrowser("http://127.0.0.1:" + DEFAULT_PORT + "/index.html");
+                    LogUntis("Port " + DEFAULT_PORT + " is already in use and active, exiting secondary instance");
+                    // Verhindere unendliche Fensteröffnung bei automatischen Restarts
+                    if (!_updateAttempted && (args == null || !Array.Exists(args, a => a == "--silent")))
+                    {
+                        LaunchBestBrowser("http://127.0.0.1:" + DEFAULT_PORT + "/index.html");
+                    }
                     return;
                 }
                 else
@@ -200,8 +210,11 @@ namespace BarrierefreierStundenplan
                 serverThread.Start();
                 LogUntis("Server listen thread started");
 
-                // 5. Asynchronen Auto-Update-Check beim Start ausführen
-                CheckAndApplyUpdateAsync();
+                // 5. Asynchronen Auto-Update-Check beim Start ausführen (nur wenn nicht gerade aktualisiert)
+                if (!_updateAttempted)
+                {
+                    CheckAndApplyUpdateAsync();
+                }
 
                 // 6. Periodischer Hintergrund-Update-Check alle 30 Minuten
                 Thread updateTimerThread = new Thread(() =>
@@ -318,7 +331,7 @@ namespace BarrierefreierStundenplan
                 }
                 catch { }
             }
-            return "1.9.26";
+            return "1.9.27";
         }
 
         private static bool IsNewerVersion(string remote, string local)
@@ -354,6 +367,12 @@ namespace BarrierefreierStundenplan
 
         public static bool CheckAndApplyUpdate()
         {
+            if (_updateAttempted)
+            {
+                LogUntis("AutoUpdater: Update already performed or cooling down, skipping check.");
+                return false;
+            }
+
             try
             {
                 string localVer = GetLocalVersion();
@@ -391,12 +410,11 @@ namespace BarrierefreierStundenplan
                         string tempExe = Path.Combine(_baseDir, "Barrierefreies_WebUntis_Update.exe");
                         string oldExe = currentExe + ".old";
 
-                        // 1. Primäre Download-Quelle: Offizieller GitHub Release, danach Raw-Fallback
+                        // 1. Primäre Download-Quelle: Exakte Version vom main-Branch oder Release-Tag der neuen Version
                         string[] candidateUrls = new string[]
                         {
-                            "https://github.com/" + GITHUB_REPO + "/releases/latest/download/Barrierefreies_WebUntis.exe",
                             "https://raw.githubusercontent.com/" + GITHUB_REPO + "/main/Barrierefreies_WebUntis.exe?t=" + ticks,
-                            "https://github.com/" + GITHUB_REPO + "/releases/latest/download/Stundenplan_LWL.exe"
+                            "https://github.com/" + GITHUB_REPO + "/releases/download/v" + remoteVer + "/Barrierefreies_WebUntis.exe"
                         };
 
                         bool exeDownloaded = false;
@@ -407,7 +425,7 @@ namespace BarrierefreierStundenplan
                                 if (File.Exists(tempExe)) File.Delete(tempExe);
                                 client.DownloadFile(downloadUrl, tempExe);
                                 FileInfo fi = new FileInfo(tempExe);
-                                if (fi.Exists && fi.Length > 25000)
+                                if (fi.Exists && fi.Length > 250000)
                                 {
                                     exeDownloaded = true;
                                     LogUntis("Successfully downloaded updated executable from: " + downloadUrl);
@@ -422,6 +440,8 @@ namespace BarrierefreierStundenplan
 
                         if (exeDownloaded)
                         {
+                            _updateAttempted = true;
+
                             if (File.Exists(oldExe))
                             {
                                 try { File.Delete(oldExe); } catch { }
@@ -431,13 +451,17 @@ namespace BarrierefreierStundenplan
                             File.Move(currentExe, oldExe);
                             File.Move(tempExe, currentExe);
 
-                            // Nach kurzer Pause neue Version starten
+                            // Alten Server sofort stoppen, damit Port 48250 frei wird
+                            _isRunning = false;
+                            try { if (_listener != null) _listener.Stop(); } catch { }
+
+                            // Nach kurzer Pause neue Version mit --updated Parameter starten
                             ThreadPool.QueueUserWorkItem((_) =>
                             {
                                 try
                                 {
-                                    Thread.Sleep(1500);
-                                    Process.Start(currentExe);
+                                    Thread.Sleep(800);
+                                    Process.Start(currentExe, "--updated");
                                     Environment.Exit(0);
                                 }
                                 catch { }
