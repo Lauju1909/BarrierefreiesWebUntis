@@ -730,7 +730,7 @@ function loadAppData() {
         });
       }
 
-      // Veraltete Hausaufgaben aus vergangenen Schuljahren (2024, 2025 etc.) und alten Klassen (wie BWO aus BFW1B) bereinigen
+      // Veraltete Hausaufgaben aus vergangenen Schuljahren (2024, 2025 etc.) und fremden Klassen (wie BFW1B, AS1, AS3) bereinigen
       if (appData.homework && Array.isArray(appData.homework)) {
         const sy = getSchoolYearRange();
         const minDateStr = `${sy.startYear}-08-01`; // 2026-08-01
@@ -744,6 +744,11 @@ function loadAppData() {
           if (h.text && /Eigenschaften und Fähigkeiten/i.test(h.text)) return false;
           // In der aktuellen Klasse wird FB PBP nicht von Feix unterrichtet (Feix unterrichtet Deutsch)
           if (/FB PBP/i.test(h.subject) && /Feix|FE\b/i.test(h.teacher)) return false;
+          // Aufgaben fremder Klassen/Lehrkräfte (z. B. Ausbildungsvorbereitung AS1/AS3 oder Klüppel Englisch) ausfiltern
+          if (/Klüppel|Klueppel|\bKLÜ\b/i.test(h.teacher || '')) return false;
+          if (/\b(02_AS1|01_AS3|AS1|AS2|AS3|_AS1|_AS2|_AS3)\b/i.test(h.text || '')) return false;
+          if (/\bSimple present task 7B\b/i.test(h.text || '')) return false;
+          if (h.klasse && !/BFW2B/i.test(h.klasse)) return false;
           // Eigene Hausaufgaben ohne Frist beibehalten
           if (!h.dueDate || h.dueDate === 'Ohne Frist') {
             return h.isCustom === true;
@@ -2082,7 +2087,7 @@ async function performWebUntisSync(userOverride, passOverride) {
       }
     }).catch(() => ({}));
 
-    // 4b. Schüler- und Klassen-IDs erfassen (NUR aktuelle Klassen aus dem aktuellen Stundenplan!)
+    // 4b. Schüler- und Klassen-IDs erfassen (STRENG NUR AKTUELLE KLASSE des aktuellen Schuljahres!)
     const detectedKlasseIds = new Set();
     const detectedStudentIds = new Set();
 
@@ -2092,33 +2097,43 @@ async function performWebUntisSync(userOverride, passOverride) {
     }
     if (mobilePersonId) detectedStudentIds.add(mobilePersonId);
 
-    // Aktuelle Klasse primär und vorrangig aus dem aktuellen Live-Stundenplan ermitteln
-    if (ttRes && ttRes.result && Array.isArray(ttRes.result)) {
-      ttRes.result.forEach(item => {
-        if (item.kl && Array.isArray(item.kl)) {
-          item.kl.forEach(k => { if (k && k.id) detectedKlasseIds.add(k.id); });
-        }
-      });
+    // Primäre aktive Klasse ermitteln (authRes hat die offizielle aktive klasseId, z. B. 2032 für BFW2B)
+    let activeKlasseId = null;
+    if (authRes.result) {
+      if (authRes.result.klasseId) activeKlasseId = authRes.result.klasseId;
+      else if (authRes.result.classId) activeKlasseId = authRes.result.classId;
     }
 
-    // Falls Stundenplan leer war: Fallback auf authRes
-    if (detectedKlasseIds.size === 0 && authRes.result) {
-      if (authRes.result.klasseId) detectedKlasseIds.add(authRes.result.klasseId);
-      if (authRes.result.classId) detectedKlasseIds.add(authRes.result.classId);
+    // Falls nicht in authRes: häufigste Klasse im aktuellen Wochenstundenplan ermitteln
+    if (!activeKlasseId && ttRes && ttRes.result && Array.isArray(ttRes.result)) {
+      const klCounts = {};
+      ttRes.result.forEach(item => {
+        if (item.kl && Array.isArray(item.kl)) {
+          item.kl.forEach(k => {
+            if (k && k.id) klCounts[k.id] = (klCounts[k.id] || 0) + 1;
+          });
+        }
+      });
+      const topK = Object.keys(klCounts).sort((a, b) => klCounts[b] - klCounts[a])[0];
+      if (topK) activeKlasseId = parseInt(topK, 10);
     }
 
     if (userDataRes && userDataRes.result && userDataRes.result.userData) {
       const ud = userDataRes.result.userData;
       if (ud.elemType === 'STUDENT' && ud.elemId) detectedStudentIds.add(ud.elemId);
-      if (ud.elemType === 'CLASS' && ud.elemId && detectedKlasseIds.size === 0) detectedKlasseIds.add(ud.elemId);
+      if (ud.elemType === 'CLASS' && ud.elemId && !activeKlasseId) activeKlasseId = ud.elemId;
       if (ud.children && Array.isArray(ud.children)) {
         ud.children.forEach(ch => { if (ch && ch.id) detectedStudentIds.add(ch.id); });
       }
-      // Hinweis: ud.klassenIds enthält die Historie ALLER Klassen aller Schuljahre (AV, BFW1B etc.).
-      // Nicht pauschal hinzufügen, um keine alten Klassen-Hausaufgaben (wie BWO aus BFW1B) abzufragen!
-      if (detectedKlasseIds.size === 0 && ud.klassenIds && Array.isArray(ud.klassenIds) && ud.klassenIds.length > 0) {
-        detectedKlasseIds.add(ud.klassenIds[ud.klassenIds.length - 1]);
+      // Falls noch immer keine Klasse: Neueste Klasse aus Historie als Fallback
+      if (!activeKlasseId && ud.klassenIds && Array.isArray(ud.klassenIds) && ud.klassenIds.length > 0) {
+        activeKlasseId = ud.klassenIds[ud.klassenIds.length - 1];
       }
+    }
+
+    if (activeKlasseId) {
+      detectedKlasseIds.clear();
+      detectedKlasseIds.add(activeKlasseId);
     }
     let detectedKlasseId = detectedKlasseIds.size > 0 ? Array.from(detectedKlasseIds)[0] : (personType === 1 ? personId : null);
 
@@ -2205,7 +2220,12 @@ async function performWebUntisSync(userOverride, passOverride) {
       }).catch(() => ({})));
     });
 
-    homeworkCalls.push(callWebUntisApi('getHomeWorks', { startDate: syRange.startDateNum, endDate: syRange.endDateNum }).catch(() => ({})));
+    const activeKid = detectedKlasseIds.size > 0 ? Array.from(detectedKlasseIds)[0] : null;
+    if (activeKid) {
+      homeworkCalls.push(callWebUntisApi('getHomeWorks', { id: activeKid, type: 1, startDate: syRange.startDateNum, endDate: syRange.endDateNum }).catch(() => ({})));
+    } else {
+      homeworkCalls.push(callWebUntisApi('getHomeWorks', { startDate: syRange.startDateNum, endDate: syRange.endDateNum }).catch(() => ({})));
+    }
 
     // B. Echte Klausuren & Klassenarbeiten (getExams2017) für Schüler & Klasse über das gesamte Schuljahr
     const examCalls = [];
@@ -2384,6 +2404,7 @@ async function performWebUntisSync(userOverride, passOverride) {
       restGradeListRes,
       restClassregEvRes,
       restMessagesRes,
+      messagesOfDayRes,
       restRecipientsRes,
       restAbsencesResults
     ] = await Promise.all([
@@ -2398,6 +2419,7 @@ async function performWebUntisSync(userOverride, passOverride) {
       callWebUntisRest(`/api/classreg/grade/gradeList?personId=${effectiveStudentId}&startDate=20240801&endDate=20270731`, jwtToken).catch(() => null),
       callWebUntisRest(`/api/classreg/classregevents?studentId=${effectiveStudentId}&startDate=${syRange.startDateNum}&endDate=${syRange.endDateNum}`, jwtToken).catch(() => null),
       callWebUntisRest('/api/rest/view/v1/messages', jwtToken).catch(() => null),
+      callWebUntisApi('getMessagesOfDay2017', [{ date: formatDateToUntis(now), ...(authObjFull ? { auth: authObjFull } : {}) }]).catch(() => ({})),
       callWebUntisRest('/api/rest/view/v1/messages/recipients/static/persons', jwtToken).catch(() => null),
       Promise.all(restAbsencesCalls)
     ]);
@@ -2570,6 +2592,14 @@ async function performWebUntisSync(userOverride, passOverride) {
     // Automatische Erkennung von Hausaufgaben aus dem Stundenplan & Klassenbuch
     function scanItemForHomework(item, idx) {
       if (!item) return;
+
+      // Nur Stunden für die eigene Klasse scannen!
+      if (item.kl && Array.isArray(item.kl) && detectedKlasseIds.size > 0) {
+        if (!item.kl.some(k => detectedKlasseIds.has(k.id) || (k.name && /BFW2B/i.test(k.name)))) {
+          return;
+        }
+      }
+
       const subjName = (item.su && item.su[0]) ? (subjectsMap[item.su[0].id] || item.su[0].name || item.su[0].longname || '') : '';
       if (subjName && /\(BWO\)/i.test(subjName)) return;
       const dStr = String(item.date || '').replace(/[-T:\s].*$/, '').replace(/-/g, '').trim().slice(0, 8);
@@ -2582,6 +2612,10 @@ async function performWebUntisSync(userOverride, passOverride) {
 
       const isoDate = `${dStr.slice(0, 4)}-${dStr.slice(4, 6)}-${dStr.slice(6, 8)}`;
       const teach = (item.te && item.te[0]) ? (teachersMap[item.te[0].id] || item.te[0].name || 'Fachlehrkraft') : 'Fachlehrkraft';
+
+      // Fremde Klassen-Lehrkräfte ignorieren
+      if (/Klüppel|Klueppel|\bKLÜ\b/i.test(teach)) return;
+      if (/FB PBP/i.test(subjName) && /Feix|FE\b/i.test(teach)) return;
 
       // 1. item.homework direkt auswerten (String, Objekt oder Array)
       if (item.homework) {
@@ -2689,9 +2723,6 @@ async function performWebUntisSync(userOverride, passOverride) {
       scanItemForExam(item, idx);
       scanItemForHomework(item, idx);
       scanItemForAbsence(item, idx);
-      if (item.kl && Array.isArray(item.kl)) {
-        item.kl.forEach(k => { if (k && k.id) detectedKlasseIds.add(k.id); });
-      }
     });
 
 
@@ -3282,6 +3313,11 @@ async function performWebUntisSync(userOverride, passOverride) {
       if (hwItem.text && /Eigenschaften und Fähigkeiten/i.test(hwItem.text)) return;
       // In der aktuellen Klasse wird FB PBP nicht von Feix unterrichtet (Feix unterrichtet Deutsch)
       if (/FB PBP/i.test(hwItem.subject) && /Feix|FE\b/i.test(hwItem.teacher)) return;
+      // Aufgaben fremder Klassen/Lehrkräfte (z. B. Ausbildungsvorbereitung AS1/AS3 oder Klüppel Englisch) ausfiltern
+      if (/Klüppel|Klueppel|\bKLÜ\b/i.test(hwItem.teacher || '')) return;
+      if (/\b(02_AS1|01_AS3|AS1|AS2|AS3|_AS1|_AS2|_AS3)\b/i.test(hwItem.text || '')) return;
+      if (/\bSimple present task 7B\b/i.test(hwItem.text || '')) return;
+      if (hwItem.klasse && !/BFW2B/i.test(hwItem.klasse)) return;
       if (appData.hiddenHomeworkIds && Array.isArray(appData.hiddenHomeworkIds) && appData.hiddenHomeworkIds.includes(String(hwItem.id))) return;
 
       const sTrim = String(hwItem.subject || '').trim();
@@ -3340,14 +3376,25 @@ async function performWebUntisSync(userOverride, passOverride) {
 
         rawList.forEach((hw, idx) => {
           if (!hw) return;
+
+          // Klassen-Abgleich: Gehört diese Aufgabe zur aktiven Klasse?
+          const lInfo = hw.lessonId ? lessonsMap[hw.lessonId] : null;
+          if (lInfo && lInfo.klassenIds && Array.isArray(lInfo.klassenIds) && lInfo.klassenIds.length > 0) {
+            if (detectedKlasseIds.size > 0 && !lInfo.klassenIds.some(kId => detectedKlasseIds.has(kId))) {
+              // Gehört zu einer fremden Klasse (z. B. AS1, AS3, BFW1B)!
+              return;
+            }
+          }
+          if (hw.klasseId && detectedKlasseIds.size > 0 && !detectedKlasseIds.has(hw.klasseId)) return;
+          if (hw.klasseIds && Array.isArray(hw.klasseIds) && detectedKlasseIds.size > 0 && !hw.klasseIds.some(kId => detectedKlasseIds.has(kId))) return;
+          if (hw.klassenIds && Array.isArray(hw.klassenIds) && detectedKlasseIds.size > 0 && !hw.klassenIds.some(kId => detectedKlasseIds.has(kId))) return;
+
           // In WebUntis Mobile ist endDate das Fälligkeitsdatum!
           const rawDate = hw.endDate || hw.dueDate || hw.date || hw.lessonDate || hw.startDate;
           let dueStr = '';
           if (rawDate) {
             dueStr = normalizeToIsoDate(rawDate);
           }
-
-          const lInfo = hw.lessonId ? lessonsMap[hw.lessonId] : null;
           let subj = '';
           if (lInfo) {
             const sId = lInfo.subjectId || lInfo.subject;
@@ -3940,6 +3987,62 @@ async function performWebUntisSync(userOverride, passOverride) {
           appData.messages.unshift(msgObj);
         }
       });
+    }
+
+    // WebUntis Tagesnachrichten (getMessagesOfDay2017) verarbeiten
+    if (messagesOfDayRes && messagesOfDayRes.result && messagesOfDayRes.result.messages && Array.isArray(messagesOfDayRes.result.messages)) {
+      if (!appData.messages) appData.messages = [];
+      const delSet = new Set((appData.deletedMessageIds || []).map(String));
+      messagesOfDayRes.result.messages.forEach(m => {
+        const sId = String(m.id || Date.now());
+        const id = `webuntis-news-${sId}`;
+        if (delSet.has(sId) || delSet.has(id)) return;
+        const existingIdx = appData.messages.findIndex(x => x.id === id);
+        const msgObj = {
+          id: id,
+          type: 'news',
+          sender: 'Schulleitung / WebUntis',
+          subject: m.subject || m.title || 'Tagesnachricht',
+          text: m.text || m.body || m.content || '',
+          date: m.date ? (typeof m.date === 'string' && m.date.includes('T') ? m.date : new Date(m.date).toISOString()) : new Date().toISOString()
+        };
+        if (existingIdx >= 0) {
+          appData.messages[existingIdx] = msgObj;
+        } else {
+          appData.messages.unshift(msgObj);
+        }
+      });
+    }
+
+    // WebUntis NewsWidget / Schwarzes Brett verarbeiten
+    if (newsRes && newsRes.result) {
+      const articles = newsRes.result.articles || newsRes.result.newsOfTheDay || (Array.isArray(newsRes.result) ? newsRes.result : []);
+      if (Array.isArray(articles) && articles.length > 0) {
+        if (!appData.messages) appData.messages = [];
+        const delSet = new Set((appData.deletedMessageIds || []).map(String));
+        articles.forEach((art, idx) => {
+          const sId = String(art.id || idx);
+          const id = `webuntis-news-${sId}`;
+          if (delSet.has(sId) || delSet.has(id)) return;
+          const title = art.topic || art.subject || art.name || art.title || '';
+          const text = art.text || art.content || art.description || '';
+          if (!title && !text) return;
+          const existingIdx = appData.messages.findIndex(x => x.id === id);
+          const msgObj = {
+            id: id,
+            type: 'news',
+            sender: 'Schulleitung / Schwarzes Brett',
+            subject: title || 'Tagesnachricht',
+            text: text,
+            date: art.date ? new Date(art.date).toISOString() : new Date().toISOString()
+          };
+          if (existingIdx >= 0) {
+            appData.messages[existingIdx] = msgObj;
+          } else {
+            appData.messages.unshift(msgObj);
+          }
+        });
+      }
     }
 
     // WebUntis Empfänger-Verzeichnis (Lehrkräfte)
@@ -6148,7 +6251,7 @@ function exportHomeworkJson() {
   ]));
 
   const exportData = {
-    version: '1.9.27',
+    version: '1.9.28',
     exportDate: new Date().toISOString(),
     klasse: appData.config.klasse || 'BFW2B',
     customHomework: appData.customHomework || [],
@@ -7097,10 +7200,11 @@ function renderUrgentNotificationBanner() {
   // 0b. Schulinformationen / Tagesnachrichten
   activeNews.forEach(msg => {
     const isNews = msg.type === 'news';
+    const badgeText = isNews ? 'Tagesnachricht' : 'Neue Mitteilung';
     const badgeLabel = isNews ? '<span class="emoji-icon" aria-hidden="true">📢 </span>Tagesnachricht' : '<span class="emoji-icon" aria-hidden="true">💬 </span>Neue Mitteilung';
-    const dateFormatted = msg.date ? formatGermanDate(new Date(msg.date)) : 'Aktuell';
+    const dateFormatted = msg.date ? (formatGermanDate(new Date(msg.date)) || 'Aktuell') : 'Aktuell';
     itemsHtml += `
-      <div class="urgent-item" style="border-left: 6px solid #eab308;" tabindex="0" role="article" aria-label="${badgeLabel}: ${escHtml(msg.subject || 'Nachricht')}">
+      <div class="urgent-item" style="border-left: 6px solid #eab308;" tabindex="0" role="article" aria-label="${escHtml(badgeText)}: ${escHtml(msg.subject || 'Nachricht')}">
         <div class="urgent-item-header">
           <span class="urgent-badge" style="background: #fef08a; color: #854d0e;">${badgeLabel}</span>
           <span class="field-hint" style="font-weight: bold;">${escHtml(dateFormatted)}</span>
@@ -7904,28 +8008,44 @@ function renderMessagesView() {
     const isInbox = msg.type === 'inbox' || (!isNews && !isSent && !isIserv);
 
     let badgeClass = 'msg-badge-inbox';
+    let badgeText = 'Posteingang';
     let badgeLabel = '<span class="emoji-icon" aria-hidden="true">📥 </span>Posteingang';
     let highlightClass = 'inbox-highlight';
 
     if (isIserv) {
       badgeClass = 'msg-badge-iserv';
+      badgeText = 'IServ E-Mail';
       badgeLabel = '<span class="emoji-icon" aria-hidden="true">📧 </span>IServ E-Mail';
       highlightClass = msg.unread ? 'iserv-highlight iserv-unread' : 'iserv-highlight';
     } else if (isNews) {
       badgeClass = 'msg-badge-news';
+      badgeText = 'Tagesnachricht der Schule';
       badgeLabel = '<span class="emoji-icon" aria-hidden="true">📢 </span>Tagesnachricht der Schule';
       highlightClass = 'news-highlight';
     } else if (isSent) {
       badgeClass = 'msg-badge-sent';
+      badgeText = 'Gesendet';
       badgeLabel = '<span class="emoji-icon" aria-hidden="true">📤 </span>Gesendet';
       highlightClass = 'sent-highlight';
     }
 
-    const dateFormatted = msg.date ? formatGermanDate(new Date(msg.date)) : 'Aktuell';
-    const timeFormatted = msg.date ? new Date(msg.date).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) : '';
+    let dateFormatted = 'Aktuell';
+    let timeFormatted = '';
+    if (msg.date) {
+      const dObj = new Date(msg.date);
+      if (!isNaN(dObj.getTime())) {
+        dateFormatted = formatGermanDate(dObj) || 'Aktuell';
+        timeFormatted = dObj.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+      }
+    }
+
+    const msgSubject = msg.subject || (isNews ? 'Tagesnachricht' : 'Mitteilung');
+    const msgSender = isSent ? (msg.recipient || 'Lehrkraft') : (msg.sender || 'LWL-Berufskolleg Soest');
+    const msgBodyText = msg.text || msg.body || msg.content || 'Kein weiterer Textinhalt vorhanden.';
+    const ariaLabelStr = `${badgeText}: ${msgSubject}. ${isSent ? 'An ' : 'Von '} ${msgSender}, Datum: ${dateFormatted}${timeFormatted ? ' um ' + timeFormatted + ' Uhr' : ''}`;
 
     html += `
-      <article class="msg-card ${highlightClass}" role="listitem" tabindex="0" aria-label="${badgeLabel}: ${escHtml(msg.subject || 'Mitteilung')}">
+      <article class="msg-card ${highlightClass}" role="listitem" tabindex="0" aria-label="${escHtml(ariaLabelStr)}">
         <div class="msg-header">
           <div class="msg-badges">
             <span class="msg-badge ${badgeClass}">${badgeLabel}</span>
@@ -7942,16 +8062,16 @@ function renderMessagesView() {
             <button type="button" class="btn btn-secondary" style="min-height: 34px; padding: 4px 10px; font-size: 13px;" onclick="speakMsg('${msg.id}')" aria-label="Diese Mitteilung vorlesen">
               <span class="emoji-icon" aria-hidden="true">🔊 </span>Vorlesen
             </button>
-            <button type="button" class="btn btn-danger" style="min-height: 34px; padding: 4px 10px; font-size: 13px;" onclick="deleteMessage('${msg.id}')" aria-label="Mitteilung ${escHtml(msg.subject || '')} löschen">
+            <button type="button" class="btn btn-danger" style="min-height: 34px; padding: 4px 10px; font-size: 13px;" onclick="deleteMessage('${msg.id}')" aria-label="Mitteilung ${escHtml(msgSubject)} löschen">
               <span class="emoji-icon" aria-hidden="true">🗑️ </span>Löschen
             </button>`}
           </div>
         </div>
-        <h4 class="msg-title">${escHtml(msg.subject || 'Ohne Betreff')}</h4>
+        <h4 class="msg-title">${escHtml(msgSubject)}</h4>
         <div class="msg-author-line">
-          ${isSent ? `<span class="emoji-icon" aria-hidden="true">👤 </span><strong>Empfänger:</strong> ${escHtml(msg.recipient || 'Lehrkraft')}` : `<span class="emoji-icon" aria-hidden="true">👤 </span><strong>Von:</strong> ${escHtml(msg.sender || 'LWL-Berufskolleg Soest')}`}
+          ${isSent ? `<span class="emoji-icon" aria-hidden="true">👤 </span><strong>Empfänger:</strong> ${escHtml(msgSender)}` : `<span class="emoji-icon" aria-hidden="true">👤 </span><strong>Von:</strong> ${escHtml(msgSender)}`}
         </div>
-        <div class="msg-body">${escHtml(msg.text || msg.body || '')}</div>
+        <div class="msg-body" style="white-space: pre-line;">${escHtml(msgBodyText)}</div>
       </article>
     `;
   });
