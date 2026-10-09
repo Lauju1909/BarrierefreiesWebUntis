@@ -233,9 +233,16 @@ namespace BarrierefreierStundenplan
 
                 string launchUrl = "http://127.0.0.1:" + _activePort + "/index.html";
 
-                // 8. Browser öffnen
-                LogUntis("Launching browser with URL: " + launchUrl);
-                LaunchBestBrowser(launchUrl);
+                // 8. Browser öffnen (nur bei manuellem Start, nicht bei automatischen Update-Restarts)
+                if (!_updateAttempted && (args == null || !Array.Exists(args, a => a == "--silent")))
+                {
+                    LogUntis("Launching browser with URL: " + launchUrl);
+                    LaunchBestBrowser(launchUrl);
+                }
+                else
+                {
+                    LogUntis("Skipping browser launch (update restart or silent mode)");
+                }
 
                 // 9. Blockieren bis Beenden-Signal
                 LogUntis("Entering _exitEvent.WaitOne()...");
