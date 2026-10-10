@@ -1,7 +1,7 @@
 {
-  "version": "1.9.29",
+  "version": "1.9.30",
   "name": "Barrierefreies WebUntis",
-  "buildDate": "2026-10-09",
+  "buildDate": "2026-10-10",
   "repository": "https://github.com/Lauju1909/BarrierefreiesWebUntis",
   "executable": "Barrierefreies_WebUntis.exe",
   "features": [
