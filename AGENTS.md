@@ -1,18 +1,49 @@
-# 🤖 Hinweise für KI-Agenten (AI Agents Guide)
+# 🤖 Richtlinien für KI-Agenten (Barrierefreies WebUntis & Stundenplan LWL (Desktop))
+<!-- Für alle KI-Assistenten (Claude, ChatGPT, Copilot, Gemini, Cursor, Antigravity) -->
 
-## ⚡ Automatisiertes Build-, Auto-Versioning- und Release-System
-- **Automatische Versionserhöhung:** Die Versionsnummer in `version.json` wird bei jedem Push auf den Branch `main` **vollautomatisch durch GitHub Actions erhöht** (z. B. `1.9.29` -> `1.9.30`).
-- **Automatischer Multi-Plattform Build (Windows & Linux):**
-  - **Windows:** GitHub Actions kompiliert auf einem virtuellen Windows-Server (`windows-latest`) automatisch:
-    - `Barrierefreies_WebUntis.exe` (über `csc.exe` aus `Program.cs`)
-    - `Feedback_Zentrale.exe` (über `csc.exe` aus `FeedbackProgram.cs`)
-  - **Linux:** GitHub Actions kompiliert auf einem Ubuntu-Server (`ubuntu-latest`) automatisch ein natives, eigenständiges Linux-Binary:
-    - `Barrierefreies_WebUntis-Linux` (über PyInstaller aus `server.py` inklusive aller Assets `index.html`, `style.css`, `app.js`, `canteen_seed.json`)
-- **Automatisches GitHub-Release:** Für jeden Commit auf `main` wird automatisch ein neues GitHub-Release erstellt und sowohl die Windows- als auch die Linux-Dateien als Download angehängt.
-- **Saubere Trennung der Auto-Updater:**
-  - Der Windows-Updater (`Program.cs`) aktualisiert ausschließlich die Windows-EXE und Windows-Dateien.
-  - Der Linux-Betrieb (`server.py`) arbeitet völlig unabhängig davon und wird durch Windows-Updates niemals beeinträchtigt.
+Dieses Dokument definiert die **verbindlichen Regeln**, Pflichten und Verbote für jede KI, die an diesem Projekt arbeitet.
 
-## 📌 Was KI-Agenten beachten MÜSSEN:
-1. **Keine manuellen Releases oder Versionsnummern-Änderungen erzwingen:** Entwickle Programm-Features und Bugfixes normal. Nach dem Push auf `main` übernimmt GitHub Actions das Hochzählen der Patch-Version, das Taggen und das Veröffentlichen des Multiplattform-Releases vollautomatisch.
-2. **Barrierefreiheit (WCAG 2.2 AAA & NVDA / JAWS / Orca):** Alle Änderungen müssen 100% barrierefrei bleiben (vollständige Tastaturbedienung, ARIA-Live-Regionen, keine störenden Emojis im Screenreader-Modus).
+---
+
+## 🚫 1. Was Agenten STRIKT VERBOTEN ist (DON'TS)
+
+1. **KEINE manuellen Versionsnummern-Änderungen:**
+   - ❌ Ändere NIEMALS manuell Versionsnummern in `version.json`, `build.gradle`, `package.json`, `app.js` oder HTML-Dateien!
+   - ℹ️ GitHub Actions CI/CD (`build-release.yml` bzw. `build-apk.yml`) erhöht die Versionsnummern (`version`, `versionCode`, `versionName`) und alle UI-Referenzen bei jedem Push auf `main` **vollautomatisch**.
+2. **KEINE manuellen GitHub Releases oder Git-Tags anlegen:**
+   - ❌ Erstelle niemals manuell Tags wie `v1.x.x` oder Releases über Git/CLI. GitHub Actions kompiliert, taggt und veröffentlicht Releases automatisch.
+3. **KEINE privaten Daten des Autors veröffentlichen:**
+   - ❌ Der Entwickler ist **Laurin Schneider**. Es dürfen **NIEMALS** private Anschriften, Adressen, Telefonnummern oder vertrauliche persönliche Angaben in Code, Commits, Dokumentation oder Issues hinterlegt werden (Datenschutz & Privatsphäre!).
+4. **KEINE bestehenden Benutzerdaten oder Vokabeln beschädigen:**
+   - ❌ Niemals vorhandene Vokabellisten, Beispieldaten, Backup-Strukturen oder Datenbank-Schemata löschen oder inkompatibel umbauen.
+   - 100% Abwärtskompatibilität für alle gespeicherten Daten (Vokabeln, Noten, Finanzbuchungen, Stundenpläne) ist zwingend vorgeschrieben.
+5. **KEINE unzugänglichen UI-Elemente bauen:**
+   - ❌ Niemals klickbare Elemente ohne Tastatur-Fokus (`tabindex="0"`), ohne `role="button"` oder ohne `aria-label` verwenden.
+   - ❌ Niemals reine Maus-Hover-Interaktionen ohne Tastatur-Alternative einbauen.
+6. **KEINE Multiplattform-Inkompatibilitäten erzeugen:**
+   - ❌ Änderungen dürfen weder den Windows-Betrieb, noch die Linux-Nutzung, noch den Android-Build stören. Beide Systeme müssen unabhängig und fehlerfrei funktionieren.
+
+---
+
+## ✅ 2. Was Agenten TUN MÜSSEN (DO'S & PFLICHTEN)
+
+1. **100% Barrierefreiheit (WCAG 2.2 AAA & Screenreader-Kompatibilität):**
+   - ♿ Zielgruppe: Blinde und stark sehbehinderte Nutzer mit Screenreadern (NVDA, JAWS, Orca (Desktop)).
+   - Jedes UI-Element muss voll per Tastatur (`Tab`, `Enter`, `Leertaste`, Pfeiltasten) erreichbar und bedienbar sein.
+   - Statusmeldungen, Dialoge, Ladevorgänge und Fehler MÜSSEN über `aria-live="polite"` oder `aria-live="assertive"` an den Screenreader gemeldet werden.
+   - Hohe Kontraste, klare semantische Überschriften-Hierarchien (`<h1>`-`<h6>`) und eindeutige Beschriftungen.
+2. **Sauberer Git-Workflow:**
+   - Änderungen am Code ganz normal entwickeln, testen und auf den Branch `main` pushen.
+   - Bei reinen Dokumentations-Commits (die keinen Build oder Release erfordern) immer `[skip ci]` in die Commit-Message schreiben.
+3. **Lokale Datenhaltung & Offline-First:**
+   - Alle Funktionen müssen lokal, fehlertolerant und offline nutzbar sein.
+   - Export- und Import-Funktionen (JSON/CSV) immer robust gegen ungültige oder veraltete Eingaben absichern.
+
+---
+
+## ⚙️ 3. Technische Projektdaten
+
+- **Projekttyp:** Barrierefreier Stundenplan und Vertretungsplan für Blinde und Sehbehinderte (LWL-Förderschulen / WebUntis).
+- **Plattformen & Build:** Windows (.exe via C# csc.exe) & Linux (PyInstaller Standalone aus server.py)
+- **Wichtige Kerndateien:** `index.html, app.js, style.css, server.py, Program.cs, FeedbackProgram.cs, canteen_seed.json`
+- **CI/CD Pipeline:** Befindet sich unter `.github/workflows/`. Führt automatische Tests, Kompilierung und Veröffentlichung durch.
