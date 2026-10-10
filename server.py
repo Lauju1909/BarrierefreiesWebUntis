@@ -12,7 +12,10 @@ import urllib.request
 import webbrowser
 
 PORT = 48250
-DIRECTORY = os.path.dirname(os.path.abspath(__file__))
+if getattr(sys, 'frozen', False):
+    DIRECTORY = getattr(sys, '_MEIPASS', os.path.dirname(sys.executable))
+else:
+    DIRECTORY = os.path.dirname(os.path.abspath(__file__))
 WEBUNTIS_URL = "https://lwl-bk-soest.webuntis.com/WebUntis/jsonrpc.do?school=lwl-bk-soest"
 
 class BridgeHandler(http.server.SimpleHTTPRequestHandler):

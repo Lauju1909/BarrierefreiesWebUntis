@@ -1,0 +1,164 @@
+name: Build Multiplatform (Windows & Linux) & Release
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  bump-version:
+    name: Auto-Bump Version
+    runs-on: ubuntu-latest
+    outputs:
+      new_version: ${{ steps.bump.outputs.version }}
+      skip: ${{ steps.check_skip.outputs.skip }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check Commit Message for Skip
+        id: check_skip
+        run: |
+          COMMIT_MSG=$(git log -1 --pretty=%B)
+          if echo "$COMMIT_MSG" | grep -qE "\[skip ci\]|chore\(release\):"; then
+            echo "skip=true" >> $GITHUB_OUTPUT
+          else
+            echo "skip=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Auto-Bump Version in version.json
+        id: bump
+        if: steps.check_skip.outputs.skip == 'false'
+        run: |
+          CURRENT_VER=$(jq -r '.version' version.json)
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT_VER"
+          NEW_PATCH=$((PATCH + 1))
+          NEW_VER="${MAJOR}.${MINOR}.${NEW_PATCH}"
+          TODAY=$(date +%Y-%m-%d)
+          jq --arg ver "$NEW_VER" --arg date "$TODAY" '.version = $ver | .buildDate = $date' version.json > version.tmp.json && mv version.tmp.json version.json
+          echo "version=$NEW_VER" >> $GITHUB_OUTPUT
+          
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add version.json
+          git commit -m "chore(release): auto-bump version to v$NEW_VER [skip ci]"
+          git tag "v$NEW_VER"
+          git push origin main
+          git push origin "v$NEW_VER"
+
+      - name: Fallback Version if Skipped
+        if: steps.check_skip.outputs.skip == 'true'
+        run: |
+          CURRENT_VER=$(jq -r '.version' version.json)
+          echo "version=$CURRENT_VER" >> $GITHUB_OUTPUT
+
+  build-windows:
+    name: Build Windows EXE
+    runs-on: windows-latest
+    needs: bump-version
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Compile Windows EXEs with csc.exe
+        shell: pwsh
+        run: |
+          $csc = "C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe"
+          Write-Host "Compiling Barrierefreies_WebUntis.exe..."
+          & $csc /target:winexe /out:Barrierefreies_WebUntis.exe Program.cs
+          if (Test-Path FeedbackProgram.cs) {
+            Write-Host "Compiling Feedback_Zentrale.exe..."
+            & $csc /target:winexe /out:Feedback_Zentrale.exe FeedbackProgram.cs
+          }
+          Write-Host "Windows compilation successful!"
+
+      - name: Upload Windows Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-executables
+          path: |
+            Barrierefreies_WebUntis.exe
+            Feedback_Zentrale.exe
+
+  build-linux:
+    name: Build Linux Executable
+    runs-on: ubuntu-latest
+    needs: bump-version
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install PyInstaller
+        run: pip install pyinstaller
+
+      - name: Build Linux Standalone Executable
+        run: |
+          pyinstaller --noconfirm --onefile --name Barrierefreies_WebUntis-Linux \
+            --add-data "index.html:." \
+            --add-data "style.css:." \
+            --add-data "app.js:." \
+            --add-data "canteen_seed.json:." \
+            --add-data "version.json:." \
+            server.py
+          chmod +x dist/Barrierefreies_WebUntis-Linux
+
+      - name: Upload Linux Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-executable
+          path: dist/Barrierefreies_WebUntis-Linux
+
+  publish-release:
+    name: Publish GitHub Release
+    runs-on: ubuntu-latest
+    needs: [bump-version, build-windows, build-linux]
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Download Windows Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: windows-executables
+          path: release-assets
+
+      - name: Download Linux Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: linux-executable
+          path: release-assets
+
+      - name: Get Target Version
+        id: target_ver
+        run: |
+          VER=$(jq -r '.version' version.json)
+          echo "version=$VER" >> $GITHUB_OUTPUT
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: "v${{ steps.target_ver.outputs.version }}"
+          name: "Barrierefreies WebUntis v${{ steps.target_ver.outputs.version }} (Windows & Linux)"
+          files: |
+            release-assets/Barrierefreies_WebUntis.exe
+            release-assets/Feedback_Zentrale.exe
+            release-assets/Barrierefreies_WebUntis-Linux
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
