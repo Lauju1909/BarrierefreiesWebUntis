@@ -1457,6 +1457,39 @@ namespace BarrierefreierStundenplan
             }
         }
 
+        private static System.Threading.Timer _canteenAutoTimer = null;
+
+        private static void StartCanteenAutoUpdater()
+        {
+            try
+            {
+                _canteenAutoTimer = new System.Threading.Timer(state => {
+                    try
+                    {
+                        LogUntis("Automatischer Hintergrund-Crawl fuer Speiseplaene wird ausgefuehrt...");
+                        string crawled = TryCrawlCanteenData();
+                        if (!string.IsNullOrEmpty(crawled))
+                        {
+                            lock (_canteenLock)
+                            {
+                                _cachedCanteenJson = crawled;
+                                _lastCanteenFetch = DateTime.UtcNow;
+                            }
+                            LogUntis("Speiseplaene automatisch im Hintergrund aktualisiert.");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        LogUntis("Automatischer Speiseplan-Hintergrundabruf Hinweis: " + ex.Message);
+                    }
+                }, null, 3000, 4 * 60 * 60 * 1000);
+            }
+            catch (Exception ex)
+            {
+                LogUntis("StartCanteenAutoUpdater Fehler: " + ex.Message);
+            }
+        }
+
         private static string TryCrawlCanteenData()
         {
             string[] sources = new string[] {
@@ -1511,7 +1544,53 @@ namespace BarrierefreierStundenplan
                 }
             }
 
-            // Versuche Online GitHub-Sync fuer stets aktuelle Speiseplaene
+            // 1. Wenn XLSX-Download-Links gefunden wurden: Herunterladen und parsen
+            if (downloadLinks.Count > 0)
+            {
+                foreach (string xlsxUrl in downloadLinks)
+                {
+                    try
+                    {
+                        LogUntis("Downloading canteen XLSX from: " + xlsxUrl);
+                        byte[] fileBytes = null;
+                        HttpWebRequest fileReq = (HttpWebRequest)WebRequest.Create(xlsxUrl);
+                        fileReq.UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) LWL-Stundenplan";
+                        fileReq.Timeout = 12000;
+                        using (HttpWebResponse fileResp = (HttpWebResponse)fileReq.GetResponse())
+                        using (MemoryStream ms = new MemoryStream())
+                        {
+                            fileResp.GetResponseStream().CopyTo(ms);
+                            fileBytes = ms.ToArray();
+                        }
+
+                        if (fileBytes != null && fileBytes.Length > 1000)
+                        {
+                            string parsedWeekJson = ParseXlsxBytesToWeek(fileBytes, activeSource, activeSourceUrl);
+                            if (!string.IsNullOrEmpty(parsedWeekJson))
+                            {
+                                string merged = MergeWeekIntoCanteenJson(parsedWeekJson, activeSource, activeSourceUrl);
+                                if (!string.IsNullOrEmpty(merged))
+                                {
+                                    try
+                                    {
+                                        string localSeedPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "canteen_seed.json");
+                                        File.WriteAllText(localSeedPath, merged, Encoding.UTF8);
+                                    }
+                                    catch { }
+                                    LogUntis("Canteen XLSX successfully parsed and merged into local canteen_seed.json");
+                                    return merged;
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception dlEx)
+                    {
+                        LogUntis("Error downloading/parsing canteen XLSX: " + dlEx.Message);
+                    }
+                }
+            }
+
+            // 2. Versuche Online GitHub-Sync fuer stets aktuelle Speiseplaene
             try
             {
                 string githubUrl = "https://raw.githubusercontent.com/Lauju1909/BarrierefreiesWebUntis/main/canteen_seed.json";
@@ -1534,6 +1613,7 @@ namespace BarrierefreierStundenplan
                 LogUntis("Canteen GitHub sync note: " + ghEx.Message);
             }
 
+            // 3. Lokale Seed-Datei als Fallback
             byte[] seedBytes = GetCanteenSeedBytes();
             if (seedBytes != null && seedBytes.Length > 0)
             {
@@ -1549,6 +1629,274 @@ namespace BarrierefreierStundenplan
             }
 
             return null;
+        }
+
+        private static int GetIsoWeekNumber(DateTime date)
+        {
+            DayOfWeek day = System.Globalization.CultureInfo.InvariantCulture.Calendar.GetDayOfWeek(date);
+            if (day >= DayOfWeek.Monday && day <= DayOfWeek.Wednesday)
+            {
+                date = date.AddDays(3);
+            }
+            return System.Globalization.CultureInfo.InvariantCulture.Calendar.GetWeekOfYear(date, System.Globalization.CalendarWeekRule.FirstFourDayWeek, DayOfWeek.Monday);
+        }
+
+        private static DateTime GetMondayOfWeek(int year, int kw)
+        {
+            DateTime jan4 = new DateTime(year, 1, 4);
+            int daysOffset = DayOfWeek.Monday - jan4.DayOfWeek;
+            DateTime firstMonday = jan4.AddDays(daysOffset);
+            return firstMonday.AddDays((kw - 1) * 7);
+        }
+
+        private static string ParseXlsxBytesToWeek(byte[] fileBytes, string sourceName, string sourceUrl)
+        {
+            try
+            {
+                List<string> sharedStrings = new List<string>();
+                Dictionary<int, Dictionary<string, string>> sheetData = new Dictionary<int, Dictionary<string, string>>();
+
+                using (MemoryStream ms = new MemoryStream(fileBytes))
+                using (ZipArchive zip = new ZipArchive(ms, ZipArchiveMode.Read))
+                {
+                    ZipArchiveEntry sstEntry = zip.GetEntry("xl/sharedStrings.xml");
+                    if (sstEntry != null)
+                    {
+                        using (Stream s = sstEntry.Open())
+                        using (XmlReader r = XmlReader.Create(s))
+                        {
+                            StringBuilder sb = null;
+                            while (r.Read())
+                            {
+                                if (r.NodeType == XmlNodeType.Element && r.Name == "si")
+                                {
+                                    sb = new StringBuilder();
+                                }
+                                else if (r.NodeType == XmlNodeType.Element && r.Name == "t")
+                                {
+                                    if (sb != null) sb.Append(r.ReadElementContentAsString());
+                                }
+                                else if (r.NodeType == XmlNodeType.EndElement && r.Name == "si")
+                                {
+                                    if (sb != null)
+                                    {
+                                        sharedStrings.Add(sb.ToString().Trim());
+                                        sb = null;
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    ZipArchiveEntry sheetEntry = zip.GetEntry("xl/worksheets/sheet1.xml");
+                    if (sheetEntry == null)
+                    {
+                        foreach (var entry in zip.Entries)
+                        {
+                            if (entry.FullName.StartsWith("xl/worksheets/sheet", StringComparison.OrdinalIgnoreCase) && entry.FullName.EndsWith(".xml", StringComparison.OrdinalIgnoreCase))
+                            {
+                                sheetEntry = entry;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (sheetEntry == null) return null;
+
+                    using (Stream s = sheetEntry.Open())
+                    using (XmlReader r = XmlReader.Create(s))
+                    {
+                        int currentRow = 0;
+                        string currentCellRef = null;
+                        string cellType = null;
+
+                        while (r.Read())
+                        {
+                            if (r.NodeType == XmlNodeType.Element && r.Name == "row")
+                            {
+                                string rAttr = r.GetAttribute("r");
+                                if (!string.IsNullOrEmpty(rAttr)) int.TryParse(rAttr, out currentRow);
+                            }
+                            else if (r.NodeType == XmlNodeType.Element && r.Name == "c")
+                            {
+                                currentCellRef = r.GetAttribute("r");
+                                cellType = r.GetAttribute("t");
+                            }
+                            else if (r.NodeType == XmlNodeType.Element && (r.Name == "v" || r.Name == "t"))
+                            {
+                                string cellVal = r.ReadElementContentAsString();
+                                if (!string.IsNullOrEmpty(currentCellRef))
+                                {
+                                    string colLetter = Regex.Match(currentCellRef, "^[A-Za-z]+").Value.ToUpper();
+                                    string rowDigits = Regex.Match(currentCellRef, @"\d+$").Value;
+                                    int rowNum = currentRow;
+                                    if (!string.IsNullOrEmpty(rowDigits)) int.TryParse(rowDigits, out rowNum);
+
+                                    string finalStr = cellVal;
+                                    if (cellType == "s")
+                                    {
+                                        int strIdx;
+                                        if (int.TryParse(cellVal, out strIdx) && strIdx >= 0 && strIdx < sharedStrings.Count)
+                                        {
+                                            finalStr = sharedStrings[strIdx];
+                                        }
+                                    }
+
+                                    if (!string.IsNullOrEmpty(finalStr))
+                                    {
+                                        if (!sheetData.ContainsKey(rowNum)) sheetData[rowNum] = new Dictionary<string, string>();
+                                        sheetData[rowNum][colLetter] = finalStr.Trim();
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (sheetData.Count == 0) return null;
+
+                Dictionary<string, string> dayToCol = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+                int headerRow = -1;
+                foreach (var kvp in sheetData)
+                {
+                    int rowIdx = kvp.Key;
+                    foreach (var cell in kvp.Value)
+                    {
+                        string val = cell.Value.ToLower();
+                        if (val.Contains("montag")) { dayToCol["Montag"] = cell.Key; headerRow = rowIdx; }
+                        else if (val.Contains("dienstag")) { dayToCol["Dienstag"] = cell.Key; }
+                        else if (val.Contains("mittwoch")) { dayToCol["Mittwoch"] = cell.Key; }
+                        else if (val.Contains("donnerstag")) { dayToCol["Donnerstag"] = cell.Key; }
+                        else if (val.Contains("freitag")) { dayToCol["Freitag"] = cell.Key; }
+                    }
+                    if (dayToCol.Count >= 3) break;
+                }
+
+                if (dayToCol.Count == 0) return null;
+
+                string[] dayNames = new string[] { "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag" };
+                Dictionary<string, Dictionary<string, string>> dayMenus = new Dictionary<string, Dictionary<string, string>>(StringComparer.OrdinalIgnoreCase);
+                foreach (string d in dayNames)
+                {
+                    dayMenus[d] = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase) {
+                        {"breakfast", ""}, {"menu1", ""}, {"menu2", ""}, {"menu3", ""}, {"extra", ""}, {"dinner", ""}
+                    };
+                }
+
+                string currentCategory = "menu1";
+                foreach (var kvp in sheetData)
+                {
+                    int rIdx = kvp.Key;
+                    if (rIdx <= headerRow) continue;
+                    var rowCells = kvp.Value;
+
+                    string rowSummary = "";
+                    foreach (var txt in rowCells.Values) rowSummary += " " + txt.ToLower();
+
+                    if (rowSummary.Contains("menü 1") || rowSummary.Contains("menue 1") || rowSummary.Contains("vollkost")) currentCategory = "menu1";
+                    else if (rowSummary.Contains("menü 2") || rowSummary.Contains("menue 2") || rowSummary.Contains("muslimisch") || rowSummary.Contains("geflügel") || rowSummary.Contains("ohne schwein")) currentCategory = "menu2";
+                    else if (rowSummary.Contains("menü 3") || rowSummary.Contains("menue 3") || rowSummary.Contains("vegetarisch")) currentCategory = "menu3";
+                    else if (rowSummary.Contains("frühstück")) currentCategory = "breakfast";
+                    else if (rowSummary.Contains("abend") || rowSummary.Contains("internat")) currentCategory = "dinner";
+                    else if (rowSummary.Contains("salat") || rowSummary.Contains("suppe") || rowSummary.Contains("dessert") || rowSummary.Contains("tagessuppe")) currentCategory = "extra";
+
+                    foreach (var pair in dayToCol)
+                    {
+                        string dayName = pair.Key;
+                        string colKey = pair.Value;
+                        if (rowCells.ContainsKey(colKey))
+                        {
+                            string dish = rowCells[colKey];
+                            if (!string.IsNullOrEmpty(dish) && !dish.Equals(dayName, StringComparison.OrdinalIgnoreCase))
+                            {
+                                if (string.IsNullOrEmpty(dayMenus[dayName][currentCategory]))
+                                    dayMenus[dayName][currentCategory] = dish;
+                                else
+                                    dayMenus[dayName][currentCategory] += "\n" + dish;
+                            }
+                        }
+                    }
+                }
+
+                DateTime now = DateTime.Now;
+                int currentKw = GetIsoWeekNumber(now);
+                DateTime monday = GetMondayOfWeek(now.Year, currentKw);
+                DateTime friday = monday.AddDays(4);
+
+                StringBuilder jsonWk = new StringBuilder();
+                jsonWk.Append("{");
+                jsonWk.AppendFormat("\"weekId\":\"kw{0}\",\"kw\":{0},", currentKw);
+                jsonWk.AppendFormat("\"label\":\"Diese Woche (KW {0}: {1:dd.MM.} – {2:dd.MM.yyyy})\",", currentKw, monday, friday);
+                jsonWk.AppendFormat("\"dateRange\":\"{0:dd.MM.yyyy} bis {1:dd.MM.yyyy}\",", monday, friday);
+                jsonWk.Append("\"isCurrent\":true,\"days\":[");
+
+                for (int i = 0; i < dayNames.Length; i++)
+                {
+                    string d = dayNames[i];
+                    DateTime curDate = monday.AddDays(i);
+                    var m = dayMenus[d];
+                    if (i > 0) jsonWk.Append(",");
+                    jsonWk.Append("{");
+                    jsonWk.AppendFormat("\"day\":\"{0}\",\"date\":\"{1:dd.MM.yyyy}\",", d, curDate);
+                    jsonWk.AppendFormat("\"breakfast\":\"{0}\",", EscapeJsonString(m["breakfast"]));
+                    jsonWk.AppendFormat("\"menu1\":\"{0}\",", EscapeJsonString(m["menu1"]));
+                    jsonWk.AppendFormat("\"menu2\":\"{0}\",", EscapeJsonString(m["menu2"]));
+                    jsonWk.AppendFormat("\"menu3\":\"{0}\",", EscapeJsonString(m["menu3"]));
+                    jsonWk.AppendFormat("\"extra\":\"{0}\",", EscapeJsonString(m["extra"]));
+                    jsonWk.AppendFormat("\"dinner\":\"{0}\"", EscapeJsonString(m["dinner"]));
+                    jsonWk.Append("}");
+                }
+                jsonWk.Append("]}");
+                return jsonWk.ToString();
+            }
+            catch (Exception ex)
+            {
+                LogUntis("ParseXlsxBytesToWeek error: " + ex.Message);
+                return null;
+            }
+        }
+
+        private static string MergeWeekIntoCanteenJson(string newWeekJson, string sourceName, string sourceUrl)
+        {
+            try
+            {
+                string existingJson = null;
+                byte[] seed = GetCanteenSeedBytes();
+                if (seed != null && seed.Length > 0)
+                {
+                    existingJson = Encoding.UTF8.GetString(seed);
+                }
+
+                if (string.IsNullOrEmpty(existingJson) || !existingJson.Contains("\"weeks\""))
+                {
+                    return string.Format("{{\"source\":\"{0}\",\"sourceUrl\":\"{1}\",\"lastUpdated\":\"{2:dd.MM.yyyy, HH:mm} Uhr\",\"weeks\":[{3}]}}",
+                        EscapeJsonString(sourceName), EscapeJsonString(sourceUrl), DateTime.Now, newWeekJson);
+                }
+
+                Match idMatch = Regex.Match(newWeekJson, "\"weekId\"\\s*:\\s*\"([^\"]+)\"");
+                string newId = idMatch.Success ? idMatch.Groups[1].Value : "";
+
+                if (!string.IsNullOrEmpty(newId) && existingJson.Contains("\"" + newId + "\""))
+                {
+                    string pattern = "\\{[^{}]*\"weekId\"\\s*:\\s*\"" + Regex.Escape(newId) + "\"[\\s\\S]*?\\}(?=\\s*[\\]\\,])";
+                    existingJson = Regex.Replace(existingJson, pattern, newWeekJson);
+                }
+                else
+                {
+                    existingJson = Regex.Replace(existingJson, "(\"weeks\"\\s*:\\s*\\[)", "$1" + newWeekJson + ",");
+                }
+
+                existingJson = Regex.Replace(existingJson, "\"source\"\\s*:\\s*\"[^\"]*\"", "\"source\":\"" + EscapeJsonString(sourceName) + "\"");
+                existingJson = Regex.Replace(existingJson, "\"sourceUrl\"\\s*:\\s*\"[^\"]*\"", "\"sourceUrl\":\"" + EscapeJsonString(sourceUrl) + "\"");
+                existingJson = Regex.Replace(existingJson, "\"lastUpdated\"\\s*:\\s*\"[^\"]*\"", "\"lastUpdated\":\"" + DateTime.Now.ToString("dd.MM.yyyy, HH:mm") + " Uhr\"");
+
+                return existingJson;
+            }
+            catch (Exception ex)
+            {
+                LogUntis("MergeWeekIntoCanteenJson error: " + ex.Message);
+                return null;
+            }
         }
 
 

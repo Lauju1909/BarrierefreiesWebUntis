@@ -1089,6 +1089,10 @@ function switchTab(tabId) {
   } else if (tabId === 'canteen') {
     renderCanteenView();
     announceSR('Reiter 8: Mensa und Speisepläne ausgewählt.', 'polite');
+    const curWkId = getCurrentCanteenWeekId();
+    if (!appData.canteen || !appData.canteen.weeks || !appData.canteen.weeks.some(w => w.weekId === curWkId && Array.isArray(w.days) && w.days.length > 0)) {
+      refreshCanteenData(true).catch(e => console.log('Auto-fetch canteen on tab switch:', e));
+    }
   } else if (tabId === 'settings') {
     loadFeedbackArchive();
     const keyNum = isSoestCampusSchool() ? '9' : '8';
@@ -7760,6 +7764,11 @@ function initApp() {
       performWebUntisSync();
     }
   }, 5 * 60 * 1000);
+
+  // Automatischer Hintergrund-Crawl & Refresh fuer Speiseplaene alle 60 Minuten
+  setInterval(() => {
+    refreshCanteenData(true).catch(e => console.log('Hourly canteen auto-refresh note:', e));
+  }, 60 * 60 * 1000);
 
   // Wenn der Benutzer zum Fenster zurückkehrt (Fokus), prüfen ob Refresh nötig
   window.addEventListener('focus', () => {
