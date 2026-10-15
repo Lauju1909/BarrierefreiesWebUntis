@@ -93,7 +93,7 @@ jobs:
         run: |
           $csc = "C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe"
           Write-Host "Compiling Barrierefreies_WebUntis.exe..."
-          & $csc /r:System.IO.Compression.dll /r:System.IO.Compression.FileSystem.dll /target:winexe /out:Barrierefreies_WebUntis.exe Program.cs
+          & $csc /r:System.IO.Compression.dll /r:System.IO.Compression.FileSystem.dll /r:System.Xml.dll /resource:index.html /resource:style.css /resource:app.js /resource:canteen_seed.json /resource:version.json /target:winexe /out:Barrierefreies_WebUntis.exe Program.cs
           if (Test-Path FeedbackProgram.cs) {
             Write-Host "Compiling Feedback_Zentrale.exe..."
             & $csc /target:winexe /out:Feedback_Zentrale.exe FeedbackProgram.cs
