@@ -22,12 +22,26 @@ class BridgeHandler(http.server.SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=DIRECTORY, **kwargs)
 
-    def do_OPTIONS(self):
-        self.send_response(200)
-        self.send_header('Access-Control-Allow-Origin', '*')
-        self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
-        self.send_header('Access-Control-Allow-Headers', 'Content-Type, X-JSESSIONID')
-        self.end_headers()
+    def do_GET(self):
+        if self.path == '/api/canteen' or self.path.startswith('/api/canteen?'):
+            canteen_path = os.path.join(DIRECTORY, 'canteen_seed.json')
+            if os.path.isfile(canteen_path):
+                with open(canteen_path, 'rb') as f:
+                    data = f.read()
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json; charset=utf-8')
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.end_headers()
+                self.wfile.write(data)
+                return
+            else:
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json; charset=utf-8')
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.end_headers()
+                self.wfile.write(b'{"source":"LWL-Mensa","weeks":[]}')
+                return
+        super().do_GET()
 
     def do_POST(self):
         if self.path.startswith('/api/webuntis'):

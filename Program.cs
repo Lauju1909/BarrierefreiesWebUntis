@@ -1457,8 +1457,8 @@ namespace BarrierefreierStundenplan
         private static string TryCrawlCanteenData()
         {
             string[] sources = new string[] {
-                "https://www.lwl-von-vincke-schule.de/de/aktuelles/speiseplane/",
-                "https://www.lwl-bbw-soest.de/de/speiseplane/",
+                "https://www.lwl-von-vincke-schule.de/de/aktuelles/speiseplaene/",
+                "https://www.lwl-bbw-soest.de/speiseplaene/",
                 "https://www.lwl-bk-soest.de/de/"
             };
 
@@ -1506,6 +1506,29 @@ namespace BarrierefreierStundenplan
                 {
                     LogUntis("Canteen source " + url + " error: " + ex.Message);
                 }
+            }
+
+            // Versuche Online GitHub-Sync fuer stets aktuelle Speiseplaene
+            try
+            {
+                string githubUrl = "https://raw.githubusercontent.com/Lauju1909/BarrierefreiesWebUntis/main/canteen_seed.json";
+                HttpWebRequest ghReq = (HttpWebRequest)WebRequest.Create(githubUrl);
+                ghReq.UserAgent = "Mozilla/5.0 LWL-Stundenplan";
+                ghReq.Timeout = 4000;
+                using (HttpWebResponse ghResp = (HttpWebResponse)ghReq.GetResponse())
+                using (StreamReader ghReader = new StreamReader(ghResp.GetResponseStream(), Encoding.UTF8))
+                {
+                    string ghJson = ghReader.ReadToEnd();
+                    if (!string.IsNullOrEmpty(ghJson) && ghJson.Contains("\"weeks\""))
+                    {
+                        LogUntis("Canteen updated successfully via GitHub repository feed.");
+                        return ghJson;
+                    }
+                }
+            }
+            catch (Exception ghEx)
+            {
+                LogUntis("Canteen GitHub sync note: " + ghEx.Message);
             }
 
             byte[] seedBytes = GetCanteenSeedBytes();

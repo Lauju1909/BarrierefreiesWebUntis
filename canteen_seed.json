@@ -1,14 +1,269 @@
 {
   "source": "LWL-Von-Vincke-Schule Soest & BBW Soest",
-  "sourceUrl": "https://www.lwl-von-vincke-schule.de/de/aktuelles/speiseplane/",
-  "lastUpdated": "2026-09-13T17:40:00Z",
+  "sourceUrl": "https://www.lwl-von-vincke-schule.de/de/aktuelles/speiseplaene/",
+  "lastUpdated": "2026-10-15T08:00:00Z",
   "weeks": [
+    {
+      "weekId": "kw42",
+      "kw": 42,
+      "label": "Diese Woche (KW 42: 12.10. – 16.10.2026)",
+      "dateRange": "12.10. bis 16.10.2026",
+      "isCurrent": true,
+      "days": [
+        {
+          "day": "Montag",
+          "date": "12.10.2026",
+          "breakfast": "Gouda & Schnittkäse, Frische Brötchen",
+          "menu1": "Knuspriges Putenschnitzel mit Rahmchampignons G,M,E\nSalzkartoffeln\nErbsen-Möhrengemüse M\nSchokopudding mit Sahnehaube M,S",
+          "menu2": "Knuspriges Putenschnitzel mit Geflügel-Bratensoße G,M,E\nSalzkartoffeln\nErbsen-Möhrengemüse M\nSchokopudding mit Sahnehaube M,S",
+          "menu3": "Hausgemachte Gemüselasagne mit fruchtiger Tomatensauce und Käse überbacken G,M,C\nbunte Blattsalate mit Joghurtdressing M\nSchokopudding mit Sahnehaube M,S",
+          "extra": "Große Salattheke mit diversen Rohkost- und Blattsalaten zur Selbstbedienung, Tagessuppe: Klare Gemüsesuppe mit Eierstich C,E",
+          "dinner": "Geflügel-Salami, Gouda, Vollkornbrot und Gemüsesticks"
+        },
+        {
+          "day": "Dienstag",
+          "date": "13.10.2026",
+          "breakfast": "Edamer & Kräuterfrischkäse",
+          "menu1": "Herzhafter Rindergulasch mit Zwiebeln und Paprika C,G\nSpiralnudeln G,E\nApfel-Rotkohl\nRote Grütze mit Vanillesoße M",
+          "menu2": "Herzhafter Rindergulasch mit Zwiebeln und Paprika C,G\nSpiralnudeln G,E\nApfel-Rotkohl\nRote Grütze mit Vanillesoße M",
+          "menu3": "Vegetarische Schupfnudelpfanne mit Marktgemüse, Frühlingszwiebeln und Kräuterdip G,M,E\nbunter Beilagensalat mit Kräuterdressing C,D\nRote Grütze mit Vanillesoße M",
+          "extra": "Tagessuppe: Kartoffel-Lauch-Cremesuppe M, Salattheke mit Kernen und Dressings",
+          "dinner": "Geflügelfleischwurst, Frisches Mischbrot, Gurkensalat"
+        },
+        {
+          "day": "Mittwoch",
+          "date": "14.10.2026",
+          "breakfast": "Tilsiter & Erdbeer-Fruchtjoghurt",
+          "menu1": "Mildes Hähnchen-Curry mit knackigem Wokgemüse C,M\nduftender Basmatireis\nMini-Frühlingsrolle G,A\nFrischer Obstsalat",
+          "menu2": "Mildes Hähnchen-Curry mit knackigem Wokgemüse C,M\nduftender Basmatireis\nMini-Frühlingsrolle G,A\nFrischer Obstsalat",
+          "menu3": "Knusprige Frühlingsrollen mit süß-saurer Soße G,A,S\nduftender Basmatireis\nAsiatisches Pfannengemüse\nFrischer Obstsalat",
+          "extra": "Salattheke mit diversen Salaten und Dressings zur Selbstbedienung, Tagessuppe: Fruchtige Tomatensuppe",
+          "dinner": "Überbackenes Toast mit Schinken/Geflügel oder Tomate-Mozzarella M,G"
+        },
+        {
+          "day": "Donnerstag",
+          "date": "15.10.2026",
+          "breakfast": "Butterkäse oder Maasdamer",
+          "menu1": "Seelachsfilet im Knusperbackteig F,G,E\nhausgemachte Remouladensoße C,E,M\nKartoffelsalat mit Gurke und Schnittlauch C,D\ngemischter Blattsalat\nVanillequark mit Himbeeren M",
+          "menu2": "Gebratenes Hähnchenbrustfilet mit Kräutersoße M,G\nParboiled Reis\nFingermöhrchen mit Petersilie M\ngemischter Blattsalat mit Joghurtdressing M\nVanillequark mit Himbeeren M",
+          "menu3": "Käsespätzle mit Röstzwiebeln und Schnittlauch G,E,M\nfrischer Gurken-Dill-Salat in feiner Essig-Öl-Vinaigrette D\nVanillequark mit Himbeeren M",
+          "extra": "Salattheke mit Toppings und Körnern, Tagessuppe: Gemüse-Nudeltopf G,C",
+          "dinner": "Geflügelfrischwurst, Schmelzkäse M, Frische Vollkornbrötchen G"
+        },
+        {
+          "day": "Freitag",
+          "date": "16.10.2026",
+          "breakfast": "Käseauswahl, gekochte Eier & Erdbeerkonfitüre",
+          "menu1": "Spaghetti mit herzhafter Rinder-Bolognesesoße G,E,C\nfrisch geriebener Hartkäse M\nSalatbeilage mit italienischem Kräuterdressing D\nFrischer Bio-Apfel",
+          "menu2": "Spaghetti mit herzhafter Rinder-Bolognesesoße G,E,C\nfrisch geriebener Hartkäse M\nSalatbeilage mit italienischem Kräuterdressing D\nFrischer Bio-Apfel",
+          "menu3": "Spaghetti Napoli mit hausgemachter Tomaten-Basilikumsoße C,G,E\nfrisch geriebener Hartkäse M\nSalatbeilage mit italienischem Kräuterdressing D\nFrischer Bio-Apfel",
+          "extra": "Salattheke zur Selbstbedienung, Brötchenauswahl",
+          "dinner": "Kaltes Buffet / Reiseproviant für das Wochenende für Internatsschüler"
+        }
+      ]
+    },
+    {
+      "weekId": "kw41",
+      "kw": 41,
+      "label": "Vorige Woche (KW 41: 05.10. – 08.10.2026)",
+      "dateRange": "05.10. bis 08.10.2026",
+      "isCurrent": false,
+      "days": [
+        {
+          "day": "Montag",
+          "date": "05.10.2026",
+          "breakfast": "Gouda",
+          "menu1": "Geflügelfrikadelle mit pikanter Pfefferrahmsoße G,M,E\nKartoffelpüree M\nKaisergemüse M\nFruchtjoghurt M",
+          "menu2": "Geflügelfrikadelle mit Geflügelbratensoße G,E,C\nKartoffelpüree M\nKaisergemüse M\nFruchtjoghurt M",
+          "menu3": "Gemüseschnitzel im Knuspermantel G,C,E\nKräuterschmand M\nKartoffelpüree M\nKaisergemüse M\nFruchtjoghurt M",
+          "extra": "Salattheke zur Selbstbedienung",
+          "dinner": "Geflügelfrischwurst, Schnittkäse"
+        },
+        {
+          "day": "Dienstag",
+          "date": "06.10.2026",
+          "breakfast": "Edamer",
+          "menu1": "Putenbrustgeschnetzeltes 'Züricher Art' mit Champignons M,G\nRöstinchen\nBohnensalat mit Bohnenkraut D,C\nZitronenmousse M",
+          "menu2": "Putenbrustgeschnetzeltes 'Züricher Art' mit Champignons M,G\nRöstinchen\nBohnensalat mit Bohnenkraut D,C\nZitronenmousse M",
+          "menu3": "Gefüllte Paprikaschote mit Gemüse-Reisfüllung in Tomatensoße C\nSalzkartoffeln\nBohnensalat mit Bohnenkraut D,C\nZitronenmousse M",
+          "extra": "Tagessuppe: Rinderkraftbrühe mit Flädle G,E",
+          "dinner": "Frischer Fleischsalat, Vollkornbrot"
+        },
+        {
+          "day": "Mittwoch",
+          "date": "07.10.2026",
+          "breakfast": "Tilsiter & Quark",
+          "menu1": "Gebratenes Fischfilet 'Müllerin Art' mit Petersilienkartoffeln F,M,G\nBlattsalat mit Thousand-Island-Dressing M,C\nGrießbrei mit Kirschen G,M",
+          "menu2": "Geflügelsteak natur mit Kräuterbutter M\nPetersilienkartoffeln M\nBlattsalat mit Thousand-Island-Dressing M,C\nGrießbrei mit Kirschen G,M",
+          "menu3": "Mediterrane Gemüse-Quiche mit Schafskäse und Kräutern G,E,M\nBlattsalat mit Thousand-Island-Dressing M,C\nGrießbrei mit Kirschen G,M",
+          "extra": "Salattheke mit diversen Dressings",
+          "dinner": "Geflügelwiener mit Kartoffelsalat"
+        },
+        {
+          "day": "Donnerstag",
+          "date": "08.10.2026",
+          "breakfast": "Butterkäse",
+          "menu1": "Rinderhacksteak mit Zwiebelsoße C,G,E\nKroketten G\nLeipziger Allerlei M\nObst",
+          "menu2": "Rinderhacksteak mit Zwiebelsoße C,G,E\nKroketten G\nLeipziger Allerlei M\nObst",
+          "menu3": "Kartoffel-Gemüse-Auflauf mit Gouda überbacken M,G,E\nKräutersalat\nObst",
+          "extra": "Tagessuppe: Blumenkohlcremesuppe M",
+          "dinner": "Geflügelaufschnitt, Schmelzkäse"
+        }
+      ]
+    },
+    {
+      "weekId": "kw43",
+      "kw": 43,
+      "label": "Nächste Woche (KW 43: 19.10. – 23.10.2026 - Herbstferien NRW)",
+      "dateRange": "19.10. bis 23.10.2026",
+      "isCurrent": false,
+      "days": [
+        {
+          "day": "Montag",
+          "date": "19.10.2026",
+          "breakfast": "Ferienverpflegung Internat",
+          "menu1": "Herbstferien in NRW: Mensa-Regelbetrieb ruht. Ferienverpflegung für anwesende Internatsschüler nach gesondertem Aushang.",
+          "menu2": "Herbstferien in NRW: Mensa-Regelbetrieb ruht. Ferienverpflegung für anwesende Internatsschüler nach gesondertem Aushang.",
+          "menu3": "Herbstferien in NRW: Vegetarisches Angebot für anwesende Internatsgruppen nach Aushang.",
+          "extra": "Ferienbetrieb",
+          "dinner": "Abendessen für Ferien-Wohngruppen"
+        },
+        {
+          "day": "Dienstag",
+          "date": "20.10.2026",
+          "breakfast": "Ferienverpflegung Internat",
+          "menu1": "Herbstferien in NRW: Mensa-Regelbetrieb ruht.",
+          "menu2": "Herbstferien in NRW: Mensa-Regelbetrieb ruht.",
+          "menu3": "Herbstferien in NRW: Mensa-Regelbetrieb ruht.",
+          "extra": "Ferienbetrieb",
+          "dinner": "Abendessen für Ferien-Wohngruppen"
+        },
+        {
+          "day": "Mittwoch",
+          "date": "21.10.2026",
+          "breakfast": "Ferienverpflegung Internat",
+          "menu1": "Herbstferien in NRW: Mensa-Regelbetrieb ruht.",
+          "menu2": "Herbstferien in NRW: Mensa-Regelbetrieb ruht.",
+          "menu3": "Herbstferien in NRW: Mensa-Regelbetrieb ruht.",
+          "extra": "Ferienbetrieb",
+          "dinner": "Abendessen für Ferien-Wohngruppen"
+        },
+        {
+          "day": "Donnerstag",
+          "date": "22.10.2026",
+          "breakfast": "Ferienverpflegung Internat",
+          "menu1": "Herbstferien in NRW: Mensa-Regelbetrieb ruht.",
+          "menu2": "Herbstferien in NRW: Mensa-Regelbetrieb ruht.",
+          "menu3": "Herbstferien in NRW: Mensa-Regelbetrieb ruht.",
+          "extra": "Ferienbetrieb",
+          "dinner": "Abendessen für Ferien-Wohngruppen"
+        }
+      ]
+    },
+    {
+      "weekId": "kw44",
+      "kw": 44,
+      "label": "Kalenderwoche 44 (26.10. – 30.10.2026 - Herbstferien NRW)",
+      "dateRange": "26.10. bis 30.10.2026",
+      "isCurrent": false,
+      "days": [
+        {
+          "day": "Montag",
+          "date": "26.10.2026",
+          "breakfast": "Ferienverpflegung Internat",
+          "menu1": "Herbstferien in NRW (2. Ferienwoche): Mensa-Regelbetrieb ruht.",
+          "menu2": "Herbstferien in NRW (2. Ferienwoche): Mensa-Regelbetrieb ruht.",
+          "menu3": "Herbstferien in NRW (2. Ferienwoche): Mensa-Regelbetrieb ruht.",
+          "extra": "Ferienbetrieb",
+          "dinner": "Abendessen für Ferien-Wohngruppen"
+        },
+        {
+          "day": "Dienstag",
+          "date": "27.10.2026",
+          "breakfast": "Ferienverpflegung Internat",
+          "menu1": "Herbstferien in NRW (2. Ferienwoche): Mensa-Regelbetrieb ruht.",
+          "menu2": "Herbstferien in NRW (2. Ferienwoche): Mensa-Regelbetrieb ruht.",
+          "menu3": "Herbstferien in NRW (2. Ferienwoche): Mensa-Regelbetrieb ruht.",
+          "extra": "Ferienbetrieb",
+          "dinner": "Abendessen für Ferien-Wohngruppen"
+        },
+        {
+          "day": "Mittwoch",
+          "date": "28.10.2026",
+          "breakfast": "Ferienverpflegung Internat",
+          "menu1": "Herbstferien in NRW (2. Ferienwoche): Mensa-Regelbetrieb ruht.",
+          "menu2": "Herbstferien in NRW (2. Ferienwoche): Mensa-Regelbetrieb ruht.",
+          "menu3": "Herbstferien in NRW (2. Ferienwoche): Mensa-Regelbetrieb ruht.",
+          "extra": "Ferienbetrieb",
+          "dinner": "Abendessen für Ferien-Wohngruppen"
+        },
+        {
+          "day": "Donnerstag",
+          "date": "29.10.2026",
+          "breakfast": "Ferienverpflegung Internat",
+          "menu1": "Herbstferien in NRW (2. Ferienwoche): Mensa-Regelbetrieb ruht. Am 02.11.2026 startet der reguläre Schulbetrieb wieder.",
+          "menu2": "Herbstferien in NRW (2. Ferienwoche): Mensa-Regelbetrieb ruht.",
+          "menu3": "Herbstferien in NRW (2. Ferienwoche): Mensa-Regelbetrieb ruht.",
+          "extra": "Ferienbetrieb",
+          "dinner": "Abendessen für Ferien-Wohngruppen"
+        }
+      ]
+    },
+    {
+      "weekId": "kw45",
+      "kw": 45,
+      "label": "Kalenderwoche 45 (02.11. – 05.11.2026)",
+      "dateRange": "02.11. bis 05.11.2026",
+      "isCurrent": false,
+      "days": [
+        {
+          "day": "Montag",
+          "date": "02.11.2026",
+          "breakfast": "Gouda & Geflügelwurst",
+          "menu1": "Hähnchengeschnetzeltes in feiner Kräuter-Rahmsoße M,G\nReis\nGemüse-Mix M\nVanillepudding M",
+          "menu2": "Hähnchengeschnetzeltes in feiner Kräuter-Rahmsoße M,G\nReis\nGemüse-Mix M\nVanillepudding M",
+          "menu3": "Gemüse-Bratlinge mit Schnittlauchdip M,G,E\nReis\nGemüse-Mix M\nVanillepudding M",
+          "extra": "Große Salattheke zur Selbstbedienung",
+          "dinner": "Geflügelaufschnitt, Vollkornbrot"
+        },
+        {
+          "day": "Dienstag",
+          "date": "03.11.2026",
+          "breakfast": "Edamer",
+          "menu1": "Schweinerückensteak im Knusperfladen G,E\nZwiebel-Dip\nBunter Krautsalat D\nObstkuchen G,E",
+          "menu2": "Putensteak natur im Knusperfladen G,E\nZwiebel-Dip\nBunter Krautsalat D\nObstkuchen G,E",
+          "menu3": "Vegetarische Frühlingsrolle mit Süß-Sauer-Sauce G,A\nGemüsereis\nBunter Krautsalat D\nObstkuchen G,E",
+          "extra": "Tagessuppe: Tomaten-Kräutersuppe",
+          "dinner": "Gouda, Schnittwurst"
+        },
+        {
+          "day": "Mittwoch",
+          "date": "04.11.2026",
+          "breakfast": "Tilsiter",
+          "menu1": "Rindfleischbällchen in Champignonsoße C,G,M\nKartoffelpüree M\nPrinzessbohnen\nSchokodessert M,S",
+          "menu2": "Rindfleischbällchen in Champignonsoße C,G,M\nKartoffelpüree M\nPrinzessbohnen\nSchokodessert M,S",
+          "menu3": "Gemüse-Maultaschen in feiner Kräutersauce G,E,M\nKartoffelpüree M\nPrinzessbohnen\nSchokodessert M,S",
+          "extra": "Salattheke mit frischen Salaten und Dressings",
+          "dinner": "Toast Hawaii oder Käsetoast M,G"
+        },
+        {
+          "day": "Donnerstag",
+          "date": "05.11.2026",
+          "breakfast": "Butterkäse",
+          "menu1": "Tortellini mit Rindfleischfüllung in Tomatensoße G,M,E,C\ngeriebener Hartkäse M\nSalatteller mit Joghurtdressing M\nFrisches Obst",
+          "menu2": "Tortellini mit Rindfleischfüllung in Tomatensoße G,M,E,C\ngeriebener Hartkäse M\nSalatteller mit Joghurtdressing M\nFrisches Obst",
+          "menu3": "Eierpfannkuchen mit Apfelmus G,E,M\nSalatteller mit Joghurtdressing M\nFrisches Obst",
+          "extra": "Salattheke",
+          "dinner": "Geflügelfrischwurst, Schmelzkäse"
+        }
+      ]
+    },
     {
       "weekId": "kw38",
       "kw": 38,
-      "label": "Diese Woche (KW 38: 14.09. – 17.09.2026)",
+      "label": "Archiv (KW 38: 14.09. – 17.09.2026)",
       "dateRange": "14.09. bis 17.09.2026",
-      "isCurrent": true,
+      "isCurrent": false,
       "days": [
         {
           "day": "Montag",
@@ -55,7 +310,7 @@
     {
       "weekId": "kw39",
       "kw": 39,
-      "label": "Nächste Woche (KW 39: 21.09. – 24.09.2026)",
+      "label": "Archiv (KW 39: 21.09. – 24.09.2026)",
       "dateRange": "21.09. bis 24.09.2026",
       "isCurrent": false,
       "days": [
@@ -104,7 +359,7 @@
     {
       "weekId": "kw37",
       "kw": 37,
-      "label": "Vorige Woche (KW 37: 07.09. – 10.09.2026)",
+      "label": "Archiv (KW 37: 07.09. – 10.09.2026)",
       "dateRange": "07.09. bis 10.09.2026",
       "isCurrent": false,
       "days": [

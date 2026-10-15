@@ -508,6 +508,23 @@ const DEFAULT_CLASSREG_EVENTS = [
   }
 ];
 
+// Hilfsfunktionen fuer ISO-Kalenderwoche und Mensa-Wochen-ID
+function getISOWeekNumber(d = new Date()) {
+  const target = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  const dayNr = (target.getUTCDay() + 6) % 7;
+  target.setUTCDate(target.getUTCDate() - dayNr + 3);
+  const firstThursday = target.getTime();
+  target.setUTCMonth(0, 1);
+  if (target.getUTCDay() !== 4) {
+    target.setUTCMonth(0, 1 + ((4 - target.getUTCDay()) + 7) % 7);
+  }
+  return 1 + Math.ceil((firstThursday - target.getTime()) / 604800000);
+}
+
+function getCurrentCanteenWeekId() {
+  return `kw${getISOWeekNumber()}`;
+}
+
 // Hinweis: Es werden KEINE synthetischen Standardprüfungen verwendet.
 // Es werden AUSSCHLIESSLICH echte Prüfungen aus der WebUntis-API dargestellt!
 
@@ -531,7 +548,7 @@ let appData = {
   webuntisFinalMarks: {},
   selectedGradeSchoolYear: '2025/2026',
   canteen: null,
-  selectedCanteenWeek: 'kw38',
+  selectedCanteenWeek: getCurrentCanteenWeekId(),
   selectedCanteenDay: 'all',
   iservEmails: [],
   iservEvents: [],
@@ -692,7 +709,7 @@ function loadAppData() {
         webuntisFinalMarks: (parsed.webuntisFinalMarks && typeof parsed.webuntisFinalMarks === 'object') ? parsed.webuntisFinalMarks : {},
         selectedGradeSchoolYear: parsed.selectedGradeSchoolYear || '2025/2026',
         canteen: (parsed.canteen && typeof parsed.canteen === 'object') ? parsed.canteen : null,
-        selectedCanteenWeek: parsed.selectedCanteenWeek || 'kw38',
+        selectedCanteenWeek: (parsed.selectedCanteenWeek && parsed.selectedCanteenWeek !== 'kw38') ? parsed.selectedCanteenWeek : getCurrentCanteenWeekId(),
         selectedCanteenDay: parsed.selectedCanteenDay || 'all',
         holidays: (parsed.holidays && parsed.holidays.length > 0) ? parsed.holidays : [...DEFAULT_NRW_HOLIDAYS_2026_2027],
         schoolYear: parsed.schoolYear || null,
@@ -7728,6 +7745,14 @@ function initApp() {
     showLoginView();
   }
 
+  // Automatische Hintergrund-Aktualisierung der Mensa-Speiseplaene bei fehlender aktueller Woche
+  const startupCurKwId = getCurrentCanteenWeekId();
+  if (!appData.canteen || !appData.canteen.weeks || !appData.canteen.weeks.some(w => w.weekId === startupCurKwId && Array.isArray(w.days) && w.days.length > 0)) {
+    setTimeout(() => {
+      refreshCanteenData(true).catch(e => console.log('Silent canteen init sync note:', e));
+    }, 1500);
+  }
+
   // Automatischer Hintergrund-Refresh alle 5 Minuten
   if (autoSyncIntervalTimer) clearInterval(autoSyncIntervalTimer);
   autoSyncIntervalTimer = setInterval(() => {
@@ -9254,7 +9279,7 @@ function readGradesSummary() {
 // Offizielle Speisepläne der Mensa LWL-Von-Vincke-Schule & BBW Soest
 // =============================================================================
 
-const DEFAULT_CANTEEN_DATA = {"source": "LWL-Von-Vincke-Schule Soest & BBW Soest", "sourceUrl": "https://www.lwl-von-vincke-schule.de/de/aktuelles/speiseplane/", "lastUpdated": "2026-09-13T17:40:00Z", "weeks": [{"weekId": "kw38", "kw": 38, "label": "Diese Woche (KW 38: 14.09. – 17.09.2026)", "dateRange": "14.09. bis 17.09.2026", "isCurrent": true, "days": [{"day": "Montag", "date": "14.09.2026", "breakfast": "Gouda", "menu1": "6 Geflügel Cevapcici E,G,D\nZaziki M;\ntomatisierter Gemüsereis C\nWeißkohl-Paprikasalat in Essig/Öldressing Dressing Bio Vanillejoghurt M", "menu2": "6 Geflügel Cevapcici E,G,D\nZaziki M;\ntomatisierterGemüsereis C\nWeißkohl-Paprikasalat in\nEssig/Öldressing D\nBio Vanillejoghurt M", "menu3": "Gemüsenuggets C\nfruchtige Currysoße M\nKartoffelwedges\nWeißkohl-Paprikasalat in\nEssig/Öldressing D\nBio Vanillejoghurt M", "extra": "Eine Salattheke mit diversen Salaten und Dressinge , zur Selbstbedienung steht für Sie bereit", "dinner": "Geflügelfrisch wurst, Geflügel dauerwurst"}, {"day": "Dienstag", "date": "15.09.2026", "breakfast": "Edamer", "menu1": "Schweinerückesteak auf griechischer Art E,G\nZwiebel-Senfsenfdip\nrustikaler Salat mit Hirtenkäse in pikanten Kräuterdip C,D\nFladenbrot G,\nZitronenkuchen GE", "menu2": "Putensteak auf griechischer Art E,G\nZwiebel-Senfsenfdip\nrustikaler Salat mit Hirtenkäse in pikanten Kräuterdip C,D\nFladenbrot G\nZitronenkuchen G,E", "menu3": "2 Hot Dogs M;G;C;D\nvegetarische Bockwurst, Hot- Dogbrötchen, hausgemachte Hot- Dogsauce, Tomatenketchup, Röstzwiebel\nSalatbeilage Kräuterdressing C;H\nZitronenkuchen G,E", "extra": "Tagessuppe", "dinner": "Geflügelleber-wurst\nBitte über den Tagesanforderungsschein bestellen."}, {"day": "Mittwoch", "date": "16.09.2026", "breakfast": "Tilsiter\nFruchtjoghurt oder Fruchtquark speise", "menu1": "Hähnchenschnitzel G,H,E\nRahmsoße M\nKartoffelkroketten\nbunter Gemüsemix M\nSchokopudding mit Sahne M,S", "menu2": "Hähnchenschnitzel G,H,E\nRahmsoße M\nKartoffelkroketten\nbunter Gemüsemix M\nSchokopudding mit Sahne M,S", "menu3": "Kartoffelpizza\ndiverse Gemüse, Tomate mit veganem Käse überbacken C,G,M\nSalatbeilage mit Joghurtdressing\nSchokopudding mit Sahne M,S", "extra": "Eine Salattheke mit diversen Salaten und Dressinge , zur Selbstbedienung steht für Sie bereit", "dinner": "Toast Hawaii"}, {"day": "Donnerstag", "date": "17.09.2026", "breakfast": "Butterkäse oder\nMaasdamer", "menu1": "Tortellini mit Rindfleischfüllung\nfruchtiger Tomatensoße G,M,E,C geriebener Hartkäse\ngemischte Salatbeilage mit Joghurtdressing M\nObst", "menu2": "Tortellini mit Rindfleischfüllung\nfruchtiger Tomatensoße G,M,E,C geriebener Hartkäse\nSalatbeilage mit Joghurtdressing M\nObst", "menu3": "Eierpfannkuchen mit Spinat und Mozzarella gefüllt. G,E,M\nGemüse-Bulgur C,G\nObst", "extra": "", "dinner": "Geflügelfrisch wurst, Geflügel dauerwurst"}]}, {"weekId": "kw39", "kw": 39, "label": "Nächste Woche (KW 39: 21.09. – 24.09.2026)", "dateRange": "21.09. bis 24.09.2026", "isCurrent": false, "days": [{"day": "Montag", "date": "21.09.2026", "breakfast": "Gouda", "menu1": "Hähnchencrossies G,M,E\nfruchtige Currysoße M\nReis\ngemischter Salat\nmit Joghurtdressing M\nObstsalat", "menu2": "Hähnchencrossies G,M,E\nfruchtige Currysoße M\nReis\ngemischter Salat\nmit Joghurtdressing M\nObstsalat", "menu3": "Gemüseknusperrösti S,H,G,E\nFrischkäse-Kräuterdip M\nReis\ngemischter Salatteller\nmit Joghurtdressing M\nObstsalat", "extra": "Eine Salattheke mit diversen Salaten und Dressinge, steht zur Selbstbedienung für Sie bereit", "dinner": "Geflügelfrisch wurst, Geflügel dauerwurst"}, {"day": "Dienstag", "date": "22.09.2026", "breakfast": "Edamer", "menu1": "Fischfilet gebacken E,G,\nTomatencremesoße\nMexicogemüse\nKartoffelplätzchen\nVanillecreme mit Sahne M", "menu2": "Geflügelhacksteak\nTomatencremesoße\nMexicogemüse\nKartoffelplätzchen\nVanillecreme mit Sahne M", "menu3": "5 Gemüse-Maultaschen\nBlumenkohl-Schnittlauchcremesauce\nPfannengemüse Pastinake, Möhre und Kohlrabi\nG,E,C,M Vanillecreme mit Sahne M", "extra": "Tagessuppe", "dinner": "Mozzarella\nBitte über den Tagesanforderungsschein bestellen"}, {"day": "Mittwoch", "date": "23.09.2026", "breakfast": "Tilsiter\nFruchtjoghurt oder Fruchtquark speise", "menu1": "Nudelauflauf\nmit Gemüse, gebratenen Putenbrustgeschnetzeltem und Käse überbachen G,E,H,M\nRahmsoße M,\nEisdessert G,S", "menu2": "Nudelauflauf\nmit Gemüse und Käse überbachen G,E,H,M\nRahmsoße M,\nEisdessert G,S", "menu3": "Tortellini mit Ricottafüllung\nfruchtige Paprika-Tomatensoße M,G,C,E,D\nSalatbeilage mit Thousend Islanddressing M,C,\nEisdessert G,S", "extra": "Eine Salattheke mit diversen Salaten und Dressinge, steht zur Selbstbedienung für Sie bereit", "dinner": "Coleslaw\namerikanischer Krautsalat. Weißkohl, Möhre, Joghurt-Majonnaisedressing M"}, {"day": "Donnerstag", "date": "24.09.2026", "breakfast": "Butterkäse oder\nMaasdamer", "menu1": "Chili con carne\nRindfleisch, Kidneybohnen,Tomaten, Paprika, Mais,Möhre, Sellerie Zwiebel in pikanter Soße C,G\nhausgemachtes Baguettebrot G\nMilchreis mit Topping M,S", "menu2": "Chili con carne\nRindfleisch, Kidneybohnen,Tomaten, Paprika, Mais,Möhre, Sellerie Zwiebel in pikanter Soße C,G\nhausgemachtes Baguettebrot G\nMilchreis mit Topping M,S", "menu3": "Süßkartoffel-Schupfnudel-Topf\nverschiedene Gemüse, gebratene Sojawürfel\nGemüse-Veloûte M,G,E,A,C\nMilchreis mit Topping M,S", "extra": "", "dinner": "Geflügelfrisch wurst, Geflügel dauerwurst"}]}, {"weekId": "kw37", "kw": 37, "label": "Vorige Woche (KW 37: 07.09. – 10.09.2026)", "dateRange": "07.09. bis 10.09.2026", "isCurrent": false, "days": [{"day": "Montag", "date": "07.09.2026", "breakfast": "Gouda", "menu1": "leicht gebratenes Hahnchenbrustfilet\nChampignoncremesosse M,G,D,C Brokkoligemüse mit Mandelbutter M,S\nReis G,E,M,C\nFruchtjoghurt M,", "menu2": "leicht gebratenes Hahnchenbrustfilet\nCremesosse M,G,D,C Brokkoligemüse mit Mandelbutter M,S\nReis G,E,M,C\nFruchtjoghurt M", "menu3": "2 Gemüse-Knusperbagel Schnittlauchrahmdip M\nBrokkoligemüse mit Mandelbutter M,S\nFruchjoghurt M", "extra": "Eine Salattheke mit diversen Salaten und Dressinge, steht zur Selbstbedienung für Sie bereit", "dinner": "Geflügelfrisch- wurst, Geflügel dauerwurst"}, {"day": "Dienstag", "date": "08.09.2026", "breakfast": "Edamer", "menu1": "Geschnetzeltes vom Schwein\nmit Gemüse M,C\nButterspätzle E,G,M\nGrießpudding G,M", "menu2": "Putenragout\nmit Gemüse M,C\nButterspätzle E,G,M\nGrießpudding G,M", "menu3": "Salat-Boule\ndiverse Blattsalate und Rohkostsalate,Fetakäse, gekochtes Ei, Baguettebrot G\nEssig/Öldressing D,C\nJoghurtdressing M\nGrießpudding G,M", "extra": "Tagessuppe", "dinner": "Fleischwurst am Stück\nBitte über den Tagesanforderungsschein bestellen"}, {"day": "Mittwoch", "date": "09.09.2026", "breakfast": "Tilsiter\nFruchtjoghurt oder Fruchtquark speise", "menu1": "Döner Teller\nHähnchenfleisch, Salate,\nJoghurtsoße, scharfe Soße,\nPommes-frites\nSchokocreme M,S", "menu2": "Döner Teller\nHähnchenfleisch, Salate,\nJoghurtsoße, scharfe Soße,\nPommes-frites\nSchokocreme M,S", "menu3": "Nudel Bolognese G vegetarische Bolognesesoße A,C,H,S geriebener Hartkäse Salatbeilage Italiendressing C,D\nSchokocreme M,S", "extra": "Eine Salattheke mit diversen Salaten und Dressinge, steht zur Selbstbedienung für Sie bereit", "dinner": "Nudelsalat G,M,E\nmit Geflügelfleischwurst-streifen, gekochtem Ei, Erbsen und Paprikawürfel, in Majonnaisecreme"}, {"day": "Donnerstag", "date": "10.09.2026", "breakfast": "", "menu1": "Grünkernhacksteak natur C,E,D,G,\nBratensoße Provencial G,C,\nReis\nRatatouillegemüse\nObst", "menu2": "gebackene Ofenkartoffel\nSchnittlauchrahmdip M Blumenkohl, Brokkoli mit Semmelbröselbutter Petersilie,gekochtes Ei M,G,E\nObst", "menu3": "gebackene Champignons G,A,E,9,10\ngebackener Blumenkohl G,A,E,9,10\nZaziki M\nBulgur mit Paprikastücken G\nObst", "extra": "", "dinner": ""}]}]};
+const DEFAULT_CANTEEN_DATA = {"source":"LWL-Von-Vincke-Schule Soest & BBW Soest","sourceUrl":"https://www.lwl-von-vincke-schule.de/de/aktuelles/speiseplaene/","lastUpdated":"2026-10-15T08:00:00Z","weeks":[{"weekId":"kw42","kw":42,"label":"Diese Woche (KW 42: 12.10. – 16.10.2026)","dateRange":"12.10. bis 16.10.2026","isCurrent":true,"days":[{"day":"Montag","date":"12.10.2026","breakfast":"Gouda & Schnittkäse, Frische Brötchen","menu1":"Knuspriges Putenschnitzel mit Rahmchampignons G,M,E\nSalzkartoffeln\nErbsen-Möhrengemüse M\nSchokopudding mit Sahnehaube M,S","menu2":"Knuspriges Putenschnitzel mit Geflügel-Bratensoße G,M,E\nSalzkartoffeln\nErbsen-Möhrengemüse M\nSchokopudding mit Sahnehaube M,S","menu3":"Hausgemachte Gemüselasagne mit fruchtiger Tomatensauce und Käse überbacken G,M,C\nbunte Blattsalate mit Joghurtdressing M\nSchokopudding mit Sahnehaube M,S","extra":"Große Salattheke mit diversen Rohkost- und Blattsalaten zur Selbstbedienung, Tagessuppe: Klare Gemüsesuppe mit Eierstich C,E","dinner":"Geflügel-Salami, Gouda, Vollkornbrot und Gemüsesticks"},{"day":"Dienstag","date":"13.10.2026","breakfast":"Edamer & Kräuterfrischkäse","menu1":"Herzhafter Rindergulasch mit Zwiebeln und Paprika C,G\nSpiralnudeln G,E\nApfel-Rotkohl\nRote Grütze mit Vanillesoße M","menu2":"Herzhafter Rindergulasch mit Zwiebeln und Paprika C,G\nSpiralnudeln G,E\nApfel-Rotkohl\nRote Grütze mit Vanillesoße M","menu3":"Vegetarische Schupfnudelpfanne mit Marktgemüse, Frühlingszwiebeln und Kräuterdip G,M,E\nbunter Beilagensalat mit Kräuterdressing C,D\nRote Grütze mit Vanillesoße M","extra":"Tagessuppe: Kartoffel-Lauch-Cremesuppe M, Salattheke mit Kernen und Dressings","dinner":"Geflügelfleischwurst, Frisches Mischbrot, Gurkensalat"},{"day":"Mittwoch","date":"14.10.2026","breakfast":"Tilsiter & Erdbeer-Fruchtjoghurt","menu1":"Mildes Hähnchen-Curry mit knackigem Wokgemüse C,M\nduftender Basmatireis\nMini-Frühlingsrolle G,A\nFrischer Obstsalat","menu2":"Mildes Hähnchen-Curry mit knackigem Wokgemüse C,M\nduftender Basmatireis\nMini-Frühlingsrolle G,A\nFrischer Obstsalat","menu3":"Knusprige Frühlingsrollen mit süß-saurer Soße G,A,S\nduftender Basmatireis\nAsiatisches Pfannengemüse\nFrischer Obstsalat","extra":"Salattheke mit diversen Salaten und Dressings zur Selbstbedienung, Tagessuppe: Fruchtige Tomatensuppe","dinner":"Überbackenes Toast mit Schinken/Geflügel oder Tomate-Mozzarella M,G"},{"day":"Donnerstag","date":"15.10.2026","breakfast":"Butterkäse oder Maasdamer","menu1":"Seelachsfilet im Knusperbackteig F,G,E\nhausgemachte Remouladensoße C,E,M\nKartoffelsalat mit Gurke und Schnittlauch C,D\ngemischter Blattsalat\nVanillequark mit Himbeeren M","menu2":"Gebratenes Hähnchenbrustfilet mit Kräutersoße M,G\nParboiled Reis\nFingermöhrchen mit Petersilie M\ngemischter Blattsalat mit Joghurtdressing M\nVanillequark mit Himbeeren M","menu3":"Käsespätzle mit Röstzwiebeln und Schnittlauch G,E,M\nfrischer Gurken-Dill-Salat in feiner Essig-Öl-Vinaigrette D\nVanillequark mit Himbeeren M","extra":"Salattheke mit Toppings und Körnern, Tagessuppe: Gemüse-Nudeltopf G,C","dinner":"Geflügelfrischwurst, Schmelzkäse M, Frische Vollkornbrötchen G"},{"day":"Freitag","date":"16.10.2026","breakfast":"Käseauswahl, gekochte Eier & Erdbeerkonfitüre","menu1":"Spaghetti mit herzhafter Rinder-Bolognesesoße G,E,C\nfrisch geriebener Hartkäse M\nSalatbeilage mit italienischem Kräuterdressing D\nFrischer Bio-Apfel","menu2":"Spaghetti mit herzhafter Rinder-Bolognesesoße G,E,C\nfrisch geriebener Hartkäse M\nSalatbeilage mit italienischem Kräuterdressing D\nFrischer Bio-Apfel","menu3":"Spaghetti Napoli mit hausgemachter Tomaten-Basilikumsoße C,G,E\nfrisch geriebener Hartkäse M\nSalatbeilage mit italienischem Kräuterdressing D\nFrischer Bio-Apfel","extra":"Salattheke zur Selbstbedienung, Brötchenauswahl","dinner":"Kaltes Buffet / Reiseproviant für das Wochenende für Internatsschüler"}]},{"weekId":"kw41","kw":41,"label":"Vorige Woche (KW 41: 05.10. – 08.10.2026)","dateRange":"05.10. bis 08.10.2026","isCurrent":false,"days":[{"day":"Montag","date":"05.10.2026","breakfast":"Gouda","menu1":"Geflügelfrikadelle mit pikanter Pfefferrahmsoße G,M,E\nKartoffelpüree M\nKaisergemüse M\nFruchtjoghurt M","menu2":"Geflügelfrikadelle mit Geflügelbratensoße G,E,C\nKartoffelpüree M\nKaisergemüse M\nFruchtjoghurt M","menu3":"Gemüseschnitzel im Knuspermantel G,C,E\nKräuterschmand M\nKartoffelpüree M\nKaisergemüse M\nFruchtjoghurt M","extra":"Salattheke zur Selbstbedienung","dinner":"Geflügelfrischwurst, Schnittkäse"},{"day":"Dienstag","date":"06.10.2026","breakfast":"Edamer","menu1":"Putenbrustgeschnetzeltes 'Züricher Art' mit Champignons M,G\nRöstinchen\nBohnensalat mit Bohnenkraut D,C\nZitronenmousse M","menu2":"Putenbrustgeschnetzeltes 'Züricher Art' mit Champignons M,G\nRöstinchen\nBohnensalat mit Bohnenkraut D,C\nZitronenmousse M","menu3":"Gefüllte Paprikaschote mit Gemüse-Reisfüllung in Tomatensoße C\nSalzkartoffeln\nBohnensalat mit Bohnenkraut D,C\nZitronenmousse M","extra":"Tagessuppe: Rinderkraftbrühe mit Flädle G,E","dinner":"Frischer Fleischsalat, Vollkornbrot"},{"day":"Mittwoch","date":"07.10.2026","breakfast":"Tilsiter & Quark","menu1":"Gebratenes Fischfilet 'Müllerin Art' mit Petersilienkartoffeln F,M,G\nBlattsalat mit Thousand-Island-Dressing M,C\nGrießbrei mit Kirschen G,M","menu2":"Geflügelsteak natur mit Kräuterbutter M\nPetersilienkartoffeln M\nBlattsalat mit Thousand-Island-Dressing M,C\nGrießbrei mit Kirschen G,M","menu3":"Mediterrane Gemüse-Quiche mit Schafskäse und Kräutern G,E,M\nBlattsalat mit Thousand-Island-Dressing M,C\nGrießbrei mit Kirschen G,M","extra":"Salattheke mit diversen Dressings","dinner":"Geflügelwiener mit Kartoffelsalat"},{"day":"Donnerstag","date":"08.10.2026","breakfast":"Butterkäse","menu1":"Rinderhacksteak mit Zwiebelsoße C,G,E\nKroketten G\nLeipziger Allerlei M\nObst","menu2":"Rinderhacksteak mit Zwiebelsoße C,G,E\nKroketten G\nLeipziger Allerlei M\nObst","menu3":"Kartoffel-Gemüse-Auflauf mit Gouda überbacken M,G,E\nKräutersalat\nObst","extra":"Tagessuppe: Blumenkohlcremesuppe M","dinner":"Geflügelaufschnitt, Schmelzkäse"}]},{"weekId":"kw43","kw":43,"label":"Nächste Woche (KW 43: 19.10. – 23.10.2026 - Herbstferien NRW)","dateRange":"19.10. bis 23.10.2026","isCurrent":false,"days":[{"day":"Montag","date":"19.10.2026","breakfast":"Ferienverpflegung Internat","menu1":"Herbstferien in NRW: Mensa-Regelbetrieb ruht. Ferienverpflegung für anwesende Internatsschüler nach gesondertem Aushang.","menu2":"Herbstferien in NRW: Mensa-Regelbetrieb ruht. Ferienverpflegung für anwesende Internatsschüler nach gesondertem Aushang.","menu3":"Herbstferien in NRW: Vegetarisches Angebot für anwesende Internatsgruppen nach Aushang.","extra":"Ferienbetrieb","dinner":"Abendessen für Ferien-Wohngruppen"},{"day":"Dienstag","date":"20.10.2026","breakfast":"Ferienverpflegung Internat","menu1":"Herbstferien in NRW: Mensa-Regelbetrieb ruht.","menu2":"Herbstferien in NRW: Mensa-Regelbetrieb ruht.","menu3":"Herbstferien in NRW: Mensa-Regelbetrieb ruht.","extra":"Ferienbetrieb","dinner":"Abendessen für Ferien-Wohngruppen"},{"day":"Mittwoch","date":"21.10.2026","breakfast":"Ferienverpflegung Internat","menu1":"Herbstferien in NRW: Mensa-Regelbetrieb ruht.","menu2":"Herbstferien in NRW: Mensa-Regelbetrieb ruht.","menu3":"Herbstferien in NRW: Mensa-Regelbetrieb ruht.","extra":"Ferienbetrieb","dinner":"Abendessen für Ferien-Wohngruppen"},{"day":"Donnerstag","date":"22.10.2026","breakfast":"Ferienverpflegung Internat","menu1":"Herbstferien in NRW: Mensa-Regelbetrieb ruht.","menu2":"Herbstferien in NRW: Mensa-Regelbetrieb ruht.","menu3":"Herbstferien in NRW: Mensa-Regelbetrieb ruht.","extra":"Ferienbetrieb","dinner":"Abendessen für Ferien-Wohngruppen"}]},{"weekId":"kw44","kw":44,"label":"Kalenderwoche 44 (26.10. – 30.10.2026 - Herbstferien NRW)","dateRange":"26.10. bis 30.10.2026","isCurrent":false,"days":[{"day":"Montag","date":"26.10.2026","breakfast":"Ferienverpflegung Internat","menu1":"Herbstferien in NRW (2. Ferienwoche): Mensa-Regelbetrieb ruht.","menu2":"Herbstferien in NRW (2. Ferienwoche): Mensa-Regelbetrieb ruht.","menu3":"Herbstferien in NRW (2. Ferienwoche): Mensa-Regelbetrieb ruht.","extra":"Ferienbetrieb","dinner":"Abendessen für Ferien-Wohngruppen"},{"day":"Dienstag","date":"27.10.2026","breakfast":"Ferienverpflegung Internat","menu1":"Herbstferien in NRW (2. Ferienwoche): Mensa-Regelbetrieb ruht.","menu2":"Herbstferien in NRW (2. Ferienwoche): Mensa-Regelbetrieb ruht.","menu3":"Herbstferien in NRW (2. Ferienwoche): Mensa-Regelbetrieb ruht.","extra":"Ferienbetrieb","dinner":"Abendessen für Ferien-Wohngruppen"},{"day":"Mittwoch","date":"28.10.2026","breakfast":"Ferienverpflegung Internat","menu1":"Herbstferien in NRW (2. Ferienwoche): Mensa-Regelbetrieb ruht.","menu2":"Herbstferien in NRW (2. Ferienwoche): Mensa-Regelbetrieb ruht.","menu3":"Herbstferien in NRW (2. Ferienwoche): Mensa-Regelbetrieb ruht.","extra":"Ferienbetrieb","dinner":"Abendessen für Ferien-Wohngruppen"},{"day":"Donnerstag","date":"29.10.2026","breakfast":"Ferienverpflegung Internat","menu1":"Herbstferien in NRW (2. Ferienwoche): Mensa-Regelbetrieb ruht. Am 02.11.2026 startet der reguläre Schulbetrieb wieder.","menu2":"Herbstferien in NRW (2. Ferienwoche): Mensa-Regelbetrieb ruht.","menu3":"Herbstferien in NRW (2. Ferienwoche): Mensa-Regelbetrieb ruht.","extra":"Ferienbetrieb","dinner":"Abendessen für Ferien-Wohngruppen"}]},{"weekId":"kw45","kw":45,"label":"Kalenderwoche 45 (02.11. – 05.11.2026)","dateRange":"02.11. bis 05.11.2026","isCurrent":false,"days":[{"day":"Montag","date":"02.11.2026","breakfast":"Gouda & Geflügelwurst","menu1":"Hähnchengeschnetzeltes in feiner Kräuter-Rahmsoße M,G\nReis\nGemüse-Mix M\nVanillepudding M","menu2":"Hähnchengeschnetzeltes in feiner Kräuter-Rahmsoße M,G\nReis\nGemüse-Mix M\nVanillepudding M","menu3":"Gemüse-Bratlinge mit Schnittlauchdip M,G,E\nReis\nGemüse-Mix M\nVanillepudding M","extra":"Große Salattheke zur Selbstbedienung","dinner":"Geflügelaufschnitt, Vollkornbrot"},{"day":"Dienstag","date":"03.11.2026","breakfast":"Edamer","menu1":"Schweinerückensteak im Knusperfladen G,E\nZwiebel-Dip\nBunter Krautsalat D\nObstkuchen G,E","menu2":"Putensteak natur im Knusperfladen G,E\nZwiebel-Dip\nBunter Krautsalat D\nObstkuchen G,E","menu3":"Vegetarische Frühlingsrolle mit Süß-Sauer-Sauce G,A\nGemüsereis\nBunter Krautsalat D\nObstkuchen G,E","extra":"Tagessuppe: Tomaten-Kräutersuppe","dinner":"Gouda, Schnittwurst"},{"day":"Mittwoch","date":"04.11.2026","breakfast":"Tilsiter","menu1":"Rindfleischbällchen in Champignonsoße C,G,M\nKartoffelpüree M\nPrinzessbohnen\nSchokodessert M,S","menu2":"Rindfleischbällchen in Champignonsoße C,G,M\nKartoffelpüree M\nPrinzessbohnen\nSchokodessert M,S","menu3":"Gemüse-Maultaschen in feiner Kräutersauce G,E,M\nKartoffelpüree M\nPrinzessbohnen\nSchokodessert M,S","extra":"Salattheke mit frischen Salaten und Dressings","dinner":"Toast Hawaii oder Käsetoast M,G"},{"day":"Donnerstag","date":"05.11.2026","breakfast":"Butterkäse","menu1":"Tortellini mit Rindfleischfüllung in Tomatensoße G,M,E,C\ngeriebener Hartkäse M\nSalatteller mit Joghurtdressing M\nFrisches Obst","menu2":"Tortellini mit Rindfleischfüllung in Tomatensoße G,M,E,C\ngeriebener Hartkäse M\nSalatteller mit Joghurtdressing M\nFrisches Obst","menu3":"Eierpfannkuchen mit Apfelmus G,E,M\nSalatteller mit Joghurtdressing M\nFrisches Obst","extra":"Salattheke","dinner":"Geflügelfrischwurst, Schmelzkäse"}]},{"weekId":"kw38","kw":38,"label":"Archiv (KW 38: 14.09. – 17.09.2026)","dateRange":"14.09. bis 17.09.2026","isCurrent":false,"days":[{"day":"Montag","date":"14.09.2026","breakfast":"Gouda","menu1":"6 Geflügel Cevapcici E,G,D\nZaziki M;\ntomatisierter Gemüsereis C\nWeißkohl-Paprikasalat in Essig/Öldressing Dressing Bio Vanillejoghurt M","menu2":"6 Geflügel Cevapcici E,G,D\nZaziki M;\ntomatisierterGemüsereis C\nWeißkohl-Paprikasalat in\nEssig/Öldressing D\nBio Vanillejoghurt M","menu3":"Gemüsenuggets C\nfruchtige Currysoße M\nKartoffelwedges\nWeißkohl-Paprikasalat in\nEssig/Öldressing D\nBio Vanillejoghurt M","extra":"Eine Salattheke mit diversen Salaten und Dressinge , zur Selbstbedienung steht für Sie bereit","dinner":"Geflügelfrisch wurst, Geflügel dauerwurst"},{"day":"Dienstag","date":"15.09.2026","breakfast":"Edamer","menu1":"Schweinerückesteak auf griechischer Art E,G\nZwiebel-Senfsenfdip\nrustikaler Salat mit Hirtenkäse in pikanten Kräuterdip C,D\nFladenbrot G,\nZitronenkuchen GE","menu2":"Putensteak auf griechischer Art E,G\nZwiebel-Senfsenfdip\nrustikaler Salat mit Hirtenkäse in pikanten Kräuterdip C,D\nFladenbrot G\nZitronenkuchen G,E","menu3":"2 Hot Dogs M;G;C;D\nvegetarische Bockwurst, Hot- Dogbrötchen, hausgemachte Hot- Dogsauce, Tomatenketchup, Röstzwiebel\nSalatbeilage Kräuterdressing C;H\nZitronenkuchen G,E","extra":"Tagessuppe","dinner":"Geflügelleber-wurst\nBitte über den Tagesanforderungsschein bestellen."},{"day":"Mittwoch","date":"16.09.2026","breakfast":"Tilsiter\nFruchtjoghurt oder Fruchtquark speise","menu1":"Hähnchenschnitzel G,H,E\nRahmsoße M\nKartoffelkroketten\nbunter Gemüsemix M\nSchokopudding mit Sahne M,S","menu2":"Hähnchenschnitzel G,H,E\nRahmsoße M\nKartoffelkroketten\nbunter Gemüsemix M\nSchokopudding mit Sahne M,S","menu3":"Kartoffelpizza\ndiverse Gemüse, Tomate mit veganem Käse überbacken C,G,M\nSalatbeilage mit Joghurtdressing\nSchokopudding mit Sahne M,S","extra":"Eine Salattheke mit diversen Salaten und Dressinge , zur Selbstbedienung steht für Sie bereit","dinner":"Toast Hawaii"},{"day":"Donnerstag","date":"17.09.2026","breakfast":"Butterkäse oder\nMaasdamer","menu1":"Tortellini mit Rindfleischfüllung\nfruchtiger Tomatensoße G,M,E,C geriebener Hartkäse\ngemischte Salatbeilage mit Joghurtdressing M\nObst","menu2":"Tortellini mit Rindfleischfüllung\nfruchtiger Tomatensoße G,M,E,C geriebener Hartkäse\nSalatbeilage mit Joghurtdressing M\nObst","menu3":"Eierpfannkuchen mit Spinat und Mozzarella gefüllt. G,E,M\nGemüse-Bulgur C,G\nObst","extra":"","dinner":"Geflügelfrisch wurst, Geflügel dauerwurst"}]},{"weekId":"kw39","kw":39,"label":"Archiv (KW 39: 21.09. – 24.09.2026)","dateRange":"21.09. bis 24.09.2026","isCurrent":false,"days":[{"day":"Montag","date":"21.09.2026","breakfast":"Gouda","menu1":"Hähnchencrossies G,M,E\nfruchtige Currysoße M\nReis\ngemischter Salat\nmit Joghurtdressing M\nObstsalat","menu2":"Hähnchencrossies G,M,E\nfruchtige Currysoße M\nReis\ngemischter Salat\nmit Joghurtdressing M\nObstsalat","menu3":"Gemüseknusperrösti S,H,G,E\nFrischkäse-Kräuterdip M\nReis\ngemischter Salatteller\nmit Joghurtdressing M\nObstsalat","extra":"Eine Salattheke mit diversen Salaten und Dressinge, steht zur Selbstbedienung für Sie bereit","dinner":"Geflügelfrisch wurst, Geflügel dauerwurst"},{"day":"Dienstag","date":"22.09.2026","breakfast":"Edamer","menu1":"Fischfilet gebacken E,G,\nTomatencremesoße\nMexicogemüse\nKartoffelplätzchen\nVanillecreme mit Sahne M","menu2":"Geflügelhacksteak\nTomatencremesoße\nMexicogemüse\nKartoffelplätzchen\nVanillecreme mit Sahne M","menu3":"5 Gemüse-Maultaschen\nBlumenkohl-Schnittlauchcremesauce\nPfannengemüse Pastinake, Möhre und Kohlrabi\nG,E,C,M Vanillecreme mit Sahne M","extra":"Tagessuppe","dinner":"Mozzarella\nBitte über den Tagesanforderungsschein bestellen"},{"day":"Mittwoch","date":"23.09.2026","breakfast":"Tilsiter\nFruchtjoghurt oder Fruchtquark speise","menu1":"Nudelauflauf\nmit Gemüse, gebratenen Putenbrustgeschnetzeltem und Käse überbachen G,E,H,M\nRahmsoße M,\nEisdessert G,S","menu2":"Nudelauflauf\nmit Gemüse und Käse überbachen G,E,H,M\nRahmsoße M,\nEisdessert G,S","menu3":"Tortellini mit Ricottafüllung\nfruchtige Paprika-Tomatensoße M,G,C,E,D\nSalatbeilage mit Thousend Islanddressing M,C,\nEisdessert G,S","extra":"Eine Salattheke mit diversen Salaten und Dressinge, steht zur Selbstbedienung für Sie bereit","dinner":"Coleslaw\namerikanischer Krautsalat. Weißkohl, Möhre, Joghurt-Majonnaisedressing M"},{"day":"Donnerstag","date":"24.09.2026","breakfast":"Butterkäse oder\nMaasdamer","menu1":"Chili con carne\nRindfleisch, Kidneybohnen,Tomaten, Paprika, Mais,Möhre, Sellerie Zwiebel in pikanter Soße C,G\nhausgemachtes Baguettebrot G\nMilchreis mit Topping M,S","menu2":"Chili con carne\nRindfleisch, Kidneybohnen,Tomaten, Paprika, Mais,Möhre, Sellerie Zwiebel in pikanter Soße C,G\nhausgemachtes Baguettebrot G\nMilchreis mit Topping M,S","menu3":"Süßkartoffel-Schupfnudel-Topf\nverschiedene Gemüse, gebratene Sojawürfel\nGemüse-Veloûte M,G,E,A,C\nMilchreis mit Topping M,S","extra":"","dinner":"Geflügelfrisch wurst, Geflügel dauerwurst"}]},{"weekId":"kw37","kw":37,"label":"Archiv (KW 37: 07.09. – 10.09.2026)","dateRange":"07.09. bis 10.09.2026","isCurrent":false,"days":[{"day":"Montag","date":"07.09.2026","breakfast":"Gouda","menu1":"leicht gebratenes Hahnchenbrustfilet\nChampignoncremesosse M,G,D,C Brokkoligemüse mit Mandelbutter M,S\nReis G,E,M,C\nFruchtjoghurt M,","menu2":"leicht gebratenes Hahnchenbrustfilet\nCremesosse M,G,D,C Brokkoligemüse mit Mandelbutter M,S\nReis G,E,M,C\nFruchtjoghurt M","menu3":"2 Gemüse-Knusperbagel Schnittlauchrahmdip M\nBrokkoligemüse mit Mandelbutter M,S\nFruchjoghurt M","extra":"Eine Salattheke mit diversen Salaten und Dressinge, steht zur Selbstbedienung für Sie bereit","dinner":"Geflügelfrisch- wurst, Geflügel dauerwurst"},{"day":"Dienstag","date":"08.09.2026","breakfast":"Edamer","menu1":"Geschnetzeltes vom Schwein\nmit Gemüse M,C\nButterspätzle E,G,M\nGrießpudding G,M","menu2":"Putenragout\nmit Gemüse M,C\nButterspätzle E,G,M\nGrießpudding G,M","menu3":"Salat-Boule\ndiverse Blattsalate und Rohkostsalate,Fetakäse, gekochtes Ei, Baguettebrot G\nEssig/Öldressing D,C\nJoghurtdressing M\nGrießpudding G,M","extra":"Tagessuppe","dinner":"Fleischwurst am Stück\nBitte über den Tagesanforderungsschein bestellen"},{"day":"Mittwoch","date":"09.09.2026","breakfast":"Tilsiter\nFruchtjoghurt oder Fruchtquark speise","menu1":"Döner Teller\nHähnchenfleisch, Salate,\nJoghurtsoße, scharfe Soße,\nPommes-frites\nSchokocreme M,S","menu2":"Döner Teller\nHähnchenfleisch, Salate,\nJoghurtsoße, scharfe Soße,\nPommes-frites\nSchokocreme M,S","menu3":"Nudel Bolognese G vegetarische Bolognesesoße A,C,H,S geriebener Hartkäse Salatbeilage Italiendressing C,D\nSchokocreme M,S","extra":"Eine Salattheke mit diversen Salaten und Dressinge, steht zur Selbstbedienung für Sie bereit","dinner":"Nudelsalat G,M,E\nmit Geflügelfleischwurst-streifen, gekochtem Ei, Erbsen und Paprikawürfel, in Majonnaisecreme"},{"day":"Donnerstag","date":"10.09.2026","breakfast":"","menu1":"Grünkernhacksteak natur C,E,D,G,\nBratensoße Provencial G,C,\nReis\nRatatouillegemüse\nObst","menu2":"gebackene Ofenkartoffel\nSchnittlauchrahmdip M Blumenkohl, Brokkoli mit Semmelbröselbutter Petersilie,gekochtes Ei M,G,E\nObst","menu3":"gebackene Champignons G,A,E,9,10\ngebackener Blumenkohl G,A,E,9,10\nZaziki M\nBulgur mit Paprikastücken G\nObst","extra":"","dinner":""}]}]};
 
 function getCanteenData() {
   if (appData.canteen && appData.canteen.weeks && appData.canteen.weeks.length > 0) {
@@ -9263,43 +9288,84 @@ function getCanteenData() {
   return DEFAULT_CANTEEN_DATA;
 }
 
+function getDateRangeOfKW(year, kw) {
+  const simple = new Date(Date.UTC(year, 0, 1 + (kw - 1) * 7));
+  const dow = simple.getUTCDay();
+  const ISOweekStart = simple;
+  if (dow <= 4) ISOweekStart.setUTCDate(simple.getUTCDate() - simple.getUTCDay() + 1);
+  else ISOweekStart.setUTCDate(simple.getUTCDate() + 8 - simple.getUTCDay());
+  const mon = new Date(ISOweekStart);
+  const thu = new Date(ISOweekStart);
+  thu.setUTCDate(mon.getUTCDate() + 3);
+  const fmt = (d) => String(d.getUTCDate()).padStart(2, '0') + '.' + String(d.getUTCMonth() + 1).padStart(2, '0') + '.' + d.getUTCFullYear();
+  return fmt(mon) + ' bis ' + fmt(thu);
+}
+
 function getFullCanteenWeeksList(canteenData) {
   const data = canteenData || getCanteenData();
   const knownWeeks = (data && data.weeks) ? data.weeks : [];
   const knownDict = {};
   knownWeeks.forEach(w => { if (w.weekId) knownDict[w.weekId] = w; });
 
-  const weekDefs = [
-    { kw: 37, dateRange: '07.09. bis 10.09.2026', label: 'Vorige Woche (KW 37: 07.09. – 10.09.2026)' },
-    { kw: 38, dateRange: '14.09. bis 17.09.2026', label: 'Diese Woche (KW 38: 14.09. – 17.09.2026)', isCurrent: true },
-    { kw: 39, dateRange: '21.09. bis 24.09.2026', label: 'Nächste Woche (KW 39: 21.09. – 24.09.2026)' },
-    { kw: 40, dateRange: '28.09. bis 01.10.2026', label: 'Kalenderwoche 40 (28.09. – 01.10.2026)' },
-    { kw: 41, dateRange: '05.10. bis 08.10.2026', label: 'Kalenderwoche 41 (05.10. – 08.10.2026)' },
-    { kw: 42, dateRange: '12.10. bis 15.10.2026', label: 'Kalenderwoche 42 (12.10. – 15.10.2026)' },
-    { kw: 43, dateRange: '19.10. bis 22.10.2026', label: 'Kalenderwoche 43 (Herbstferien NRW)' },
-    { kw: 44, dateRange: '26.10. bis 29.10.2026', label: 'Kalenderwoche 44 (Herbstferien NRW)' }
+  const now = new Date();
+  const currentKw = getISOWeekNumber(now);
+  const currentYear = now.getFullYear();
+
+  const candidateKws = [
+    currentKw - 1,
+    currentKw,
+    currentKw + 1,
+    currentKw + 2,
+    currentKw + 3
   ];
 
-  return weekDefs.map(wdef => {
-    const wid = `kw${wdef.kw}`;
+  knownWeeks.forEach(w => {
+    if (typeof w.kw === 'number' && !candidateKws.includes(w.kw)) {
+      candidateKws.push(w.kw);
+    }
+  });
+
+  candidateKws.sort((a, b) => a - b);
+
+  return candidateKws.map(kw => {
+    const wid = 'kw' + kw;
+    const range = getDateRangeOfKW(currentYear, kw);
+    const isCur = (kw === currentKw);
+
+    let defaultLabel = 'Kalenderwoche ' + kw + ' (' + range + ')';
+    if (isCur) {
+      defaultLabel = 'Diese Woche (KW ' + kw + ': ' + range + ')';
+    } else if (kw === currentKw - 1) {
+      defaultLabel = 'Vorige Woche (KW ' + kw + ': ' + range + ')';
+    } else if (kw === currentKw + 1) {
+      defaultLabel = 'Nächste Woche (KW ' + kw + ': ' + range + ')';
+    }
+
+    if (kw === 43 || kw === 44) {
+      if (!defaultLabel.includes('Herbstferien')) {
+        defaultLabel += ' - Herbstferien NRW';
+      }
+    }
+
     if (knownDict[wid]) {
       const k = knownDict[wid];
       return {
         weekId: wid,
-        kw: wdef.kw,
-        label: k.label || wdef.label,
-        dateRange: k.dateRange || wdef.dateRange,
-        isCurrent: !!k.isCurrent || !!wdef.isCurrent,
+        kw: kw,
+        label: isCur ? ('Diese Woche (KW ' + kw + ': ' + (k.dateRange || range) + ')') : (k.label || defaultLabel),
+        dateRange: k.dateRange || range,
+        isCurrent: isCur,
         hasData: Array.isArray(k.days) && k.days.length > 0,
         days: k.days || []
       };
     }
+
     return {
       weekId: wid,
-      kw: wdef.kw,
-      label: wdef.label,
-      dateRange: wdef.dateRange,
-      isCurrent: !!wdef.isCurrent,
+      kw: kw,
+      label: defaultLabel,
+      dateRange: range,
+      isCurrent: isCur,
       hasData: false,
       days: []
     };
@@ -9322,7 +9388,7 @@ function setCanteenWeek(weekId, fromSelect = false) {
 function changeCanteenWeek(delta) {
   const allWeeks = getFullCanteenWeeksList();
   let currentIdx = allWeeks.findIndex(w => w.weekId === appData.selectedCanteenWeek);
-  if (currentIdx === -1) currentIdx = 1; // default to KW 38
+  if (currentIdx === -1) { const curIdx = allWeeks.findIndex(w => w.isCurrent); currentIdx = curIdx !== -1 ? curIdx : 0; }
   let newIdx = currentIdx + delta;
   if (newIdx < 0) newIdx = 0;
   if (newIdx >= allWeeks.length) newIdx = allWeeks.length - 1;
@@ -9355,10 +9421,12 @@ function renderCanteenView(fromSelect = false) {
   const allWeeks = getFullCanteenWeeksList(data);
 
   // 1. Wochenauswahl-Dropdown synchronisieren
+  const curKw = getISOWeekNumber();
+  const curWeekId = 'kw' + curKw;
   let selectedWeekId = appData.selectedCanteenWeek;
-  if (!selectedWeekId || !allWeeks.some(w => w.weekId === selectedWeekId)) {
-    const currentWk = allWeeks.find(w => w.isCurrent) || allWeeks[1];
-    selectedWeekId = currentWk ? currentWk.weekId : 'kw38';
+  if (!selectedWeekId || !allWeeks.some(w => w.weekId === selectedWeekId) || (selectedWeekId === 'kw38' && curKw !== 38)) {
+    const currentWk = allWeeks.find(w => w.isCurrent) || allWeeks.find(w => w.weekId === curWeekId) || allWeeks[0];
+    selectedWeekId = currentWk ? currentWk.weekId : curWeekId;
     appData.selectedCanteenWeek = selectedWeekId;
   }
 
@@ -9381,10 +9449,10 @@ function renderCanteenView(fromSelect = false) {
   const quickNav = document.getElementById('canteen-week-quick-nav');
   if (quickNav) {
     const quickItems = [
-      { id: 'kw37', label: 'KW 37 (Vorige)' },
-      { id: 'kw38', label: 'KW 38 (Diese Woche)' },
-      { id: 'kw39', label: 'KW 39 (Nächste)' },
-      { id: 'kw40', label: 'KW 40' }
+      { id: 'kw' + (curKw - 1), label: 'KW ' + (curKw - 1) + ' (Vorige)' },
+      { id: 'kw' + curKw, label: 'KW ' + curKw + ' (Diese Woche)' },
+      { id: 'kw' + (curKw + 1), label: 'KW ' + (curKw + 1) + ' (Nächste)' },
+      { id: 'kw' + (curKw + 2), label: 'KW ' + (curKw + 2) }
     ];
     quickNav.innerHTML = quickItems.map(item => {
       const isSel = (selectedWeekId === item.id);
@@ -9429,7 +9497,8 @@ function renderCanteenView(fromSelect = false) {
       { id: 'Montag', label: 'Montag' },
       { id: 'Dienstag', label: 'Dienstag' },
       { id: 'Mittwoch', label: 'Mittwoch' },
-      { id: 'Donnerstag', label: 'Donnerstag' }
+      { id: 'Donnerstag', label: 'Donnerstag' },
+      { id: 'Freitag', label: 'Freitag' }
     ];
 
     dayFilterBar.innerHTML = dayButtons.map(btn => {
@@ -9470,8 +9539,8 @@ function renderCanteenView(fromSelect = false) {
           <button type="button" class="btn btn-primary" onclick="refreshCanteenData()" aria-label="Jetzt prüfen ob ein Speiseplan veröffentlicht wurde">
             <span class="emoji-icon" aria-hidden="true">🔄 </span>Speisepläne jetzt neu abrufen (Taste A)
           </button>
-          <button type="button" class="btn btn-secondary" onclick="setCanteenWeek('kw38', false)" aria-label="Zur aktuellen Schulwoche KW 38 zurückkehren">
-            <span class="emoji-icon" aria-hidden="true">🍽️ </span>Zur aktuellen Woche (KW 38)
+          <button type="button" class="btn btn-secondary" onclick="setCanteenWeek('kw' + getISOWeekNumber(), false)" aria-label="Zur aktuellen Schulwoche KW 38 zurückkehren">
+            <span class="emoji-icon" aria-hidden="true">🍽️ </span>Zur aktuellen Woche (KW ${getISOWeekNumber()})
           </button>
         </div>
       </article>
@@ -9587,7 +9656,8 @@ function renderCanteenView(fromSelect = false) {
 function readCanteenSummary() {
   const data = getCanteenData();
   const allWeeks = getFullCanteenWeeksList(data);
-  const selectedWeekId = appData.selectedCanteenWeek || 'kw38';
+  const curKwId = getCurrentCanteenWeekId();
+  const selectedWeekId = appData.selectedCanteenWeek || curKwId;
   const activeWeek = allWeeks.find(w => w.weekId === selectedWeekId) || allWeeks[1];
 
   if (!activeWeek || !activeWeek.hasData || !activeWeek.days || activeWeek.days.length === 0) {
@@ -9630,44 +9700,86 @@ function readCanteenSummary() {
   announceSR(speech, 'assertive');
 }
 
-async function refreshCanteenData() {
+async function refreshCanteenData(silent = false) {
   const btn = document.getElementById('btn-sync-canteen');
-  if (btn) {
+  if (btn && !silent) {
     btn.disabled = true;
     btn.innerHTML = '<span class="emoji-icon" aria-hidden="true">⏳ </span>Lade Speisepläne...';
   }
 
-  announceSR('Mensa-Speisepläne werden aus dem Internet synchronisiert...', 'assertive');
+  if (!silent) {
+    announceSR('Mensa-Speisepläne werden aus dem Internet synchronisiert...', 'assertive');
+  }
 
+  let freshData = null;
+
+  // 1. Lokale Server-API (/api/canteen)
   try {
     const resp = await fetch('/api/canteen', { cache: 'no-store' });
     if (resp.ok) {
-      const freshData = await resp.json();
-      if (freshData && freshData.weeks && freshData.weeks.length > 0) {
-        appData.canteen = freshData;
-        saveAppData();
-        renderCanteenView();
-        const successMsg = `Mensa-Speisepläne erfolgreich aktualisiert (${freshData.weeks.length} Wochen geladen).`;
-        speak(successMsg, true);
-        announceSR(successMsg, 'assertive');
-        return;
+      const json = await resp.json();
+      if (json && Array.isArray(json.weeks) && json.weeks.length > 0) {
+        freshData = json;
       }
     }
-    throw new Error('Ungültige Server-Antwort');
   } catch (err) {
-    console.warn('Canteen sync error:', err);
-    renderCanteenView();
-    const warnMsg = 'Speisepläne konnten nicht neu geladen werden. Gespeicherter Speiseplan wird verwendet.';
-    speak(warnMsg, true);
-    announceSR(warnMsg, 'assertive');
-  } finally {
-    if (btn) {
-      btn.disabled = false;
-      btn.innerHTML = '<span class="emoji-icon" aria-hidden="true">🔄 </span><strong>Aktualisieren (A)</strong>';
+    // Lokaler C#-Server nicht erreichbar oder andere Plattform
+  }
+
+  // 2. Fallback: Lokale Datei canteen_seed.json (Android Assets / Standalone)
+  if (!freshData) {
+    try {
+      const resp = await fetch('canteen_seed.json', { cache: 'no-store' });
+      if (resp.ok) {
+        const json = await resp.json();
+        if (json && Array.isArray(json.weeks) && json.weeks.length > 0) {
+          freshData = json;
+        }
+      }
+    } catch (err) {
+      // Lokale Datei nicht erreichbar
     }
   }
-}
 
+  // 3. Fallback: Online GitHub Raw (Live-Feed)
+  if (!freshData) {
+    try {
+      const resp = await fetch('https://raw.githubusercontent.com/Lauju1909/BarrierefreiesWebUntis/main/canteen_seed.json?t=' + Date.now(), { cache: 'no-store' });
+      if (resp.ok) {
+        const json = await resp.json();
+        if (json && Array.isArray(json.weeks) && json.weeks.length > 0) {
+          freshData = json;
+        }
+      }
+    } catch (err) {
+      console.warn('Online GitHub canteen sync failed:', err);
+    }
+  }
+
+  if (freshData) {
+    appData.canteen = freshData;
+    const curKw = getISOWeekNumber();
+    if (!appData.selectedCanteenWeek || appData.selectedCanteenWeek === 'kw38') {
+      appData.selectedCanteenWeek = 'kw' + curKw;
+    }
+    saveAppData();
+    renderCanteenView();
+    if (!silent) {
+      const successMsg = `Mensa-Speisepläne erfolgreich aktualisiert (${freshData.weeks.length} Wochen geladen. KW ${curKw} aktiv).`;
+      speak(successMsg, true);
+      announceSR(successMsg, 'assertive');
+    }
+    return true;
+  } else {
+    renderCanteenView();
+    if (!silent) {
+      const warnMsg = 'Speisepläne konnten nicht neu aus dem Internet geladen werden. Gespeicherter Speiseplan wird verwendet.';
+      speak(warnMsg, true);
+      announceSR(warnMsg, 'assertive');
+    }
+    return false;
+  }
+}
 
 document.addEventListener('DOMContentLoaded', initApp);
 
