@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
+using System.IO.Compression;
 using System.Net;
 using System.Net.Sockets;
 using System.Reflection;
@@ -12,6 +13,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
+using System.Xml;
 
 namespace BarrierefreierStundenplan
 {
@@ -187,6 +189,7 @@ namespace BarrierefreierStundenplan
                         _activePort = p;
                         serverStarted = true;
                         LogUntis("HttpListener started successfully on port " + p);
+                        StartCanteenAutoUpdater();
                         break;
                     }
                     catch (Exception lex)

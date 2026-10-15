@@ -1,0 +1,46 @@
+name: Auto-Update Canteen Plans (Mensa & Speiseplaene)
+
+on:
+  schedule:
+    # Jeden Montag und Freitag um 05:00 UTC automatisch ausfuehren
+    - cron: '0 5 * * 1,5'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-canteen:
+    name: Crawl & Update Canteen Plans
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Dependencies
+        run: |
+          pip install openpyxl requests
+
+      - name: Run Canteen Crawler
+        run: |
+          python scripts/canteen_crawler.py
+
+      - name: Commit and Push Updated Canteen Seed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if [ -n "$(git status --porcelain canteen_seed.json)" ]; then
+            git add canteen_seed.json
+            git commit -m "chore: Speiseplaene automatisch von Schul-Webseite aktualisiert [skip ci]"
+            git push origin main
+            echo "Neue Speiseplaene erfolgreich committet und gepusht."
+          else
+            echo "Keine Aenderungen im Speiseplan festgestellt."
+          fi
