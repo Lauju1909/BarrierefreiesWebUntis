@@ -49,8 +49,6 @@ namespace BarrierefreierStundenplan
         private static System.Threading.Timer _closingTimer = null;
         private static bool _closingPending = false;
         private static DateTime _lastActivity = DateTime.UtcNow;
-        private static bool _pageHasLoaded = false;
-        private static bool _isWindowHidden = false;
         private static NotifyIcon _trayIcon = null;
 
         private static void InitTrayIcon()
@@ -529,7 +527,6 @@ namespace BarrierefreierStundenplan
                 lock (_shutdownLock)
                 {
                     _lastActivity = DateTime.UtcNow;
-                    _pageHasLoaded = true;
                 }
             }
 
@@ -555,16 +552,6 @@ namespace BarrierefreierStundenplan
             // 1. Health-Check / Ping / Heartbeat
             if (rawUrl == "/api/ping")
             {
-                string q = req.Url != null ? req.Url.Query : "";
-                if (!string.IsNullOrEmpty(q) && q.IndexOf("hidden", StringComparison.OrdinalIgnoreCase) >= 0)
-                {
-                    lock (_shutdownLock) { _isWindowHidden = true; }
-                }
-                else
-                {
-                    lock (_shutdownLock) { _isWindowHidden = false; }
-                }
-
                 resp.StatusCode = 200;
                 resp.ContentType = "application/json";
                 byte[] pong = Encoding.UTF8.GetBytes("{\"status\":\"ok\"}");
@@ -1547,6 +1534,7 @@ namespace BarrierefreierStundenplan
             // 1. Wenn XLSX-Download-Links gefunden wurden: Herunterladen und parsen
             if (downloadLinks.Count > 0)
             {
+                string currentMerged = null;
                 foreach (string xlsxUrl in downloadLinks)
                 {
                     try
@@ -1565,20 +1553,13 @@ namespace BarrierefreierStundenplan
 
                         if (fileBytes != null && fileBytes.Length > 1000)
                         {
-                            string parsedWeekJson = ParseXlsxBytesToWeek(fileBytes, activeSource, activeSourceUrl);
+                            string parsedWeekJson = ParseXlsxBytesToWeek(fileBytes, activeSource, activeSourceUrl, xlsxUrl);
                             if (!string.IsNullOrEmpty(parsedWeekJson))
                             {
-                                string merged = MergeWeekIntoCanteenJson(parsedWeekJson, activeSource, activeSourceUrl);
+                                string merged = MergeWeekIntoCanteenJson(parsedWeekJson, activeSource, activeSourceUrl, currentMerged);
                                 if (!string.IsNullOrEmpty(merged))
                                 {
-                                    try
-                                    {
-                                        string localSeedPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "canteen_seed.json");
-                                        File.WriteAllText(localSeedPath, merged, Encoding.UTF8);
-                                    }
-                                    catch { }
-                                    LogUntis("Canteen XLSX successfully parsed and merged into local canteen_seed.json");
-                                    return merged;
+                                    currentMerged = merged;
                                 }
                             }
                         }
@@ -1587,6 +1568,18 @@ namespace BarrierefreierStundenplan
                     {
                         LogUntis("Error downloading/parsing canteen XLSX: " + dlEx.Message);
                     }
+                }
+
+                if (!string.IsNullOrEmpty(currentMerged))
+                {
+                    try
+                    {
+                        string localSeedPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "canteen_seed.json");
+                        File.WriteAllText(localSeedPath, currentMerged, Encoding.UTF8);
+                    }
+                    catch { }
+                    LogUntis("Canteen XLSX files successfully parsed and merged into local canteen_seed.json");
+                    return currentMerged;
                 }
             }
 
@@ -1649,7 +1642,7 @@ namespace BarrierefreierStundenplan
             return firstMonday.AddDays((kw - 1) * 7);
         }
 
-        private static string ParseXlsxBytesToWeek(byte[] fileBytes, string sourceName, string sourceUrl)
+        private static string ParseXlsxBytesToWeek(byte[] fileBytes, string sourceName, string sourceUrl, string xlsxUrl = "")
         {
             try
             {
@@ -1818,17 +1811,74 @@ namespace BarrierefreierStundenplan
                     }
                 }
 
+                int validDays = 0;
+                foreach (string d in dayNames)
+                {
+                    var m = dayMenus[d];
+                    if (!string.IsNullOrEmpty(m["menu1"]) || !string.IsNullOrEmpty(m["menu2"]) || !string.IsNullOrEmpty(m["menu3"]))
+                    {
+                        validDays++;
+                    }
+                }
+                if (validDays < 2) return null;
+
                 DateTime now = DateTime.Now;
                 int currentKw = GetIsoWeekNumber(now);
-                DateTime monday = GetMondayOfWeek(now.Year, currentKw);
+                int targetKw = 0;
+                int targetYear = now.Year;
+
+                // Suche nach Kalenderwoche oder Datum in den Zellen oder der URL
+                string allHeaderText = xlsxUrl ?? "";
+                foreach (var kvp in sheetData)
+                {
+                    if (kvp.Key <= headerRow + 2)
+                    {
+                        foreach (var cellVal in kvp.Value.Values) allHeaderText += " " + cellVal;
+                    }
+                }
+
+                Match kwMatch = Regex.Match(allHeaderText, @"(?:KW|Kalenderwoche|Woche)[\s_\-]*(\d{1,2})\b", RegexOptions.IgnoreCase);
+                if (kwMatch.Success)
+                {
+                    int parsedKw;
+                    if (int.TryParse(kwMatch.Groups[1].Value, out parsedKw) && parsedKw >= 1 && parsedKw <= 53)
+                    {
+                        targetKw = parsedKw;
+                    }
+                }
+
+                if (targetKw == 0)
+                {
+                    Match dateMatch = Regex.Match(allHeaderText, @"\b(\d{1,2})\.(\d{1,2})\.(20\d{2}|\d{2})\b");
+                    if (dateMatch.Success)
+                    {
+                        int dd, mm, yy;
+                        if (int.TryParse(dateMatch.Groups[1].Value, out dd) && int.TryParse(dateMatch.Groups[2].Value, out mm) && int.TryParse(dateMatch.Groups[3].Value, out yy))
+                        {
+                            if (yy < 100) yy += 2000;
+                            try
+                            {
+                                DateTime dt = new DateTime(yy, mm, dd);
+                                targetKw = GetIsoWeekNumber(dt);
+                                targetYear = dt.Year;
+                            }
+                            catch { }
+                        }
+                    }
+                }
+
+                if (targetKw <= 0) targetKw = currentKw;
+
+                DateTime monday = GetMondayOfWeek(targetYear, targetKw);
                 DateTime friday = monday.AddDays(4);
+                bool isCurrent = (targetKw == currentKw);
 
                 StringBuilder jsonWk = new StringBuilder();
                 jsonWk.Append("{");
-                jsonWk.AppendFormat("\"weekId\":\"kw{0}\",\"kw\":{0},", currentKw);
-                jsonWk.AppendFormat("\"label\":\"Diese Woche (KW {0}: {1:dd.MM.} – {2:dd.MM.yyyy})\",", currentKw, monday, friday);
+                jsonWk.AppendFormat("\"weekId\":\"kw{0}\",\"kw\":{0},", targetKw);
+                jsonWk.AppendFormat("\"label\":\"{0}KW {1} ({2:dd.MM.} – {3:dd.MM.yyyy})\",", isCurrent ? "Diese Woche: " : "", targetKw, monday, friday);
                 jsonWk.AppendFormat("\"dateRange\":\"{0:dd.MM.yyyy} bis {1:dd.MM.yyyy}\",", monday, friday);
-                jsonWk.Append("\"isCurrent\":true,\"days\":[");
+                jsonWk.AppendFormat("\"isCurrent\":{0},\"days\":[", isCurrent ? "true" : "false");
 
                 for (int i = 0; i < dayNames.Length; i++)
                 {
@@ -1856,15 +1906,18 @@ namespace BarrierefreierStundenplan
             }
         }
 
-        private static string MergeWeekIntoCanteenJson(string newWeekJson, string sourceName, string sourceUrl)
+        private static string MergeWeekIntoCanteenJson(string newWeekJson, string sourceName, string sourceUrl, string baseJson = null)
         {
             try
             {
-                string existingJson = null;
-                byte[] seed = GetCanteenSeedBytes();
-                if (seed != null && seed.Length > 0)
+                string existingJson = baseJson;
+                if (string.IsNullOrEmpty(existingJson))
                 {
-                    existingJson = Encoding.UTF8.GetString(seed);
+                    byte[] seed = GetCanteenSeedBytes();
+                    if (seed != null && seed.Length > 0)
+                    {
+                        existingJson = Encoding.UTF8.GetString(seed);
+                    }
                 }
 
                 if (string.IsNullOrEmpty(existingJson) || !existingJson.Contains("\"weeks\""))
@@ -1878,7 +1931,7 @@ namespace BarrierefreierStundenplan
 
                 if (!string.IsNullOrEmpty(newId) && existingJson.Contains("\"" + newId + "\""))
                 {
-                    string pattern = "\\{[^{}]*\"weekId\"\\s*:\\s*\"" + Regex.Escape(newId) + "\"[\\s\\S]*?\\}(?=\\s*[\\]\\,])";
+                    string pattern = "\\{[^{}]*\"weekId\"\\s*:\\s*\"" + Regex.Escape(newId) + "\"[\\s\\S]*?\\]\\s*\\}";
                     existingJson = Regex.Replace(existingJson, pattern, newWeekJson);
                 }
                 else
@@ -2162,20 +2215,28 @@ namespace BarrierefreierStundenplan
                 }
 
                 LogUntis(string.Format("ERR EXCEPTION: {0}", webEx.Message));
-                resp.StatusCode = 500;
-                byte[] err = Encoding.UTF8.GetBytes("{\"jsonrpc\":\"2.0\",\"id\":\"err\",\"error\":{\"message\":\"" + webEx.Message.Replace("\"", "'") + "\",\"code\":-1}}");
-                resp.ContentType = "application/json; charset=utf-8";
-                resp.OutputStream.Write(err, 0, err.Length);
-                resp.Close();
+                try
+                {
+                    resp.StatusCode = 500;
+                    byte[] err = Encoding.UTF8.GetBytes("{\"jsonrpc\":\"2.0\",\"id\":\"err\",\"error\":{\"message\":\"" + webEx.Message.Replace("\"", "'") + "\",\"code\":-1}}");
+                    resp.ContentType = "application/json; charset=utf-8";
+                    resp.OutputStream.Write(err, 0, err.Length);
+                    resp.Close();
+                }
+                catch { }
             }
             catch (Exception ex)
             {
                 LogUntis(string.Format("GENERAL EXCEPTION: {0}", ex.Message));
-                resp.StatusCode = 500;
-                byte[] err = Encoding.UTF8.GetBytes("{\"jsonrpc\":\"2.0\",\"id\":\"err\",\"error\":{\"message\":\"" + ex.Message.Replace("\"", "'") + "\",\"code\":-1}}");
-                resp.ContentType = "application/json; charset=utf-8";
-                resp.OutputStream.Write(err, 0, err.Length);
-                resp.Close();
+                try
+                {
+                    resp.StatusCode = 500;
+                    byte[] err = Encoding.UTF8.GetBytes("{\"jsonrpc\":\"2.0\",\"id\":\"err\",\"error\":{\"message\":\"" + ex.Message.Replace("\"", "'") + "\",\"code\":-1}}");
+                    resp.ContentType = "application/json; charset=utf-8";
+                    resp.OutputStream.Write(err, 0, err.Length);
+                    resp.Close();
+                }
+                catch { }
             }
         }
 
