@@ -1,14 +1,14 @@
 {
   "source": "LWL-Von-Vincke-Schule Soest & BBW Soest",
   "sourceUrl": "https://www.lwl-von-vincke-schule.de/de/aktuelles/speiseplaene/",
-  "lastUpdated": "16.10.2026, 09:21 Uhr",
+  "lastUpdated": "19.10.2026, 10:21 Uhr",
   "weeks": [
     {
       "weekId": "kw42",
       "kw": 42,
       "label": "Diese Woche (KW 42: 12.10. – 16.10.2026)",
       "dateRange": "12.10. bis 16.10.2026",
-      "isCurrent": true,
+      "isCurrent": false,
       "days": [
         {
           "day": "Montag",
@@ -116,7 +116,7 @@
       "kw": 43,
       "label": "Nächste Woche (KW 43: 19.10. – 23.10.2026 - Herbstferien NRW)",
       "dateRange": "19.10. bis 23.10.2026",
-      "isCurrent": false,
+      "isCurrent": true,
       "days": [
         {
           "day": "Montag",
