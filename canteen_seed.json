@@ -1,7 +1,7 @@
 {
   "source": "LWL-Von-Vincke-Schule Soest & BBW Soest",
   "sourceUrl": "https://www.lwl-von-vincke-schule.de/de/aktuelles/speiseplaene/",
-  "lastUpdated": "23.10.2026, 09:38 Uhr",
+  "lastUpdated": "24.10.2026, 16:00 Uhr",
   "weeks": [
     {
       "weekId": "kw42",
@@ -402,6 +402,124 @@
           "menu3": "gebackene Champignons G,A,E,9,10\ngebackener Blumenkohl G,A,E,9,10\nZaziki M\nBulgur mit Paprikastücken G\nObst",
           "extra": "",
           "dinner": ""
+        }
+      ]
+    },
+    {
+      "weekId": "kw46",
+      "kw": 46,
+      "label": "Kalenderwoche 46 (09.11. – 13.11.2026)",
+      "dateRange": "09.11. bis 13.11.2026",
+      "isCurrent": false,
+      "days": [
+        {
+          "day": "Montag",
+          "date": "09.11.2026",
+          "breakfast": "Gouda & Schnittkäse, Frische Brötchen",
+          "menu1": "Knuspriges Hähnchenschnitzel mit Paprikasoße G,M,E\nPommes frites\nBunter Krautsalat D\nSchokopudding mit Vanillesoße M,S",
+          "menu2": "Knuspriges Hähnchenschnitzel mit Paprikasoße G,M,E\nPommes frites\nBunter Krautsalat D\nSchokopudding mit Vanillesoße M,S",
+          "menu3": "Gemüse-Kartoffel-Auflauf mit Mozzarella überbacken G,M,E\nBunter Krautsalat D\nSchokopudding mit Vanillesoße M,S",
+          "extra": "Große Salattheke mit diversen Rohkost- und Blattsalaten zur Selbstbedienung",
+          "dinner": "Geflügel-Aufschnitt, Edamer, Vollkornbrot"
+        },
+        {
+          "day": "Dienstag",
+          "date": "10.11.2026",
+          "breakfast": "Edamer & Frischkäse",
+          "menu1": "Rinderbratwurst mit Zwiebelbratensoße C,G\nKartoffelstampf mit Muskat M\nSauerkraut\nFruchtquark M",
+          "menu2": "Geflügelbratwurst mit Zwiebelbratensoße C,G\nKartoffelstampf mit Muskat M\nApfel-Rotkohl\nFruchtquark M",
+          "menu3": "Vegetarische Linsen-Bolognese mit Vollkorn-Spaghetti G,C,E\nBlattsalat mit Kräuterdressing M\nFruchtquark M",
+          "extra": "Tagessuppe: Klare Gemüsebrühe mit Einlage C,G",
+          "dinner": "Geflügelsalami, Frischkäse, Mischbrot"
+        },
+        {
+          "day": "Mittwoch",
+          "date": "11.11.2026",
+          "breakfast": "Tilsiter & Fruchtjoghurt",
+          "menu1": "Putengeschnetzeltes in Champignonrahmsoße M,G\nButterspätzle G,E,M\nBrokkoliröschen M\nMartinsbrezel G,M,E",
+          "menu2": "Putengeschnetzeltes in Champignonrahmsoße M,G\nButterspätzle G,E,M\nBrokkoliröschen M\nMartinsbrezel G,M,E",
+          "menu3": "Kürbis-Kichererbsen-Curry mit Kokosmilch\nDuftreis\nBrokkoliröschen\nMartinsbrezel G,M,E",
+          "extra": "Salattheke zur Selbstbedienung",
+          "dinner": "Überbackenes Käse- oder Geflügeltoast G,M"
+        },
+        {
+          "day": "Donnerstag",
+          "date": "12.11.2026",
+          "breakfast": "Butterkäse & Konfitüre",
+          "menu1": "Gebackenes Seelachsfilet F,G,E\nKräuter-Remoulade C,E,M\nSalzkartoffeln\nGurkensalat mit Dill M\nFrischer Obstsalat",
+          "menu2": "Hähnchenbrustfilet in Kräutersoße M,G\nSalzkartoffeln\nGurkensalat mit Dill M\nFrischer Obstsalat",
+          "menu3": "Spinat-Ricotta-Tortellini in Tomaten-Basilikumsoße G,E,M\nReibekäse M\nGurkensalat mit Dill M\nFrischer Obstsalat",
+          "extra": "Tagessuppe: Kartoffelcremesuppe M,C",
+          "dinner": "Geflügelfrischwurst, Schmelzkäse, Brötchen"
+        },
+        {
+          "day": "Freitag",
+          "date": "13.11.2026",
+          "breakfast": "Käseauswahl & Rührei",
+          "menu1": "Hausgemachter Eintopf mit Rindfleisch, Kartoffeln und Marktgemüse C\nVollkornbrötchen G\nBio-Apfel",
+          "menu2": "Hausgemachter Eintopf mit Rindfleisch, Kartoffeln und Marktgemüse C\nVollkornbrötchen G\nBio-Apfel",
+          "menu3": "Cremiger Kartoffel-Gemüse-Eintopf mit frischen Kräutern C,M\nVollkornbrötchen G\nBio-Apfel",
+          "extra": "Lunchpakete für die Heimreise",
+          "dinner": "Reiseproviant / Wochenend-Buffet"
+        }
+      ]
+    },
+    {
+      "weekId": "kw47",
+      "kw": 47,
+      "label": "Kalenderwoche 47 (16.11. – 20.11.2026)",
+      "dateRange": "16.11. bis 20.11.2026",
+      "isCurrent": false,
+      "days": [
+        {
+          "day": "Montag",
+          "date": "16.11.2026",
+          "breakfast": "Gouda & Geflügelaufschnitt",
+          "menu1": "Cevapcici vom Rind & Geflügel G,E\nZaziki M\nTomatenreis\nKrautsalat D\nVanillejoghurt M",
+          "menu2": "Cevapcici vom Rind & Geflügel G,E\nZaziki M\nTomatenreis\nKrautsalat D\nVanillejoghurt M",
+          "menu3": "Falafel-Bällchen mit Minz-Joghurt-Dip G,M\nTomatenreis\nKrautsalat D\nVanillejoghurt M",
+          "extra": "Große Salattheke zur Selbstbedienung",
+          "dinner": "Schnittkäse, Geflügelwurst, Vollkornbrot"
+        },
+        {
+          "day": "Dienstag",
+          "date": "17.11.2026",
+          "breakfast": "Edamer",
+          "menu1": "Hähnchenkeule knusprig gebacken\nGeflügelsoße G,C\nKartoffelwedges\nErbsen-Möhrengemüse M\nRote Grütze mit Vanillesoße M",
+          "menu2": "Hähnchenkeule knusprig gebacken\nGeflügelsoße G,C\nKartoffelwedges\nErbsen-Möhrengemüse M\nRote Grütze mit Vanillesoße M",
+          "menu3": "Blumenkohl-Käse-Medaillon G,M,E\nKräutersoße M\nKartoffelwedges\nErbsen-Möhrengemüse M\nRote Grütze mit Vanillesoße M",
+          "extra": "Tagessuppe: Tomatencremesuppe M,C",
+          "dinner": "Geflügel-Fleischsalat mit Brötchen"
+        },
+        {
+          "day": "Mittwoch",
+          "date": "18.11.2026",
+          "breakfast": "Tilsiter & Quark",
+          "menu1": "Spaghetti Bolognese vom Rind G,E,C\nGeriebener Gouda M\nBeilagensalat mit Italien-Dressing D\nSchokocreme M,S",
+          "menu2": "Spaghetti Bolognese vom Rind G,E,C\nGeriebener Gouda M\nBeilagensalat mit Italien-Dressing D\nSchokocreme M,S",
+          "menu3": "Spaghetti mit Soja-Gemüse-Bolognese G,E,S,C\nGeriebener Gouda M\nBeilagensalat mit Italien-Dressing D\nSchokocreme M,S",
+          "extra": "Salattheke zur Selbstbedienung",
+          "dinner": "Warmer Leberkäse (Geflügel) mit Kartoffelsalat"
+        },
+        {
+          "day": "Donnerstag",
+          "date": "19.11.2026",
+          "breakfast": "Butterkäse",
+          "menu1": "Fischstäbchen im Knuspermantel F,G,E\nRahmspinat M\nSalzkartoffeln\nObst der Saison",
+          "menu2": "Geflügel-Nuggets im Knuspermantel G,E\nRahmspinat M\nSalzkartoffeln\nObst der Saison",
+          "menu3": "Rührei mit frischen Kräutern E,M\nRahmspinat M\nSalzkartoffeln\nObst der Saison",
+          "extra": "Salattheke mit Kernen und Dressings",
+          "dinner": "Käseplatte, Frisches Bauernbrot"
+        },
+        {
+          "day": "Freitag",
+          "date": "20.11.2026",
+          "breakfast": "Brötchen & Käseauswahl",
+          "menu1": "Knusprige Pizza Margherita oder Pizza Salami (Pute) G,M\nBunter Blattsalat\nJoghurt-Dessert M",
+          "menu2": "Knusprige Pizza Salami (100% Pute) G,M\nBunter Blattsalat\nJoghurt-Dessert M",
+          "menu3": "Knusprige Pizza Margherita mit Tomaten und Mozzarella G,M\nBunter Blattsalat\nJoghurt-Dessert M",
+          "extra": "Lunchpakete für die Heimreise",
+          "dinner": "Reiseproviant"
         }
       ]
     }

@@ -590,8 +590,25 @@ namespace BarrierefreierStundenplan
                 {
                     Match mt = Regex.Match(q, @"[?&]title=([^&]+)");
                     if (mt.Success) title = Uri.UnescapeDataString(mt.Groups[1].Value);
-                    Match mm = Regex.Match(q, @"[?&]msg=([^&]+)");
+                    Match mm = Regex.Match(q, @"[?&](?:msg|message)=([^&]+)");
                     if (mm.Success) msg = Uri.UnescapeDataString(mm.Groups[1].Value);
+                }
+                if (req.HttpMethod == "POST" && req.HasEntityBody)
+                {
+                    try
+                    {
+                        using (StreamReader r = new StreamReader(req.InputStream, Encoding.UTF8))
+                        {
+                            string body = r.ReadToEnd();
+                            Match bt = Regex.Match(body, "\"title\"\\s*:\\s*\"((?:\\\\.|[^\"\\\\])*)\"");
+                            if (bt.Success && !string.IsNullOrEmpty(bt.Groups[1].Value))
+                                title = Regex.Unescape(bt.Groups[1].Value);
+                            Match bm = Regex.Match(body, "\"(?:message|msg)\"\\s*:\\s*\"((?:\\\\.|[^\"\\\\])*)\"");
+                            if (bm.Success && !string.IsNullOrEmpty(bm.Groups[1].Value))
+                                msg = Regex.Unescape(bm.Groups[1].Value);
+                        }
+                    }
+                    catch { }
                 }
                 LogUntis(string.Format("API /api/notify: title='{0}', msg='{1}'", title, msg));
                 ShowWindowsNotification(title, msg);
@@ -1388,8 +1405,25 @@ namespace BarrierefreierStundenplan
         
         private static byte[] GetCanteenSeedBytes()
         {
+            byte[] diskBytes = null;
+            try
+            {
+                string diskPath = Path.Combine(_baseDir, "canteen_seed.json");
+                if (File.Exists(diskPath))
+                {
+                    diskBytes = File.ReadAllBytes(diskPath);
+                }
+            }
+            catch { }
+
             string ct;
-            return GetFileOrResourceBytes("canteen_seed.json", out ct);
+            byte[] resBytes = GetFileOrResourceBytes("canteen_seed.json", out ct);
+
+            if (diskBytes != null && resBytes != null)
+            {
+                return diskBytes.Length >= resBytes.Length ? diskBytes : resBytes;
+            }
+            return diskBytes ?? resBytes;
         }
 
         private static string _cachedCanteenJson = null;
@@ -1398,7 +1432,18 @@ namespace BarrierefreierStundenplan
 
         private static void HandleCanteenApi(HttpListenerRequest req, HttpListenerResponse resp)
         {
-            string json = GetOrUpdateCanteenData();
+            bool force = false;
+            try
+            {
+                string q = (req != null && req.Url != null) ? req.Url.Query : "";
+                if (!string.IsNullOrEmpty(q) && (q.IndexOf("force", StringComparison.OrdinalIgnoreCase) >= 0 || q.IndexOf("t=", StringComparison.OrdinalIgnoreCase) >= 0))
+                {
+                    force = true;
+                }
+            }
+            catch { }
+
+            string json = GetOrUpdateCanteenData(force);
             resp.StatusCode = 200;
             resp.ContentType = "application/json; charset=utf-8";
             byte[] data = Encoding.UTF8.GetBytes(json);
@@ -1406,11 +1451,11 @@ namespace BarrierefreierStundenplan
             resp.Close();
         }
 
-        private static string GetOrUpdateCanteenData()
+        private static string GetOrUpdateCanteenData(bool force = false)
         {
             lock (_canteenLock)
             {
-                if (!string.IsNullOrEmpty(_cachedCanteenJson) && (DateTime.UtcNow - _lastCanteenFetch).TotalHours < 2)
+                if (!force && !string.IsNullOrEmpty(_cachedCanteenJson) && (DateTime.UtcNow - _lastCanteenFetch).TotalHours < 2)
                 {
                     return _cachedCanteenJson;
                 }
