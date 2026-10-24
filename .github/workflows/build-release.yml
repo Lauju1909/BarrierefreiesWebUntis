@@ -35,9 +35,13 @@ jobs:
         id: bump
         if: steps.check_skip.outputs.skip == 'false'
         run: |
+          git fetch --tags origin --force || true
           CURRENT_VER=$(jq -r '.version' version.json)
           IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT_VER"
           NEW_PATCH=$((PATCH + 1))
+          while git rev-parse "v${MAJOR}.${MINOR}.${NEW_PATCH}" >/dev/null 2>&1; do
+            NEW_PATCH=$((NEW_PATCH + 1))
+          done
           NEW_VER="${MAJOR}.${MINOR}.${NEW_PATCH}"
           TODAY=$(date +%Y-%m-%d)
           jq --arg ver "$NEW_VER" --arg date "$TODAY" '.version = $ver | .buildDate = $date' version.json > version.tmp.json && mv version.tmp.json version.json
@@ -68,9 +72,10 @@ jobs:
             [ -f "$html" ] && git add "$html"
           done
           git commit -m "chore(release): auto-bump version to v$NEW_VER [skip ci]"
-          git tag "v$NEW_VER"
+          git tag -f "v$NEW_VER"
+          git pull --rebase origin main || true
           git push origin main
-          git push origin "v$NEW_VER"
+          git push -f origin "v$NEW_VER"
 
       - name: Fallback Version if Skipped
         if: steps.check_skip.outputs.skip == 'true'
