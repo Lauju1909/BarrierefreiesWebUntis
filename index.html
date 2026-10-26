@@ -43,6 +43,10 @@
           <span class="emoji-icon" aria-hidden="true">🔊</span>
           <span data-i18n="btnReadAloud">Vorlesen (V)</span>
         </button>
+        <button type="button" class="btn btn-secondary" id="btn-header-feedback" onclick="openFeedbackModal()" title="Feedback oder Fehler an Lauju melden" aria-label="Feedback oder Fehler an Lauju melden">
+          <span class="emoji-icon" aria-hidden="true">💬</span>
+          <span>Feedback</span>
+        </button>
         <button type="button" class="btn btn-secondary" id="btn-header-logout" onclick="logoutUser()" title="Benutzer abmelden" style="display: none;">
           <span class="emoji-icon" aria-hidden="true">🚪</span>
           <span data-i18n="btnLogout">Abmelden</span>
@@ -1191,6 +1195,40 @@
           </button>
           <button type="submit" class="btn btn-primary" id="btn-save-hw-submit">
             <span class="emoji-icon" aria-hidden="true">💾 </span><strong><span data-i18n="saveHwBtn">Hausaufgabe speichern</span></strong>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       MODAL: FEEDBACK AN LAUJU SENDEN
+       ========================================================================= -->
+  <div id="modal-feedback" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-feedback-title" style="display: none;" onclick="handleFeedbackModalBackdropClick(event)">
+    <div class="modal-card" role="document">
+      <div class="modal-header">
+        <h3 id="modal-feedback-title" class="modal-title">
+          <span class="emoji-icon" aria-hidden="true">💬 </span><span>Feedback &amp; Wunsch an Lauju</span>
+        </h3>
+        <button type="button" class="modal-close-btn" onclick="closeFeedbackModal()" aria-label="Modal schließen (Taste Esc)"><span class="emoji-icon" aria-hidden="true">✕</span></button>
+      </div>
+      <form id="form-stundenplan-feedback" onsubmit="handleSendStundenplanFeedback(event)">
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="stundenplan-feedback-author" class="field-label"><strong>Dein Name oder Absender (optional):</strong></label>
+            <input type="text" id="stundenplan-feedback-author" class="large-input" placeholder="z. B. Max oder Anonym">
+          </div>
+          <div class="form-group">
+            <label for="stundenplan-feedback-message" class="field-label"><strong>Deine Idee, dein Wunsch oder Fehlerbericht:</strong> <span class="required-star">*</span></label>
+            <textarea id="stundenplan-feedback-message" class="large-input" rows="4" placeholder="z. B. Ich wünsche mir eine Funktion für..." required style="resize: vertical;"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeFeedbackModal()">
+            <span>Abbrechen (Esc)</span>
+          </button>
+          <button type="submit" class="btn btn-primary" id="btn-submit-stundenplan-feedback">
+            <span class="emoji-icon" aria-hidden="true">📤 </span><strong><span>Feedback absenden</span></strong>
           </button>
         </div>
       </form>

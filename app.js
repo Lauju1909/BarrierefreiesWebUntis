@@ -10734,3 +10734,80 @@ async function refreshCanteenData(silent = false) {
 
 document.addEventListener('DOMContentLoaded', initApp);
 
+
+// ============================================================================
+// UNIVERSAL FEEDBACK ZENTRALE (LAUJU)
+// ============================================================================
+function openFeedbackModal() {
+  const modal = document.getElementById('modal-feedback');
+  if (!modal) return;
+  modal.style.display = 'flex';
+  const input = document.getElementById('stundenplan-feedback-author');
+  if (input) input.focus();
+  announceLive('Feedback-Dialog geöffnet.');
+}
+
+function closeFeedbackModal() {
+  const modal = document.getElementById('modal-feedback');
+  if (!modal) return;
+  modal.style.display = 'none';
+  const btn = document.getElementById('btn-header-feedback');
+  if (btn) btn.focus();
+}
+
+function handleFeedbackModalBackdropClick(e) {
+  if (e.target && e.target.id === 'modal-feedback') {
+    closeFeedbackModal();
+  }
+}
+
+async function handleSendStundenplanFeedback(e) {
+  if (e && e.preventDefault) e.preventDefault();
+  const authorEl = document.getElementById('stundenplan-feedback-author');
+  const msgEl = document.getElementById('stundenplan-feedback-message');
+  const submitBtn = document.getElementById('btn-submit-stundenplan-feedback');
+
+  const author = (authorEl && authorEl.value.trim()) || 'Schüler / Nutzer (Anonym)';
+  const message = (msgEl && msgEl.value.trim()) || '';
+
+  if (!message) {
+    announceLive('Bitte gib eine Nachricht ein.');
+    return;
+  }
+
+  if (submitBtn) submitBtn.disabled = true;
+  announceLive('Feedback wird an Lauju gesendet...');
+
+  const now = new Date().toLocaleString('de-DE');
+  const nl = '\n';
+  const appVer = (typeof CURRENT_VERSION !== 'undefined') ? CURRENT_VERSION : 'v1.9.38';
+  const ntfyBody = `App: stundenplan${nl}Version: ${appVer}${nl}Absender: ${author}${nl}Datum: ${now}${nl}Nachricht: ${message}`;
+
+  try {
+    await fetch('https://ntfy.sh/lauju_app_feedback', {
+      method: 'POST',
+      headers: {
+        'Title': '[Stundenplan] Feedback von ' + author,
+        'Priority': 'default',
+        'Tags': 'speech_balloon,stundenplan'
+      },
+      body: ntfyBody
+    });
+  } catch (err) {
+    try {
+      await fetch('https://ntfy.sh/lauju_app_feedback', {
+        method: 'POST',
+        mode: 'no-cors',
+        body: ntfyBody
+      });
+    } catch (_) {}
+  }
+
+  if (authorEl) authorEl.value = '';
+  if (msgEl) msgEl.value = '';
+  if (submitBtn) submitBtn.disabled = false;
+
+  closeFeedbackModal();
+  announceLive('Vielen Dank! Dein Feedback wurde erfolgreich an Lauju übermittelt.');
+  alert('✅ Vielen Dank! Dein Feedback wurde sofort an Entwickler Lauju übertragen.');
+}
