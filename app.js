@@ -421,6 +421,651 @@ function playEarcon(type) {
  */
 
 // =============================================================================
+// =============================================================================
+// INTERNATIONALISIERUNG (I18N): DEUTSCH & ENGLISCH
+// =============================================================================
+const I18N = {
+  "de": {
+    "appName": "Barrierefreies WebUntis",
+    "schoolLiveTag": "Live aus WebUntis",
+    "statusReady": "WebUntis bereit",
+    "statusSyncing": "Synchronisiere...",
+    "statusSynced": "Live: {time} Uhr",
+    "statusOffline": "Offline-Modus",
+    "statusError": "Fehler bei Synchronisation",
+    "statusPleaseLogin": "Bitte anmelden",
+    "welcomeLoginSR": "Willkommen bei Barrierefreies WebUntis für blinde und sehbehinderte Schülerinnen und Schüler. Bitte melde dich mit deinen WebUntis-Zugangsdaten an.",
+    "btnRefresh": "Aktualisieren (A)",
+    "btnRefreshTitle": "Stundenplan jetzt von WebUntis aktualisieren (Taste A)",
+    "btnReadAloud": "Vorlesen (V)",
+    "btnReadAloudTitle": "Stundenplan laut vorlesen (Taste V)",
+    "btnLogout": "Abmelden",
+    "btnLogoutTitle": "Benutzer abmelden",
+    "btnExit": "Beenden",
+    "btnExitTitle": "Stundenplan-App komplett beenden",
+    "skipNav": "Zur Menüauswahl springen (Tasten 1-9)",
+    "skipNav8": "Zur Menüauswahl springen (Tasten 1-8)",
+    "skipDay": "Zur Tagesauswahl springen",
+    "skipContent": "Direkt zum Hauptinhalt springen",
+    "skipNavAria": "Schnellnavigation",
+    "syncStatusAria": "Synchronisationsstatus",
+    "settingsSaved": "Einstellungen gespeichert.",
+    "notLoggedIn": "Nicht angemeldet",
+    "search": "Suchen",
+    "close": "Schließen (Esc)",
+    "cancel": "Abbrechen (Esc)",
+    "tabOverview": "Übersicht",
+    "tabTimetable": "Stundenplan",
+    "tabExams": "Klausuren & Termine",
+    "tabHomework": "Hausaufgaben",
+    "tabAbsences": "Fehlzeiten",
+    "tabMessages": "Nachrichten",
+    "tabGrades": "Noten",
+    "tabCanteen": "Mensa & Speisepläne",
+    "tabSettings": "Konto & Einstellungen",
+    "srTab1": "Reiter 1: Zentrale Übersicht ausgewählt.",
+    "srTab2": "Reiter 2: Stundenplan und Vertretungsplan ausgewählt.",
+    "srTab3": "Reiter 3: Prüfungen und Termine für das gesamte Schuljahr ausgewählt.",
+    "srTab4": "Reiter 4: Hausaufgaben und Klassenbuch ausgewählt.",
+    "srTab5": "Reiter 5: Fehlzeiten und Entschuldigungen ausgewählt.",
+    "srTab6": "Reiter 6: Tagesnachrichten und Mitteilungen ausgewählt.",
+    "srTab7": "Reiter 7: Noten und Leistungsübersicht ausgewählt.",
+    "srTab8": "Reiter 8: Mensa und Speisepläne ausgewählt.",
+    "srTab9": "Reiter {n}: Konto und Einstellungen ausgewählt.",
+    "monday": "Montag",
+    "tuesday": "Dienstag",
+    "wednesday": "Mittwoch",
+    "thursday": "Donnerstag",
+    "friday": "Freitag",
+    "saturday": "Samstag",
+    "sunday": "Sonntag",
+    "today": "Heute",
+    "tomorrow": "Morgen",
+    "dayTodayBtn": "Heute (H)",
+    "dayTomorrowBtn": "Morgen",
+    "dayFullWeekBtn": "Ganze Woche",
+    "weekPrev": "Vorherige Woche",
+    "weekPrevTitle": "Vorherige Woche (Alt + links)",
+    "weekPrevAria": "Vorherige Schulwoche aufrufen",
+    "weekCurrent": "Diese Woche (W)",
+    "weekCurrentTitle": "Zur aktuellen Schulwoche zurückkehren (Taste W)",
+    "weekCurrentAria": "Zur aktuellen Schulwoche zurückkehren",
+    "weekNext": "Nächste Woche",
+    "weekNextTitle": "Nächste Woche (Alt + rechts)",
+    "weekNextAria": "Nächste Schulwoche aufrufen",
+    "readDayAloud": "Tag vorlesen (V)",
+    "readDayAloudTitle": "Diesen Tag laut vorlesen (Taste V)",
+    "timetableTitle": "Stundenplan & Vertretungen",
+    "timetableSubtitle": "Echte Live-Daten aus WebUntis mit Räumen, Lehrkräften, Vertretungen und Entfällen.",
+    "statusRegular": "Regulär",
+    "statusCancelled": "Entfall",
+    "statusSubstitute": "Vertretung",
+    "statusRoomChange": "Raumwechsel",
+    "srRegular": "Regulärer Unterricht",
+    "srCancelled": "Achtung: Stunde entfällt!",
+    "srSubstitute": "Hinweis: Vertretungsunterricht.",
+    "srRoomChange": "Hinweis: Geänderter Raum.",
+    "periodLabel": "Std.",
+    "roomLabel": "Raum:",
+    "teacherLabel": "Lehrer:",
+    "classLabel": "Klasse:",
+    "homeworkLabel": "Hausaufgabe:",
+    "topicLabel": "Lehrstoff:",
+    "noLessons": "Kein Unterricht eingetragen!",
+    "noLessonsHint": "Für diesen Tag liegen in WebUntis aktuell keine Stunden vor.",
+    "clickLessonDetails": "Klicken oder Enter drücken für Lehrstoff, Hausaufgaben & Details",
+    "overviewTitle": "Übersicht & Tagesstatus",
+    "overviewSubtitle": "Tagesaktuelle Schulinformationen, Stundenstatus, Warnungen und Fristen auf einen Blick.",
+    "urgentHeading": "Tagesnachrichten, Warnungen & Fristen",
+    "urgentSubtitle": "Tagesaktuelle Schulinformationen, Klausuren-Countdown und Fristen auf einen Blick.",
+    "readOverviewBtn": "Übersicht vorlesen (V)",
+    "goToTimetableBtn": "Zum Stundenplan (2)",
+    "nowLessonWeekend": "Aktuell (Wochenende)",
+    "weekendTitle": "Schönes Wochenende!",
+    "weekendMeta": "Am Montag geht die Schule wieder um 07:45 Uhr los.",
+    "nowLessonLabel": "Jetzt (Aktuelle Stunde)",
+    "nextLessonLabel": "Als Nächstes",
+    "noLessonNow": "Aktuell kein Unterricht",
+    "noNextLesson": "Keine weiteren Stunden heute",
+    "examsTitle": "Prüfungen, Klausuren & Schultermine",
+    "examsSubtitle": "Komplette Jahresübersicht aller Klausuren und Termine für das gesamte Schuljahr.",
+    "filterAllExams": "Alle Termine",
+    "filterOnlyExams": "Prüfungen & Klausuren",
+    "filterHolidays": "Ferien & Feiertage",
+    "filterUpcoming": "Nur anstehend",
+    "filterIserv": "IServ-Termine",
+    "readExamsBtn": "Termine vorlesen (V)",
+    "readExamsTitle": "Alle Termine und Klausuren laut vorlesen (Taste V)",
+    "noExamsFound": "Keine Klausuren gefunden",
+    "homeworkTitle": "Hausaufgaben, Klassenbucheinträge & Lehrstoff",
+    "homeworkSubtitle": "Offizielle Klassenbucheinträge, Hausaufgaben und durchgenommener Unterrichtsstoff aus WebUntis.",
+    "addHomeworkBtn": "Hausaufgabe hinzufügen (N)",
+    "syncCloudBtn": "Internet-Sync",
+    "exportHwBtn": "Teilen / Android",
+    "importHwBtn": "Import",
+    "readHwBtn": "Vorlesen (V)",
+    "hwFilterClassreg": "Klassenbucheinträge",
+    "hwFilterPending": "Offene Aufgaben",
+    "hwFilterAll": "Alle Hausaufgaben",
+    "hwFilterCompleted": "Erledigt",
+    "hwFilterClassbook": "Durchgenommener Lehrstoff",
+    "noHomework": "Keine Hausaufgaben vorhanden",
+    "dueOn": "Fällig am",
+    "markDone": "Als erledigt markieren",
+    "markUndone": "Wiedereröffnen",
+    "delete": "Löschen",
+    "absencesTitle": "Fehlzeiten & Entschuldigungen",
+    "absencesSubtitle": "Übersicht aller Fehltage, Fehlstunden und Entschuldigungsstatus aus WebUntis.",
+    "btnAbsenceToggle": "Krankmeldung / Fehlzeit erfassen (K)",
+    "btnReadAbsences": "Fehlzeiten vorlesen (V)",
+    "btnSyncAbsences": "Aktualisieren (A)",
+    "absenceFormTitle": "Krankmeldung / Fehlzeit erfassen",
+    "absenceDateFrom": "Datum (von):",
+    "absenceDateTo": "Datum (bis):",
+    "absenceReasonLabel": "Grund der Fehlzeit:",
+    "absenceReasonIllness": "Krankheit / Erkältung",
+    "absenceReasonDoctor": "Arzttermin",
+    "absenceReasonOfficial": "Behördengang / Amtstermin",
+    "absenceReasonLeave": "Genehmigte Beurlaubung",
+    "absenceReasonInternship": "Praktikum",
+    "absenceReasonOther": "Sonstiges",
+    "absenceScopeLabel": "Umfang / Zeitspanne:",
+    "absenceScopeFull": "Ganztägig (gesamter Schultag)",
+    "absenceScopeCustom": "Bestimmte Uhrzeit / Stunden",
+    "statusExcused": "Entschuldigt",
+    "statusUnexcused": "Unentschuldigt",
+    "statusOpen": "Offen",
+    "messagesTitle": "Tagesnachrichten & Mitteilungen",
+    "messagesSubtitle": "Offizielle Schulinformationen, Tagesnachrichten und Mitteilungen an Lehrkräfte direkt aus WebUntis.",
+    "btnComposeToggle": "Neue Mitteilung verfassen",
+    "btnReadMessages": "Mitteilungen vorlesen (V)",
+    "btnSyncMessages": "Aktualisieren",
+    "msgComposerTitle": "Neue Mitteilung verfassen",
+    "msgRecipientLabel": "Empfänger (Lehrkraft / Ansprechpartner):",
+    "msgRecipientPlaceholder": "-- Lehrkraft auswählen --",
+    "msgSubjectLabel": "Betreff:",
+    "msgSubjectPlaceholder": "z. B. Entschuldigung wegen Krankheit, Rückfrage zur Hausaufgabe...",
+    "msgTextLabel": "Nachrichtentext:",
+    "msgTextPlaceholder": "Schreibe hier deine Nachricht an die Lehrkraft...",
+    "btnSendMessage": "Mitteilung absenden",
+    "msgFilterAll": "Alle Nachrichten",
+    "msgFilterNews": "Tagesnachrichten",
+    "msgFilterInbox": "Posteingang",
+    "msgFilterSent": "Gesendet",
+    "gradesTitle": "Noten & Leistungsübersicht",
+    "gradesSubtitle": "Offizieller WebUntis-Leistungsstand aller Schulfächer direkt aus dem Klassenbuch (vollautomatisch synchronisiert).",
+    "btnSyncGrades": "Aus WebUntis abrufen (A)",
+    "btnReadGrades": "Noten vorlesen (V)",
+    "selectSchoolYearLabel": "Schuljahr auswählen:",
+    "statGpa": "Gesamtschnitt",
+    "statTotalGrades": "Erfasste Noten",
+    "statWritten": "Klassenarbeiten",
+    "statOral": "Sonstige Leistungen",
+    "canteenTitle": "Mensa & Speisepläne",
+    "canteenSubtitle": "Wöchentlicher Speiseplan der Mensa im LWL-Bildungszentrum Soest (Von-Vincke-Schule, BBW & Berufskolleg).",
+    "btnSyncCanteen": "Aktualisieren (A)",
+    "btnReadCanteen": "Speiseplan vorlesen (V)",
+    "selectWeekLabel": "Woche auswählen:",
+    "btnWeekPrev": "Vorherige",
+    "btnWeekNext": "Nächste",
+    "canteenAvailable": "Mensa verfügbar",
+    "settingsTitle": "Konto & Einstellungen",
+    "settingsSubtitle": "WebUntis-Verbindung verwalten, Anmeldedaten anpassen und Barrierefreiheit einstellen.",
+    "accSectionHeading": "1. WebUntis-Zugang & Schule",
+    "accUsernameLabel": "Benutzername:",
+    "accSyncTimeLabel": "Status: Zuletzt erfolgreich aktualisiert um",
+    "btnLogoutSwitch": "Abmelden & Konto wechseln",
+    "a11yHeading": "Barrierefreiheit & Kontraste (WCAG 2.2 AAA)",
+    "a11yHint": "Optimiere Farben, Schriftgrößen, Sprache und Sprachausgabe für deine Sehbedürfnisse:",
+    "themeLabel": "Farbschema & Kontrast:",
+    "themeLight": "Standard Hell (Weiß / Dunkelblau)",
+    "themeDark": "Dunkelmodus (Schonend für die Augen)",
+    "themeHighContrast": "Gelb auf Schwarz (Maximaler Kontrast für Sehbehinderte)",
+    "fontSizeLabel": "Schriftgröße:",
+    "fontNormal": "Normal (18 Pixel - Standard)",
+    "fontLarge": "Groß (22 Pixel - Gut lesbar)",
+    "fontXLarge": "Sehr groß (26 Pixel - Für Sehbehinderte)",
+    "languageLabel": "Sprache / Language:",
+    "langAuto": "Automatisch (Systemsprache) / Automatic (System language)",
+    "langDe": "Deutsch (German)",
+    "langEn": "English (Englisch)",
+    "ttsRateLabel": "Sprachausgabe: Sprechtempo:",
+    "ttsRate08": "0.8x (Langsam & sehr deutlich)",
+    "ttsRate10": "1.0x (Normal)",
+    "ttsRate12": "1.2x (Zügig)",
+    "ttsRate15": "1.5x (Schnell für Profis)",
+    "ttsEnabledLabel": "Sprachausgabe (TTS) aktivierbar",
+    "textOnlyModeLabel": "Reiner Textmodus (0 Emojis für NVDA / Braillezeile)",
+    "updatesHeading": "Software-Updates & GitHub (Auto-Updater)",
+    "updatesHint": "Die Anwendung prüft bei jedem Start und automatisch im Hintergrund auf neue Versionen:",
+    "installedVersion": "Installierte Version:",
+    "autoUpdateActive": "Automatische Hintergrundaktualisierung über GitHub ist aktiv.",
+    "autoUpdateReady": "Auto-Update bereit",
+    "btnCheckUpdate": "Jetzt auf Updates prüfen",
+    "btnOpenGitHub": "GitHub Repository aufrufen",
+    "feedbackHeading": "Feedback, Wünsche & Fehler melden",
+    "feedbackHint": "Hast du eine Idee, einen Wunsch oder ein Problem? Sende dein Feedback direkt hier über die App:",
+    "feedbackCategoryLabel": "Art des Feedbacks:",
+    "feedbackAuthorLabel": "Dein Name / Absender (optional):",
+    "feedbackAuthorPlaceholder": "Freiwillig – leer lassen für anonym",
+    "feedbackEmailLabel": "Deine E-Mail-Adresse (optional für Rückfragen):",
+    "feedbackEmailPlaceholder": "name@beispiel.de",
+    "feedbackTextLabel": "Deine Nachricht / Beschreibung:",
+    "feedbackTextPlaceholder": "Beschreibe deinen Vorschlag oder das Problem so genau wie möglich...",
+    "btnSubmitFeedback": "Vorschlag / Feedback absenden",
+    "archiveTitle": "Gesendete Nachrichten & Archiv",
+    "archiveHint": "Alle aus dieser App versendeten Nachrichten und Vorschläge auf einen Blick:",
+    "btnArchiveRefresh": "Aktualisieren",
+    "btnArchiveClear": "Archiv leeren",
+    "loginHeading": "Barrierefreies WebUntis – Anmeldung",
+    "loginSubtitle": "Entwickelt für blinde und sehbehinderte Schülerinnen und Schüler (Förderschwerpunkt Sehen)",
+    "loginDesc": "Melde dich mit deinem Schul-Benutzernamen und Passwort an. Die App ruft deinen persönlichen Stundenplan, Raumwechsel, Vertretungen und Prüfungen direkt über die WebUntis-Schnittstelle ab.",
+    "loginSchoolStep": "1. Schule auswählen:",
+    "loginSchoolSearchLabel": "WebUntis Schulsuche (Name oder Ort):",
+    "loginSchoolSearchPlaceholder": "z. B. Soest, Dortmund, Berufskolleg...",
+    "loginSchoolSearchBtn": "Suchen",
+    "loginSelectedSchool": "Ausgewählt:",
+    "loginCanteenBadge": "Mensa verfügbar",
+    "loginUserStep": "2. Benutzername (WebUntis):",
+    "loginUserPlaceholder": "Benutzername oder Schüler-ID",
+    "loginUserHint": "Dein offizieller WebUntis-Login an der ausgewählten Schule.",
+    "loginPassStep": "3. Passwort:",
+    "loginPassPlaceholder": "WebUntis Passwort",
+    "loginPassHint": "Wird verschlüsselt nur lokal auf diesem Rechner verwendet.",
+    "loginRemember": "Zugangsdaten merken (automatische Anmeldung bei jedem Start)",
+    "loginBtn": "Anmelden & Stundenplan laden",
+    "quickContrast": "Schnellauswahl Kontrast:",
+    "contrastLight": "Hell",
+    "contrastDark": "Dunkel",
+    "contrastHigh": "Gelb/Schwarz",
+    "lessonDetailsTitle": "Stunden-Details",
+    "readLessonDetails": "Details vorlesen (Taste V)",
+    "gradeModalTitle": "Klausurnote eintragen",
+    "selectExamLabel": "Klausur / Termin auswählen:",
+    "gradeAchievedLabel": "Erzielte Note:",
+    "gradePointsLabel": "Punkte / Prozent (optional):",
+    "gradePointsPlaceholder": "z. B. 45 / 50 Pkt (90%)",
+    "gradeNoteLabel": "Bemerkung der Lehrkraft (optional):",
+    "gradeNotePlaceholder": "z. B. Gute Argumentation in Teil 2",
+    "saveGradeBtn": "Note speichern",
+    "hwModalTitle": "Hausaufgabe hinzufügen",
+    "hwSubjectLabel": "Schulfach:",
+    "hwDueDateLabel": "Zu erledigen bis (Fälligkeitsdatum):",
+    "hwTomorrow": "Morgen",
+    "hwDayAfter": "Übermorgen",
+    "hwInWeek": "In 1 Woche",
+    "hwTextLabel": "Aufgabe / Beschreibung:",
+    "hwTextPlaceholder": "z. B. Buch Seite 45 Nr. 3 und 4 bearbeiten",
+    "hwScopeLabel": "Sichtbarkeit / Speicherort:",
+    "hwScopePrivate": "[Privat] Nur für mich (Persönliche Notiz)",
+    "hwScopeClass": "[Klasse] Für meine Klasse",
+    "hwScopeHint": "Wähle „Für meine Klasse“, wenn die Hausaufgabe für deine gesamte Klasse gilt und mit Klassenkameraden oder der Android-App geteilt werden soll.",
+    "saveHwBtn": "Hausaufgabe speichern",
+    "footerText": "Entwickelt für blinde und sehbehinderte Schülerinnen und Schüler",
+    "footerSub": "100% barrierefrei • Optimiert für NVDA, JAWS, Braillezeilen und Windows-Tastatursteuerung (WCAG 2.2 AAA)"
+  },
+  "en": {
+    "appName": "Accessible WebUntis",
+    "schoolLiveTag": "Live from WebUntis",
+    "statusReady": "WebUntis ready",
+    "statusSyncing": "Synchronizing...",
+    "statusSynced": "Live: {time}",
+    "statusOffline": "Offline mode",
+    "statusError": "Sync error",
+    "statusPleaseLogin": "Please log in",
+    "welcomeLoginSR": "Welcome to Accessible WebUntis for blind and visually impaired students. Please log in with your WebUntis credentials.",
+    "btnRefresh": "Refresh (A)",
+    "btnRefreshTitle": "Refresh timetable from WebUntis now (Key A)",
+    "btnReadAloud": "Read aloud (V)",
+    "btnReadAloudTitle": "Read timetable aloud (Key V)",
+    "btnLogout": "Log out",
+    "btnLogoutTitle": "Log out user",
+    "btnExit": "Exit",
+    "btnExitTitle": "Exit timetable app completely",
+    "skipNav": "Skip to menu selection (Keys 1-9)",
+    "skipNav8": "Skip to menu selection (Keys 1-8)",
+    "skipDay": "Skip to day selection",
+    "skipContent": "Skip to main content",
+    "skipNavAria": "Quick navigation",
+    "syncStatusAria": "Synchronization status",
+    "settingsSaved": "Settings saved.",
+    "notLoggedIn": "Not logged in",
+    "search": "Search",
+    "close": "Close (Esc)",
+    "cancel": "Cancel (Esc)",
+    "tabOverview": "Overview",
+    "tabTimetable": "Timetable",
+    "tabExams": "Exams & Dates",
+    "tabHomework": "Homework",
+    "tabAbsences": "Absences",
+    "tabMessages": "Messages",
+    "tabGrades": "Grades",
+    "tabCanteen": "Canteen & Menus",
+    "tabSettings": "Account & Settings",
+    "srTab1": "Tab 1: Central overview selected.",
+    "srTab2": "Tab 2: Timetable and substitution plan selected.",
+    "srTab3": "Tab 3: Exams and dates for the whole school year selected.",
+    "srTab4": "Tab 4: Homework and class register selected.",
+    "srTab5": "Tab 5: Absences and excuse notes selected.",
+    "srTab6": "Tab 6: Daily messages and announcements selected.",
+    "srTab7": "Tab 7: Grades and performance overview selected.",
+    "srTab8": "Tab 8: Canteen and menus selected.",
+    "srTab9": "Tab {n}: Account and settings selected.",
+    "monday": "Monday",
+    "tuesday": "Tuesday",
+    "wednesday": "Wednesday",
+    "thursday": "Thursday",
+    "friday": "Friday",
+    "saturday": "Saturday",
+    "sunday": "Sunday",
+    "today": "Today",
+    "tomorrow": "Tomorrow",
+    "dayTodayBtn": "Today (H)",
+    "dayTomorrowBtn": "Tomorrow",
+    "dayFullWeekBtn": "Full Week",
+    "weekPrev": "Previous week",
+    "weekPrevTitle": "Previous week (Alt + Left)",
+    "weekPrevAria": "Open previous school week",
+    "weekCurrent": "This week (W)",
+    "weekCurrentTitle": "Return to current school week (Key W)",
+    "weekCurrentAria": "Return to current school week",
+    "weekNext": "Next week",
+    "weekNextTitle": "Next week (Alt + Right)",
+    "weekNextAria": "Open next school week",
+    "readDayAloud": "Read day aloud (V)",
+    "readDayAloudTitle": "Read this day aloud (Key V)",
+    "timetableTitle": "Timetable & Substitutions",
+    "timetableSubtitle": "Live WebUntis data with rooms, teachers, substitutions and cancellations.",
+    "statusRegular": "Regular",
+    "statusCancelled": "Cancelled",
+    "statusSubstitute": "Substitution",
+    "statusRoomChange": "Room Change",
+    "srRegular": "Regular lesson",
+    "srCancelled": "Attention: Lesson cancelled!",
+    "srSubstitute": "Notice: Substitution lesson.",
+    "srRoomChange": "Notice: Changed room.",
+    "periodLabel": "Pd.",
+    "roomLabel": "Room:",
+    "teacherLabel": "Teacher:",
+    "classLabel": "Class:",
+    "homeworkLabel": "Homework:",
+    "topicLabel": "Topic:",
+    "noLessons": "No lessons scheduled!",
+    "noLessonsHint": "There are currently no lessons in WebUntis for this day.",
+    "clickLessonDetails": "Click or press Enter for syllabus, homework & details",
+    "overviewTitle": "Overview & Daily Status",
+    "overviewSubtitle": "Daily school info, lesson status, warnings and deadlines at a glance.",
+    "urgentHeading": "Daily Announcements, Warnings & Deadlines",
+    "urgentSubtitle": "Daily school information, exams countdown and deadlines at a glance.",
+    "readOverviewBtn": "Read overview aloud (V)",
+    "goToTimetableBtn": "Go to Timetable (2)",
+    "nowLessonWeekend": "Current (Weekend)",
+    "weekendTitle": "Have a nice weekend!",
+    "weekendMeta": "School starts again on Monday at 07:45.",
+    "nowLessonLabel": "Now (Current Lesson)",
+    "nextLessonLabel": "Next Lesson",
+    "noLessonNow": "No lesson right now",
+    "noNextLesson": "No further lessons today",
+    "examsTitle": "Exams, Tests & School Dates",
+    "examsSubtitle": "Complete yearly overview of all exams and dates for the school year.",
+    "filterAllExams": "All Dates",
+    "filterOnlyExams": "Exams & Tests",
+    "filterHolidays": "Holidays & Vacations",
+    "filterUpcoming": "Upcoming only",
+    "filterIserv": "IServ Dates",
+    "readExamsBtn": "Read dates aloud (V)",
+    "readExamsTitle": "Read all dates and exams aloud (Key V)",
+    "noExamsFound": "No exams found",
+    "homeworkTitle": "Homework, Class Register Entries & Syllabus",
+    "homeworkSubtitle": "Official class register entries, homework and syllabus covered in WebUntis.",
+    "addHomeworkBtn": "Add Homework (N)",
+    "syncCloudBtn": "Cloud Sync",
+    "exportHwBtn": "Share / Android",
+    "importHwBtn": "Import",
+    "readHwBtn": "Read aloud (V)",
+    "hwFilterClassreg": "Class Register Entries",
+    "hwFilterPending": "Pending Tasks",
+    "hwFilterAll": "All Homework",
+    "hwFilterCompleted": "Completed",
+    "hwFilterClassbook": "Covered Topics",
+    "noHomework": "No homework available",
+    "dueOn": "Due on",
+    "markDone": "Mark as completed",
+    "markUndone": "Reopen",
+    "delete": "Delete",
+    "absencesTitle": "Absences & Excuse Notes",
+    "absencesSubtitle": "Overview of all missed days, hours and excuse status from WebUntis.",
+    "btnAbsenceToggle": "Report Absence / Sick Note (K)",
+    "btnReadAbsences": "Read absences aloud (V)",
+    "btnSyncAbsences": "Refresh (A)",
+    "absenceFormTitle": "Report Absence / Sick Note",
+    "absenceDateFrom": "Date (from):",
+    "absenceDateTo": "Date (to):",
+    "absenceReasonLabel": "Reason for absence:",
+    "absenceReasonIllness": "Illness / Cold",
+    "absenceReasonDoctor": "Doctor appointment",
+    "absenceReasonOfficial": "Official appointment",
+    "absenceReasonLeave": "Approved leave",
+    "absenceReasonInternship": "Internship",
+    "absenceReasonOther": "Other",
+    "absenceScopeLabel": "Scope / Timeframe:",
+    "absenceScopeFull": "All day (full school day)",
+    "absenceScopeCustom": "Specific time / hours",
+    "statusExcused": "Excused",
+    "statusUnexcused": "Unexcused",
+    "statusOpen": "Pending",
+    "messagesTitle": "Messages & Announcements",
+    "messagesSubtitle": "Official school information, daily news and messages to teachers directly from WebUntis.",
+    "btnComposeToggle": "Compose New Message",
+    "btnReadMessages": "Read messages aloud (V)",
+    "btnSyncMessages": "Refresh",
+    "msgComposerTitle": "Compose New Message",
+    "msgRecipientLabel": "Recipient (Teacher / Contact):",
+    "msgRecipientPlaceholder": "-- Select teacher --",
+    "msgSubjectLabel": "Subject:",
+    "msgSubjectPlaceholder": "e.g. Question regarding homework, sick note...",
+    "msgTextLabel": "Message text:",
+    "msgTextPlaceholder": "Write your message to the teacher here...",
+    "btnSendMessage": "Send Message",
+    "msgFilterAll": "All Messages",
+    "msgFilterNews": "Daily News",
+    "msgFilterInbox": "Inbox",
+    "msgFilterSent": "Sent",
+    "gradesTitle": "Grades & Performance Overview",
+    "gradesSubtitle": "Official WebUntis performance across all subjects directly from the class register (fully synced).",
+    "btnSyncGrades": "Fetch from WebUntis (A)",
+    "btnReadGrades": "Read grades aloud (V)",
+    "selectSchoolYearLabel": "Select school year:",
+    "statGpa": "Overall GPA",
+    "statTotalGrades": "Recorded Grades",
+    "statWritten": "Written Exams",
+    "statOral": "Oral / Other Grades",
+    "canteenTitle": "Canteen & Daily Menus",
+    "canteenSubtitle": "Weekly canteen menu at the LWL Education Center Soest (Von-Vincke School, BBW & College).",
+    "btnSyncCanteen": "Refresh (A)",
+    "btnReadCanteen": "Read menu aloud (V)",
+    "selectWeekLabel": "Select week:",
+    "btnWeekPrev": "Previous",
+    "btnWeekNext": "Next",
+    "canteenAvailable": "Canteen available",
+    "settingsTitle": "Account & Settings",
+    "settingsSubtitle": "Manage WebUntis connection, credentials, and accessibility preferences.",
+    "accSectionHeading": "1. WebUntis Login & School",
+    "accUsernameLabel": "Username:",
+    "accSyncTimeLabel": "Status: Successfully updated at",
+    "btnLogoutSwitch": "Log out & switch account",
+    "a11yHeading": "Accessibility & Contrasts (WCAG 2.2 AAA)",
+    "a11yHint": "Optimize colors, font sizes, language and speech output for your visual needs:",
+    "themeLabel": "Color scheme & contrast:",
+    "themeLight": "Standard Light (White / Dark Blue)",
+    "themeDark": "Dark Mode (Easy on the eyes)",
+    "themeHighContrast": "Yellow on Black (Maximum contrast for visually impaired)",
+    "fontSizeLabel": "Font size:",
+    "fontNormal": "Normal (18 Pixels - Standard)",
+    "fontLarge": "Large (22 Pixels - Easy to read)",
+    "fontXLarge": "Extra Large (26 Pixels - For visually impaired)",
+    "languageLabel": "Language / Sprache:",
+    "langAuto": "Automatic (System language) / Automatisch (Systemsprache)",
+    "langDe": "German (Deutsch)",
+    "langEn": "English (Englisch)",
+    "ttsRateLabel": "Speech output: Speed rate:",
+    "ttsRate08": "0.8x (Slow & very clear)",
+    "ttsRate10": "1.0x (Normal)",
+    "ttsRate12": "1.2x (Brisk)",
+    "ttsRate15": "1.5x (Fast for power users)",
+    "ttsEnabledLabel": "Enable speech output (TTS)",
+    "textOnlyModeLabel": "Plain text mode (0 emojis for NVDA / Braille display)",
+    "updatesHeading": "Software Updates & GitHub (Auto-Updater)",
+    "updatesHint": "The application checks for new versions on startup and automatically in the background:",
+    "installedVersion": "Installed version:",
+    "autoUpdateActive": "Automatic background updates via GitHub are active.",
+    "autoUpdateReady": "Auto-update ready",
+    "btnCheckUpdate": "Check for updates now",
+    "btnOpenGitHub": "Open GitHub Repository",
+    "feedbackHeading": "Feedback, Suggestions & Bug Reports",
+    "feedbackHint": "Have an idea, wish, or issue? Send your feedback directly via the app:",
+    "feedbackCategoryLabel": "Feedback type:",
+    "feedbackAuthorLabel": "Your name / sender (optional):",
+    "feedbackAuthorPlaceholder": "Optional – leave blank for anonymous",
+    "feedbackEmailLabel": "Your email address (optional for inquiries):",
+    "feedbackEmailPlaceholder": "name@example.com",
+    "feedbackTextLabel": "Your message / description:",
+    "feedbackTextPlaceholder": "Describe your suggestion or issue as clearly as possible...",
+    "btnSubmitFeedback": "Submit Proposal / Feedback",
+    "archiveTitle": "Sent Messages & Archive",
+    "archiveHint": "All messages and suggestions sent from this app at a glance:",
+    "btnArchiveRefresh": "Refresh",
+    "btnArchiveClear": "Clear archive",
+    "loginHeading": "Accessible WebUntis – Login",
+    "loginSubtitle": "Developed for blind and visually impaired students",
+    "loginDesc": "Log in with your school username and password. The app retrieves your personal timetable, room changes, substitutions, and exams directly via the WebUntis interface.",
+    "loginSchoolStep": "1. Select school:",
+    "loginSchoolSearchLabel": "WebUntis School Search (Name or City):",
+    "loginSchoolSearchPlaceholder": "e.g. Soest, Dortmund, College...",
+    "loginSchoolSearchBtn": "Search",
+    "loginSelectedSchool": "Selected:",
+    "loginCanteenBadge": "Canteen available",
+    "loginUserStep": "2. Username (WebUntis):",
+    "loginUserPlaceholder": "Username or Student ID",
+    "loginUserHint": "Your official WebUntis login at the selected school.",
+    "loginPassStep": "3. Password:",
+    "loginPassPlaceholder": "WebUntis password",
+    "loginPassHint": "Used securely only on this local device.",
+    "loginRemember": "Remember credentials (auto-login on every startup)",
+    "loginBtn": "Log In & Load Timetable",
+    "quickContrast": "Quick contrast selection:",
+    "contrastLight": "Light",
+    "contrastDark": "Dark",
+    "contrastHigh": "Yellow/Black",
+    "lessonDetailsTitle": "Lesson Details",
+    "readLessonDetails": "Read details aloud (Key V)",
+    "gradeModalTitle": "Enter Exam Grade",
+    "selectExamLabel": "Select exam / date:",
+    "gradeAchievedLabel": "Grade received:",
+    "gradePointsLabel": "Points / Percentage (optional):",
+    "gradePointsPlaceholder": "e.g. 45 / 50 pts (90%)",
+    "gradeNoteLabel": "Teacher note (optional):",
+    "gradeNotePlaceholder": "e.g. Good argumentation in part 2",
+    "saveGradeBtn": "Save Grade",
+    "hwModalTitle": "Add Homework",
+    "hwSubjectLabel": "Subject:",
+    "hwDueDateLabel": "Due date:",
+    "hwTomorrow": "Tomorrow",
+    "hwDayAfter": "Day after tomorrow",
+    "hwInWeek": "In 1 week",
+    "hwTextLabel": "Assignment / Description:",
+    "hwTextPlaceholder": "e.g. Book page 45 exercises 3 and 4",
+    "hwScopeLabel": "Visibility / Storage location:",
+    "hwScopePrivate": "[Private] Only for me (Personal note)",
+    "hwScopeClass": "[Class] For my class",
+    "hwScopeHint": "Choose \"For my class\" if the homework applies to your entire class and should be shared with classmates or the Android app.",
+    "saveHwBtn": "Save Homework",
+    "footerText": "Developed for blind and visually impaired students",
+    "footerSub": "100% accessible • Optimized for NVDA, JAWS, TalkBack, Braille displays and keyboard navigation (WCAG 2.2 AAA)"
+  }
+};
+
+function getEffectiveLanguage() {
+  const pref = (appData && appData.config && appData.config.language) || 'auto';
+  if (pref === 'de' || pref === 'en') return pref;
+  try {
+    const nav = (navigator.language || (navigator.languages && navigator.languages[0]) || 'de').toLowerCase();
+    if (nav.startsWith('en')) return 'en';
+  } catch (e) {}
+  return 'de';
+}
+
+function t(key, params = {}) {
+  const lang = getEffectiveLanguage();
+  let str = (I18N[lang] && I18N[lang][key] !== undefined)
+    ? I18N[lang][key]
+    : ((I18N['de'] && I18N['de'][key] !== undefined) ? I18N['de'][key] : key);
+  if (params && typeof params === 'object') {
+    Object.keys(params).forEach(k => {
+      str = str.replace(new RegExp(`\\{${k}\\}`, 'g'), params[k]);
+    });
+  }
+  return str;
+}
+
+function applyLanguage() {
+  const lang = getEffectiveLanguage();
+  try {
+    document.documentElement.lang = lang;
+  } catch (e) {}
+
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    const val = t(key);
+    if (val !== undefined && val !== key) {
+      el.textContent = val;
+    }
+  });
+
+  document.querySelectorAll('[data-i18n-html]').forEach(el => {
+    const key = el.getAttribute('data-i18n-html');
+    const val = t(key);
+    if (val !== undefined && val !== key) {
+      el.innerHTML = val;
+    }
+  });
+
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    const key = el.getAttribute('data-i18n-placeholder');
+    const val = t(key);
+    if (val !== undefined && val !== key) {
+      el.setAttribute('placeholder', val);
+    }
+  });
+
+  document.querySelectorAll('[data-i18n-title]').forEach(el => {
+    const key = el.getAttribute('data-i18n-title');
+    const val = t(key);
+    if (val !== undefined && val !== key) {
+      el.setAttribute('title', val);
+    }
+  });
+
+  document.querySelectorAll('[data-i18n-aria-label]').forEach(el => {
+    const key = el.getAttribute('data-i18n-aria-label');
+    const val = t(key);
+    if (val !== undefined && val !== key) {
+      el.setAttribute('aria-label', val);
+    }
+  });
+
+  // Dynamic status and week labels
+  updateTodayBadge();
+  updateWeekAndDayLabels();
+  updateNavigationForSchool();
+  updateSyncDisplay();
+
+  const cfgLang = document.getElementById('cfg-language');
+  if (cfgLang && appData && appData.config) {
+    cfgLang.value = appData.config.language || 'auto';
+  }
+}
+
 // 1. STANDARD-DATEN & VORKONFIGURATION (LWL-BERUFSKOLLEG SOEST)
 // =============================================================================
 const DEFAULT_CONFIG = {
@@ -433,6 +1078,7 @@ const DEFAULT_CONFIG = {
   rememberLogin: true,
   theme: 'theme-light',
   fontSize: 'font-normal',
+  language: 'auto',
   ttsEnabled: true,
   ttsRate: 1.0,
   textOnlyMode: false,
@@ -618,14 +1264,14 @@ function updateNavigationForSchool() {
 
   if (skipLinkNav) {
     skipLinkNav.textContent = isSoest
-      ? 'Zur Menüauswahl springen (Tasten 1-9)'
-      : 'Zur Menüauswahl springen (Tasten 1-8)';
+      ? t('skipNav')
+      : t('skipNav8');
   }
 
   const headerSchoolEl = document.getElementById('header-school-name');
   if (headerSchoolEl) {
     const sName = (appData && appData.config && appData.config.schoolName) || 'WebUntis';
-    headerSchoolEl.textContent = `${sName} • Live aus WebUntis`;
+    headerSchoolEl.textContent = `${sName} • ${t('schoolLiveTag')}`;
   }
 
   const loginSub = document.getElementById('login-subtitle-school');
@@ -912,6 +1558,9 @@ function applyConfig() {
     body.classList.remove('text-only-mode');
   }
 
+  // Sprache anwenden & lokalisierte Elemente aktualisieren
+  applyLanguage();
+
   // Navigation & Header School Name aktualisieren
   updateNavigationForSchool();
 
@@ -920,6 +1569,8 @@ function applyConfig() {
   if (cfgTheme) cfgTheme.value = appData.config.theme;
   const cfgFont = document.getElementById('cfg-font-size');
   if (cfgFont) cfgFont.value = appData.config.fontSize;
+  const cfgLang = document.getElementById('cfg-language');
+  if (cfgLang) cfgLang.value = appData.config.language || 'auto';
   const cfgTextOnly = document.getElementById('cfg-text-only');
   if (cfgTextOnly) cfgTextOnly.checked = !!appData.config.textOnlyMode;
   const cfgTts = document.getElementById('cfg-tts');
@@ -929,7 +1580,7 @@ function applyConfig() {
 
   // Account Display
   const uDisp = document.getElementById('settings-username-display');
-  if (uDisp) uDisp.textContent = appData.config.username || 'Nicht angemeldet';
+  if (uDisp) uDisp.textContent = appData.config.username || t('notLoggedIn');
 
   // IServ Settings Population
   const cfgIservEnabled = document.getElementById('cfg-iserv-enabled');
@@ -953,6 +1604,9 @@ function saveSettings(e) {
   const cfgFont = document.getElementById('cfg-font-size');
   if (cfgFont) appData.config.fontSize = cfgFont.value;
 
+  const cfgLang = document.getElementById('cfg-language');
+  if (cfgLang) appData.config.language = cfgLang.value;
+
   const cfgTts = document.getElementById('cfg-tts');
   if (cfgTts) appData.config.ttsEnabled = cfgTts.checked;
 
@@ -964,7 +1618,32 @@ function saveSettings(e) {
 
   saveAppData();
   applyConfig();
-  announceSR('Einstellungen gespeichert.', 'polite');
+
+  // Aktive Ansicht neu rendern falls eingeloggt
+  if (appData.config.username && appData.config.password) {
+    if (typeof currentTab !== 'undefined') {
+      if (currentTab === 'overview') {
+        renderUrgentNotificationBanner();
+        updateCurrentAndNextLesson();
+      } else if (currentTab === 'timetable') {
+        renderTimetable();
+      } else if (currentTab === 'exams') {
+        renderExams();
+      } else if (currentTab === 'homework') {
+        renderHomework();
+      } else if (currentTab === 'absences') {
+        renderAbsences();
+      } else if (currentTab === 'messages') {
+        renderMessagesView();
+      } else if (currentTab === 'grades') {
+        renderGradesView();
+      } else if (currentTab === 'canteen') {
+        renderCanteenView();
+      }
+    }
+  }
+
+  announceSR(t('settingsSaved'), 'polite');
 }
 
 function setThemeDirect(themeName) {
@@ -980,15 +1659,129 @@ function setThemeDirect(themeName) {
 // Comprehensive emoji regex for clean screenreader & TTS output
 const ALL_EMOJI_REGEX = /[\u{1F000}-\u{1FFFF}\u{2600}-\u{27BF}\u{2300}-\u{23FF}\u{2B00}-\u{2BFF}\u{1F900}-\u{1F9FF}\u{1FA00}-\u{1FA9F}\u{231A}-\u{231B}\u{23E9}-\u{23F3}\u{23F8}-\u{23FA}\u{25AA}-\u{25AB}\u{25B6}\u{25C0}\u{25FB}-\u{25FE}\u{2614}-\u{2615}\u{2648}-\u{2653}\u{267F}\u{2693}\u{26A1}\u{26AA}-\u{26AB}\u{26BD}-\u{26BE}\u{26C4}-\u{26C5}\u{26CE}\u{26D4}\u{26EA}\u{26F2}-\u{26F3}\u{26F5}\u{26FA}\u{26FD}\u{2702}\u{2705}\u{2708}-\u{270D}\u{270F}\u{2712}\u{2714}\u{2716}\u{271D}\u{2721}\u{2728}\u{2733}-\u{2734}\u{2744}\u{2747}\u{274C}\u{274E}\u{2753}-\u{2755}\u{2757}\u{2763}-\u{2764}\u{2795}-\u{2797}\u{27A1}\u{27B0}\u{27BF}\u{2934}-\u{2935}\u{2B05}-\u{2B07}\u{2B1B}-\u{2B1C}\u{2B50}\u{2B55}\u{3030}\u{303D}\u{3297}\u{3299}\u{FE0F}]/gu;
 
+function triggerAccessibleFeedback(type = 'tap') {
+  if (typeof navigator !== 'undefined' && navigator.vibrate) {
+    const patterns = {
+      tap: [15],
+      success: [30, 50, 30],
+      warning: [40, 60, 40],
+      error: [80, 50, 80],
+      boundary: [25, 25, 25]
+    };
+    try { navigator.vibrate(patterns[type] || [15]); } catch (_) {}
+  }
+  try {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext) return;
+    if (!window.__sharedAudioCtx) window.__sharedAudioCtx = new AudioContext();
+    const ctx = window.__sharedAudioCtx;
+    if (ctx.state === 'suspended') ctx.resume();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    const now = ctx.currentTime;
+    
+    if (type === 'success') {
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(523.25, now); // C5
+      osc.frequency.setValueAtTime(659.25, now + 0.08); // E5
+      gain.gain.setValueAtTime(0.12, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+      osc.start(now);
+      osc.stop(now + 0.22);
+    } else if (type === 'error') {
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(220, now); // A3
+      osc.frequency.setValueAtTime(164.81, now + 0.09); // E3
+      gain.gain.setValueAtTime(0.15, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+      osc.start(now);
+      osc.stop(now + 0.25);
+    } else if (type === 'warning') {
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(440, now);
+      osc.frequency.setValueAtTime(392, now + 0.07);
+      gain.gain.setValueAtTime(0.1, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+      osc.start(now);
+      osc.stop(now + 0.18);
+    } else if (type === 'boundary') {
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(330, now);
+      gain.gain.setValueAtTime(0.08, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
+      osc.start(now);
+      osc.stop(now + 0.09);
+    } else { // tap
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(800, now);
+      gain.gain.setValueAtTime(0.05, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+      osc.start(now);
+      osc.stop(now + 0.04);
+    }
+  } catch (_) {}
+}
+
+class AriaLiveQueue {
+  constructor() {
+    this.queue = [];
+    this.isProcessing = false;
+    this.timer = null;
+  }
+
+  announce(message, priority = 'polite') {
+    if (!message) return;
+    const cleanMsg = String(message).replace(ALL_EMOJI_REGEX, '').trim();
+    if (!cleanMsg) return;
+
+    if (priority === 'assertive') {
+      if (this.timer) {
+        clearTimeout(this.timer);
+        this.timer = null;
+      }
+      this.queue.unshift({ message: cleanMsg, priority: 'assertive' });
+      this.isProcessing = false;
+      this.processNext();
+    } else {
+      this.queue.push({ message: cleanMsg, priority: 'polite' });
+      if (!this.isProcessing) {
+        this.processNext();
+      }
+    }
+  }
+
+  processNext() {
+    if (this.queue.length === 0) {
+      this.isProcessing = false;
+      return;
+    }
+
+    this.isProcessing = true;
+    const item = this.queue.shift();
+    const targetId = item.priority === 'assertive' ? 'sr-live-assertive' : 'sr-live';
+    const liveEl = document.getElementById(targetId);
+
+    if (liveEl) {
+      liveEl.textContent = '';
+      setTimeout(() => {
+        liveEl.textContent = item.message;
+        const readDuration = Math.max(1200, item.message.length * 65);
+        this.timer = setTimeout(() => {
+          this.processNext();
+        }, readDuration);
+      }, 50);
+    } else {
+      this.processNext();
+    }
+  }
+}
+
+const ariaLiveQueue = new AriaLiveQueue();
+
 function announceSR(message, priority = 'polite') {
-  const targetId = priority === 'assertive' ? 'sr-live-assertive' : 'sr-live';
-  const liveEl = document.getElementById(targetId);
-  if (!liveEl) return;
-  const cleanMsg = (message || '').replace(ALL_EMOJI_REGEX, '').trim();
-  liveEl.textContent = '';
-  setTimeout(() => {
-    liveEl.textContent = cleanMsg;
-  }, 50);
+  ariaLiveQueue.announce(message, priority);
 }
 
 function speak(text, force = false) {
@@ -999,7 +1792,7 @@ function speak(text, force = false) {
     speechSynth.cancel();
     const cleanText = (text || '').replace(ALL_EMOJI_REGEX, '').trim();
     const utter = new SpeechSynthesisUtterance(cleanText);
-    utter.lang = 'de-DE';
+    utter.lang = getEffectiveLanguage() === 'en' ? 'en-US' : 'de-DE';
     utter.rate = appData.config.ttsRate || 1.0;
     speechSynth.speak(utter);
   } catch (e) {
@@ -1027,6 +1820,7 @@ function escapeHtml(str) {
 // 4. NAVIGATION & REITER-WECHSEL (TASTEN 1 BIS 8)
 // =============================================================================
 function switchTab(tabId) {
+  triggerAccessibleFeedback('tap');
   currentTab = tabId;
 
   const tabs = [
@@ -1061,29 +1855,29 @@ function switchTab(tabId) {
   if (tabId === 'overview') {
     renderUrgentNotificationBanner();
     updateCurrentAndNextLesson();
-    announceSR('Reiter 1: Zentrale Übersicht ausgewählt.', 'polite');
+    announceSR(t('srTab1'), 'polite');
   } else if (tabId === 'timetable') {
     updateWeekAndDayLabels();
     renderTimetable();
-    announceSR('Reiter 2: Stundenplan und Vertretungsplan ausgewählt.', 'polite');
+    announceSR(t('srTab2'), 'polite');
   } else if (tabId === 'exams') {
     renderExams();
-    announceSR('Reiter 3: Prüfungen und Termine für das gesamte Schuljahr ausgewählt.', 'polite');
+    announceSR(t('srTab3'), 'polite');
   } else if (tabId === 'homework') {
     renderHomework();
-    announceSR('Reiter 4: Hausaufgaben und Klassenbuch ausgewählt.', 'polite');
+    announceSR(t('srTab4'), 'polite');
   } else if (tabId === 'absences') {
     renderAbsences();
-    announceSR('Reiter 5: Fehlzeiten und Entschuldigungen ausgewählt.', 'polite');
+    announceSR(t('srTab5'), 'polite');
   } else if (tabId === 'messages') {
     renderMessagesView();
-    announceSR('Reiter 6: Tagesnachrichten und Mitteilungen ausgewählt.', 'polite');
+    announceSR(t('srTab6'), 'polite');
   } else if (tabId === 'grades') {
     renderGradesView();
-    announceSR('Reiter 7: Noten und Leistungsübersicht ausgewählt.', 'polite');
+    announceSR(t('srTab7'), 'polite');
   } else if (tabId === 'canteen') {
     renderCanteenView();
-    announceSR('Reiter 8: Mensa und Speisepläne ausgewählt.', 'polite');
+    announceSR(t('srTab8'), 'polite');
     const curWkId = getCurrentCanteenWeekId();
     if (!appData.canteen || !appData.canteen.weeks || !appData.canteen.weeks.some(w => w.weekId === curWkId && Array.isArray(w.days) && w.days.length > 0)) {
       refreshCanteenData(true).catch(e => console.log('Auto-fetch canteen on tab switch:', e));
@@ -1091,7 +1885,7 @@ function switchTab(tabId) {
   } else if (tabId === 'settings') {
     loadFeedbackArchive();
     const keyNum = isSoestCampusSchool() ? '9' : '8';
-    announceSR(`Reiter ${keyNum}: Konto und Einstellungen ausgewählt.`, 'polite');
+    announceSR(t('srTab9', { n: keyNum }), 'polite');
   }
 }
 
@@ -1299,9 +2093,9 @@ function showLoginView() {
   }
 
   const statusEl = document.getElementById('sync-status-text');
-  if (statusEl) statusEl.textContent = 'Bitte anmelden';
+  if (statusEl) statusEl.textContent = t('statusPleaseLogin');
 
-  announceSR('Willkommen bei Barrierefreies WebUntis für blinde und sehbehinderte Schülerinnen und Schüler. Bitte melde dich mit deinen WebUntis-Zugangsdaten an.', 'assertive');
+  announceSR(t('welcomeLoginSR'), 'assertive');
 }
 
 function hideLoginView() {
@@ -4250,10 +5044,19 @@ function updateSyncDisplay() {
 
   if (!lastSyncTimestamp) return;
 
-  const timeStr = lastSyncTimestamp.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
-  if (syncStatusText) syncStatusText.textContent = `Live: ${timeStr} Uhr`;
-  if (timerBadge) timerBadge.textContent = `Zuletzt aktualisiert: ${timeStr} Uhr (automatische Aktualisierung alle 5 Min)`;
-  if (settingsTime) settingsTime.textContent = `Status: Zuletzt erfolgreich aktualisiert um ${timeStr} Uhr`;
+  const isEn = getEffectiveLanguage() === 'en';
+  const timeStr = lastSyncTimestamp.toLocaleTimeString(isEn ? 'en-US' : 'de-DE', { hour: '2-digit', minute: '2-digit' });
+  if (syncStatusText) syncStatusText.textContent = t('statusSynced', { time: timeStr });
+  if (timerBadge) {
+    timerBadge.textContent = isEn
+      ? `Last updated: ${timeStr} (automatic update every 5 min)`
+      : `Zuletzt aktualisiert: ${timeStr} Uhr (automatische Aktualisierung alle 5 Min)`;
+  }
+  if (settingsTime) {
+    settingsTime.textContent = isEn
+      ? `Status: Successfully updated at ${timeStr}`
+      : `Status: Zuletzt erfolgreich aktualisiert um ${timeStr} Uhr`;
+  }
 }
 
 function triggerManualSync() {
@@ -4292,14 +5095,18 @@ function getEffectiveDayIndex(dayChoice) {
 }
 
 function getDayName(dayIndex) {
-  const names = ['', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag'];
-  return names[dayIndex] || 'Unbekannt';
+  const isEn = getEffectiveLanguage() === 'en';
+  const names = isEn
+    ? ['', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']
+    : ['', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag'];
+  return names[dayIndex] || (isEn ? 'Unknown' : 'Unbekannt');
 }
 
 function updateTodayBadge() {
   const now = new Date();
+  const isEn = getEffectiveLanguage() === 'en';
   const options = { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' };
-  const str = now.toLocaleDateString('de-DE', options);
+  const str = now.toLocaleDateString(isEn ? 'en-US' : 'de-DE', options);
   const badge = document.getElementById('today-date-text');
   if (badge) badge.textContent = str;
 }
@@ -4760,6 +5567,7 @@ function getMondayForWeekOffset(offset = selectedWeekOffset) {
 // getISOWeekNumber ist oben deklariert
 
 function updateWeekAndDayLabels() {
+  const isEn = getEffectiveLanguage() === 'en';
   const monday = getMondayForWeekOffset(selectedWeekOffset);
   const friday = new Date(monday);
   friday.setDate(monday.getDate() + 4);
@@ -4771,31 +5579,38 @@ function updateWeekAndDayLabels() {
   const fMon = String(friday.getMonth() + 1).padStart(2, '0');
   const fYear = friday.getFullYear();
 
-  let badgeText = `KW ${kw} • ${mDay}.${mMon}. – ${fDay}.${fMon}.${fYear}`;
+  const kwLabel = isEn ? 'Wk' : 'KW';
+  const dateRangeStr = isEn ? `${mMon}/${mDay} - ${fMon}/${fDay}/${fYear}` : `${mDay}.${mMon}. – ${fDay}.${fMon}.${fYear}`;
+  let badgeText = `${kwLabel} ${kw} • ${dateRangeStr}`;
   if (selectedWeekOffset === 0) {
-    badgeText += ' (Aktuelle Woche)';
+    badgeText += isEn ? ' (Current week)' : ' (Aktuelle Woche)';
   } else if (selectedWeekOffset === -1) {
-    badgeText += ' (Letzte Woche)';
+    badgeText += isEn ? ' (Last week)' : ' (Letzte Woche)';
   } else if (selectedWeekOffset === 1) {
-    badgeText += ' (Nächste Woche)';
+    badgeText += isEn ? ' (Next week)' : ' (Nächste Woche)';
   } else if (selectedWeekOffset < -1) {
-    badgeText += ` (${Math.abs(selectedWeekOffset)} Wochen zurück)`;
+    badgeText += isEn ? ` (${Math.abs(selectedWeekOffset)} weeks ago)` : ` (${Math.abs(selectedWeekOffset)} Wochen zurück)`;
   } else {
-    badgeText += ` (${selectedWeekOffset} Wochen voraus)`;
+    badgeText += isEn ? ` (${selectedWeekOffset} weeks ahead)` : ` (${selectedWeekOffset} Wochen voraus)`;
   }
 
   const badgeEl = document.getElementById('week-display-badge');
   if (badgeEl) badgeEl.textContent = badgeText;
 
   // Wochentags-Buttons beschriften
-  const dayNames = ['', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag'];
+  const dayNames = isEn
+    ? ['', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']
+    : ['', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag'];
   for (let i = 1; i <= 5; i++) {
     const curD = new Date(monday);
     curD.setDate(monday.getDate() + (i - 1));
     const cDay = String(curD.getDate()).padStart(2, '0');
     const cMon = String(curD.getMonth() + 1).padStart(2, '0');
     const lbl = document.getElementById(`day-label-${i}`);
-    if (lbl) lbl.textContent = `${dayNames[i]} (${cDay}.${cMon}.)`;
+    if (lbl) {
+      const dStr = isEn ? `${cMon}/${cDay}` : `${cDay}.${cMon}.`;
+      lbl.textContent = `${dayNames[i]} (${dStr})`;
+    }
   }
 }
 
@@ -4938,14 +5753,19 @@ function renderTimetable() {
   });
   lessons = uniqueLessons;
 
+  const isEn = getEffectiveLanguage() === 'en';
   const titleEl = document.getElementById('timetable-view-title');
   if (titleEl) {
     const monday = getMondayForWeekOffset(selectedWeekOffset);
     const kw = getISOWeekNumber(monday);
     if (isWeekView) {
-      titleEl.textContent = `Stundenplan für KW ${kw} (Ganze Schulwoche Montag bis Freitag)`;
+      titleEl.textContent = isEn
+        ? `Timetable for Week ${kw} (Full School Week Monday to Friday)`
+        : `Stundenplan für KW ${kw} (Ganze Schulwoche Montag bis Freitag)`;
     } else {
-      titleEl.textContent = `Stundenplan für ${getDayName(dayIndex)} (KW ${kw})`;
+      titleEl.textContent = isEn
+        ? `Timetable for ${getDayName(dayIndex)} (Week ${kw})`
+        : `Stundenplan für ${getDayName(dayIndex)} (KW ${kw})`;
     }
   }
 
@@ -4953,8 +5773,8 @@ function renderTimetable() {
     container.innerHTML = `
       <div class="status-box" style="padding: 28px; text-align: center;">
         <span class="emoji-icon" style="font-size: 36px;" aria-hidden="true">🎉</span>
-        <h3 style="font-size: var(--font-size-lg); font-weight: bold; margin-top: 10px;">Kein Unterricht eingetragen!</h3>
-        <p class="field-hint">Für diesen Tag liegen in WebUntis aktuell keine Stunden vor.</p>
+        <h3 style="font-size: var(--font-size-lg); font-weight: bold; margin-top: 10px;">${isEn ? 'No lessons scheduled!' : 'Kein Unterricht eingetragen!'}</h3>
+        <p class="field-hint">${isEn ? 'There are currently no lessons in WebUntis for this day.' : 'Für diesen Tag liegen in WebUntis aktuell keine Stunden vor.'}</p>
       </div>
     `;
     return;
@@ -4975,25 +5795,25 @@ function renderTimetable() {
       end: (matchedPeriod && matchedPeriod.end) || l.endTime || '--:--'
     };
     let statusClass = 'status-normal';
-    let badgeText = 'Regulär';
+    let badgeText = isEn ? 'Regular' : 'Regulär';
     let badgeClass = 'badge-normal';
-    let srStatus = 'Regulärer Unterricht';
+    let srStatus = isEn ? 'Regular lesson' : 'Regulärer Unterricht';
 
     if (l.status === 'cancelled') {
       statusClass = 'status-cancelled';
-      badgeText = 'Entfall';
+      badgeText = isEn ? 'Cancelled' : 'Entfall';
       badgeClass = 'badge-cancelled';
-      srStatus = 'Achtung: Stunde entfällt!';
+      srStatus = isEn ? 'Attention: Lesson cancelled!' : 'Achtung: Stunde entfällt!';
     } else if (l.status === 'substitute') {
       statusClass = 'status-substitute';
-      badgeText = 'Vertretung';
+      badgeText = isEn ? 'Substitution' : 'Vertretung';
       badgeClass = 'badge-substitute';
-      srStatus = 'Hinweis: Vertretungsunterricht.';
+      srStatus = isEn ? 'Notice: Substitution lesson.' : 'Hinweis: Vertretungsunterricht.';
     } else if (l.status === 'roomchange') {
       statusClass = 'status-roomchange';
-      badgeText = 'Raumwechsel';
+      badgeText = isEn ? 'Room Change' : 'Raumwechsel';
       badgeClass = 'badge-roomchange';
-      srStatus = 'Hinweis: Geänderter Raum.';
+      srStatus = isEn ? 'Notice: Changed room.' : 'Hinweis: Geänderter Raum.';
     }
 
     const dayPrefix = isWeekView ? `<strong>${getDayName(l.day)}:</strong> ` : '';
@@ -5064,20 +5884,21 @@ function updateCurrentAndNextLesson() {
     ? appData.timetableCache[currentWeekMoKey]
     : appData.timetable;
 
+  const isEnCurrent = getEffectiveLanguage() === 'en';
   if (currentJsDay < 1 || currentJsDay > 5) {
     boxNow.innerHTML = `
-      <div class="status-label">Aktuell (Wochenende)</div>
-      <h4 class="status-content-title">Schönes Wochenende!</h4>
-      <div class="status-meta">Am Montag geht die Schule wieder um 07:45 Uhr los.</div>
+      <div class="status-label">${isEnCurrent ? 'Current (Weekend)' : 'Aktuell (Wochenende)'}</div>
+      <h4 class="status-content-title">${isEnCurrent ? 'Have a nice weekend!' : 'Schönes Wochenende!'}</h4>
+      <div class="status-meta">${isEnCurrent ? 'School starts again on Monday at 07:45.' : 'Am Montag geht die Schule wieder um 07:45 Uhr los.'}</div>
     `;
     const mondayFirst = currentWeekLessons.find(t => t.day === 1 && t.period === 1);
     const monRoom = mondayFirst ? formatRoomNameOnly(mondayFirst.room, mondayFirst.teacher) : '';
     const monTeach = mondayFirst ? cleanTeacherName(mondayFirst.teacher) : '';
     boxNext.innerHTML = `
-      <div class="status-label">Nächste Stunde (Montag 1. Std.)</div>
-      <h4 class="status-content-title">${mondayFirst ? mondayFirst.subject : 'Unterrichtsbeginn'}</h4>
+      <div class="status-label">${isEnCurrent ? 'Next Lesson (Monday Period 1)' : 'Nächste Stunde (Montag 1. Std.)'}</div>
+      <h4 class="status-content-title">${mondayFirst ? mondayFirst.subject : (isEnCurrent ? 'Start of classes' : 'Unterrichtsbeginn')}</h4>
       <div class="status-meta" style="display: flex; flex-direction: column; gap: 4px; margin-top: 6px;">
-        ${mondayFirst ? `<div><span class="emoji-icon" aria-hidden="true">🚪 </span><strong>Raum:</strong> ${monRoom}</div><div><span class="emoji-icon" aria-hidden="true">👨‍🏫 </span><strong>Lehrer:</strong> ${monTeach}</div>` : '<div>07:45 Uhr</div>'}
+        ${mondayFirst ? `<div><span class="emoji-icon" aria-hidden="true">🚪 </span><strong>${isEnCurrent ? 'Room:' : 'Raum:'}</strong> ${monRoom}</div><div><span class="emoji-icon" aria-hidden="true">👨‍🏫 </span><strong>${isEnCurrent ? 'Teacher:' : 'Lehrer:'}</strong> ${monTeach}</div>` : (isEnCurrent ? '<div>07:45 AM</div>' : '<div>07:45 Uhr</div>')}
       </div>
     `;
     return;
@@ -5148,26 +5969,35 @@ function updateCurrentAndNextLesson() {
 }
 
 function readTodayTimetable() {
+  const isEn = getEffectiveLanguage() === 'en';
   const dayIndex = getEffectiveDayIndex(selectedDay);
   const dayName = getDayName(dayIndex);
   const lessons = appData.timetable.filter(l => l.day === dayIndex).sort((a, b) => a.period - b.period);
 
   if (lessons.length === 0) {
-    speak(`Für ${dayName} ist kein Unterricht eingetragen.`);
+    speak(isEn ? `No lessons scheduled for ${dayName}.` : `Für ${dayName} ist kein Unterricht eingetragen.`);
     return;
   }
 
-  let text = `Stundenplan für ${dayName}. Du hast ${lessons.length} Stunden. `;
+  let text = isEn
+    ? `Timetable for ${dayName}. You have ${lessons.length} lessons. `
+    : `Stundenplan für ${dayName}. Du hast ${lessons.length} Stunden. `;
   lessons.forEach(l => {
     const p = (appData.periods || []).find(per => per.period === l.period) || { start: l.startTime || '', end: l.endTime || '' };
-    const timeStr = (p.start && p.end) ? `von ${p.start} bis ${p.end} Uhr` : '';
+    const timeStr = (p.start && p.end)
+      ? (isEn ? `from ${p.start} to ${p.end}` : `von ${p.start} bis ${p.end} Uhr`)
+      : '';
     let statusText = '';
-    if (l.status === 'cancelled') statusText = 'Diese Stunde entfällt!';
-    else if (l.status === 'substitute') statusText = `Vertretungsunterricht: ${l.notes || ''}`;
-    else if (l.status === 'roomchange') statusText = `Raumwechsel: ${l.notes || ''}`;
+    if (l.status === 'cancelled') statusText = isEn ? 'This lesson is cancelled!' : 'Diese Stunde entfällt!';
+    else if (l.status === 'substitute') statusText = isEn ? `Substitution lesson: ${l.notes || ''}` : `Vertretungsunterricht: ${l.notes || ''}`;
+    else if (l.status === 'roomchange') statusText = isEn ? `Room change: ${l.notes || ''}` : `Raumwechsel: ${l.notes || ''}`;
 
     const rDisp = formatRoomDisplay(l.room, l.teacher);
-    text += `${l.period}. Stunde ${timeStr}: ${l.subject} in ${rDisp}, Lehrkraft ${l.teacher}${l.klasse ? ', Klasse ' + l.klasse : ''}. ${statusText}. `;
+    if (isEn) {
+      text += `Period ${l.period} ${timeStr}: ${l.subject} in ${rDisp}, teacher ${l.teacher}${l.klasse ? ', class ' + l.klasse : ''}. ${statusText}. `;
+    } else {
+      text += `${l.period}. Stunde ${timeStr}: ${l.subject} in ${rDisp}, Lehrkraft ${l.teacher}${l.klasse ? ', Klasse ' + l.klasse : ''}. ${statusText}. `;
+    }
   });
 
   speak(text, true);
@@ -5476,7 +6306,8 @@ function formatGermanDate(d) {
   if (!d) return '';
   const dateObj = (d instanceof Date) ? d : new Date(d);
   if (isNaN(dateObj.getTime())) return '';
-  return dateObj.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  const isEn = getEffectiveLanguage() === 'en';
+  return dateObj.toLocaleDateString(isEn ? 'en-US' : 'de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
 function readAllExamsAndEvents() {
@@ -5745,6 +6576,7 @@ function handleModalBackdropClick(event) {
 function speakCurrentLessonDetails() {
   const modal = document.getElementById('modal-lesson-details');
   if (!modal || modal.style.display === 'none') return;
+  const isEn = getEffectiveLanguage() === 'en';
 
   const getVal = key => {
     const el = modal.querySelector(`[data-key="${key}"]`);
@@ -5759,13 +6591,17 @@ function speakCurrentLessonDetails() {
   const lstext   = getVal('lstext');
   const homework = getVal('homework');
 
-  let text = `Stunden-Details: ${subject}. `;
-  if (date)     text += `Datum: ${date}. `;
-  if (time)     text += `Zeit: ${time}. `;
-  if (room)     text += `Raum: ${room}. `;
-  if (teacher)  text += `Lehrer: ${teacher}. `;
-  if (lstext && !lstext.includes('abgerufen'))   text += `Lehrstoff: ${lstext}. `;
-  if (homework && !homework.includes('Keine Hausaufgaben')) text += `Hausaufgaben: ${homework}. `;
+  let text = isEn ? `Lesson details: ${subject}. ` : `Stunden-Details: ${subject}. `;
+  if (date)     text += isEn ? `Date: ${date}. ` : `Datum: ${date}. `;
+  if (time)     text += isEn ? `Time: ${time}. ` : `Zeit: ${time}. `;
+  if (room)     text += isEn ? `Room: ${room}. ` : `Raum: ${room}. `;
+  if (teacher)  text += isEn ? `Teacher: ${teacher}. ` : `Lehrer: ${teacher}. `;
+  if (lstext && !lstext.includes('abgerufen') && !lstext.includes('retrieved')) {
+    text += isEn ? `Syllabus: ${lstext}. ` : `Lehrstoff: ${lstext}. `;
+  }
+  if (homework && !homework.includes('Keine Hausaufgaben') && !homework.includes('No homework')) {
+    text += isEn ? `Homework: ${homework}. ` : `Hausaufgaben: ${homework}. `;
+  }
 
   speak(text, true);
 }

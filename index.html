@@ -14,9 +14,9 @@
 
   <!-- Schnellsprunglinks für Tastaturbedienung -->
   <nav class="skip-links" aria-label="Schnellnavigation">
-    <a href="#main-nav-tabs" class="skip-link" id="skip-link-nav">Zur Menüauswahl springen (Tasten 1-9)</a>
-    <a href="#day-picker-bar" class="skip-link">Zur Tagesauswahl springen</a>
-    <a href="#view-content-area" class="skip-link">Direkt zum Hauptinhalt springen</a>
+    <a href="#main-nav-tabs" class="skip-link" id="skip-link-nav" data-i18n="skipNav">Zur Menüauswahl springen (Tasten 1-9)</a>
+    <a href="#day-picker-bar" class="skip-link" data-i18n="skipDay">Zur Tagesauswahl springen</a>
+    <a href="#view-content-area" class="skip-link" data-i18n="skipContent">Direkt zum Hauptinhalt springen</a>
   </nav>
 
   <!-- =========================================================================
@@ -27,29 +27,29 @@
       <div class="brand">
         <span class="app-icon emoji-icon" aria-hidden="true"><span class="emoji-icon" aria-hidden="true">🏫</span></span>
         <div class="brand-text">
-          <h1>Barrierefreies WebUntis</h1>
+          <h1 data-i18n="appName">Barrierefreies WebUntis</h1>
           <span class="school-tag" id="header-school-name">LWL-Berufskolleg Soest • Live aus WebUntis</span>
         </div>
       </div>
       <div class="header-controls">
         <span id="live-sync-indicator" class="today-badge" style="border: 2px solid var(--accent-ok); background: rgba(21, 128, 61, 0.15);" aria-label="Synchronisationsstatus">
-          <span class="emoji-icon" aria-hidden="true">🟢 </span><span id="sync-status-text">WebUntis bereit</span>
+          <span class="emoji-icon" aria-hidden="true">🟢 </span><span id="sync-status-text" data-i18n="statusReady">WebUntis bereit</span>
         </span>
         <button type="button" class="btn btn-primary" id="btn-refresh" onclick="triggerManualSync()" title="Stundenplan jetzt von WebUntis aktualisieren (Taste A)">
           <span class="emoji-icon" aria-hidden="true">🔄</span>
-          <span>Aktualisieren (A)</span>
+          <span data-i18n="btnRefresh">Aktualisieren (A)</span>
         </button>
         <button type="button" class="btn btn-tts" onclick="readTodayTimetable()" title="Stundenplan laut vorlesen (Taste V)">
           <span class="emoji-icon" aria-hidden="true">🔊</span>
-          <span>Vorlesen (V)</span>
+          <span data-i18n="btnReadAloud">Vorlesen (V)</span>
         </button>
         <button type="button" class="btn btn-secondary" id="btn-header-logout" onclick="logoutUser()" title="Benutzer abmelden" style="display: none;">
           <span class="emoji-icon" aria-hidden="true">🚪</span>
-          <span>Abmelden</span>
+          <span data-i18n="btnLogout">Abmelden</span>
         </button>
         <button type="button" class="btn btn-secondary" id="btn-header-exit" onclick="exitApp()" title="Stundenplan-App komplett beenden">
           <span class="emoji-icon" aria-hidden="true">❌</span>
-          <span>Beenden</span>
+          <span data-i18n="btnExit">Beenden</span>
         </button>
       </div>
     </div>
@@ -62,13 +62,13 @@
     <section class="section-card login-card" aria-labelledby="login-heading">
       <div style="text-align: center; margin-bottom: 20px;">
         <span class="emoji-icon" style="font-size: 48px;" aria-hidden="true">🔐</span>
-        <h2 id="login-heading" style="font-size: var(--font-size-xl); color: var(--text-primary); margin-top: 10px;">Barrierefreies WebUntis – Anmeldung</h2>
-        <p class="field-hint" style="font-size: var(--font-size-base); margin-top: 6px;" id="login-subtitle-school">
+        <h2 id="login-heading" style="font-size: var(--font-size-xl); color: var(--text-primary); margin-top: 10px;" data-i18n="loginHeading">Barrierefreies WebUntis – Anmeldung</h2>
+        <p class="field-hint" style="font-size: var(--font-size-base); margin-top: 6px;" id="login-subtitle-school" data-i18n="loginSubtitle">
           Entwickelt für blinde und sehbehinderte Schülerinnen und Schüler (Förderschwerpunkt Sehen)
         </p>
       </div>
 
-      <p style="margin-bottom: 20px; font-size: 16px; color: var(--text-secondary);">
+      <p style="margin-bottom: 20px; font-size: 16px; color: var(--text-secondary);" data-i18n="loginDesc">
         Melde dich mit deinem Schul-Benutzernamen und Passwort an. Die App ruft deinen persönlichen Stundenplan, Raumwechsel, Vertretungen und Prüfungen direkt über die WebUntis-Schnittstelle ab.
       </p>
 
@@ -76,7 +76,7 @@
         <!-- 1. SCHULAUSWAHL AN ERSTER STELLE -->
         <div class="form-group" style="background: var(--bg-surface-elevated); border: 2px solid var(--border-color); border-radius: var(--radius-md); padding: 16px; margin-bottom: 20px;">
           <label for="login-school-preset" class="field-label" style="font-size: 16px; font-weight: bold; margin-bottom: 8px;">
-            <span class="emoji-icon" aria-hidden="true">🏫 </span><strong>1. Schule auswählen:</strong><span class="required-star">*</span>
+            <span class="emoji-icon" aria-hidden="true">🏫 </span><strong><span data-i18n="loginSchoolStep">1. Schule auswählen:</span></strong><span class="required-star">*</span>
           </label>
           <select id="login-school-preset" class="large-input" onchange="handleSchoolPresetChange(this.value)" style="font-size: 15px; font-weight: 600; margin-bottom: 10px;" aria-label="Schule aus Liste auswählen">
             <option value="lwl-bk-soest">LWL-Berufskolleg Soest</option>
@@ -88,12 +88,12 @@
           <!-- Suchbereich für alle anderen WebUntis Schulen -->
           <div id="login-school-search-box" style="display: none; margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--border-subtle);">
             <label for="school-search-query" class="field-label" style="font-size: 14px;">
-              <strong>WebUntis Schulsuche (Name oder Ort):</strong>
+              <strong><span data-i18n="loginSchoolSearchLabel">WebUntis Schulsuche (Name oder Ort):</span></strong>
             </label>
             <div style="display: flex; gap: 8px; margin-bottom: 8px;">
-              <input type="text" id="school-search-query" class="large-input" placeholder="z. B. Soest, Dortmund, Berufskolleg..." onkeydown="if(event.key==='Enter'){event.preventDefault();executeSchoolSearch();}">
+              <input type="text" id="school-search-query" class="large-input" placeholder="z. B. Soest, Dortmund, Berufskolleg..." data-i18n-placeholder="loginSchoolSearchPlaceholder" onkeydown="if(event.key==='Enter'){event.preventDefault();executeSchoolSearch();}" aria-label="WebUntis Schulsuche">
               <button type="button" class="btn btn-primary" onclick="executeSchoolSearch()" style="min-width: 110px;">
-                <span class="emoji-icon" aria-hidden="true">🔍 </span>Suchen
+                <span class="emoji-icon" aria-hidden="true">🔍 </span><span data-i18n="search">Suchen</span>
               </button>
             </div>
             <div id="school-search-results" role="region" aria-live="polite" style="max-height: 220px; overflow-y: auto; margin-bottom: 10px;">
@@ -103,9 +103,9 @@
 
           <!-- Aktuell gewählte Schule & Mensa-Status -->
           <div id="login-selected-school-box" style="margin-top: 10px; font-size: 14px; color: var(--text-secondary); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
-            <span>Ausgewählt: <strong id="login-selected-school-display" style="color: var(--text-primary);">LWL-Berufskolleg Soest</strong></span>
+            <span><span data-i18n="loginSelectedSchool">Ausgewählt:</span> <strong id="login-selected-school-display" style="color: var(--text-primary);">LWL-Berufskolleg Soest</strong></span>
             <span id="login-canteen-availability-badge" class="badge-substitute" style="font-size: 12.5px; background: rgba(37,99,235,0.15); color: #1d4ed8; padding: 3px 8px; border-radius: 4px;">
-              <span class="emoji-icon" aria-hidden="true">🍽️ </span>Mensa verfügbar
+              <span class="emoji-icon" aria-hidden="true">🍽️ </span><span data-i18n="loginCanteenBadge">Mensa verfügbar</span>
             </span>
           </div>
 
@@ -125,27 +125,27 @@
         </div>
 
         <div class="form-group">
-          <label for="login-username" class="field-label"><strong>2. Benutzername (WebUntis):</strong><span class="required-star">*</span></label>
-          <input type="text" id="login-username" class="large-input" placeholder="Benutzername oder Schüler-ID" required autocomplete="username" onfocus="this.select()">
-          <span class="field-hint">Dein offizieller WebUntis-Login an der ausgewählten Schule.</span>
+          <label for="login-username" class="field-label"><strong><span data-i18n="loginUserStep">2. Benutzername (WebUntis):</span></strong><span class="required-star">*</span></label>
+          <input type="text" id="login-username" class="large-input" placeholder="Benutzername oder Schüler-ID" data-i18n-placeholder="loginUserPlaceholder" required autocomplete="username" onfocus="this.select()">
+          <span class="field-hint" data-i18n="loginUserHint">Dein offizieller WebUntis-Login an der ausgewählten Schule.</span>
         </div>
 
         <div class="form-group">
-          <label for="login-password" class="field-label"><strong>3. Passwort:</strong><span class="required-star">*</span></label>
-          <input type="password" id="login-password" class="large-input" placeholder="WebUntis Passwort" required autocomplete="current-password" onfocus="this.select()">
-          <span class="field-hint">Wird verschlüsselt nur lokal auf diesem Rechner verwendet.</span>
+          <label for="login-password" class="field-label"><strong><span data-i18n="loginPassStep">3. Passwort:</span></strong><span class="required-star">*</span></label>
+          <input type="password" id="login-password" class="large-input" placeholder="WebUntis Passwort" data-i18n-placeholder="loginPassPlaceholder" required autocomplete="current-password" onfocus="this.select()">
+          <span class="field-hint" data-i18n="loginPassHint">Wird verschlüsselt nur lokal auf diesem Rechner verwendet.</span>
         </div>
 
         <div class="form-group" style="margin-top: 8px;">
           <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
             <input type="checkbox" id="login-remember" checked style="width: 24px; height: 24px;">
-            <span><strong>Zugangsdaten merken (automatische Anmeldung bei jedem Start)</strong></span>
+            <span><strong><span data-i18n="loginRemember">Zugangsdaten merken (automatische Anmeldung bei jedem Start)</span></strong></span>
           </label>
         </div>
 
         <div class="form-actions" style="margin-top: 24px;">
           <button type="submit" class="btn btn-primary" id="btn-login-submit" style="width: 100%; min-height: 54px; font-size: var(--font-size-lg);">
-            <span class="emoji-icon" aria-hidden="true">🚀 </span><strong>Anmelden &amp; Stundenplan laden</strong>
+            <span class="emoji-icon" aria-hidden="true">🚀 </span><strong><span data-i18n="loginBtn">Anmelden &amp; Stundenplan laden</span></strong>
           </button>
         </div>
       </form>
@@ -154,11 +154,11 @@
 
       <!-- Schnellzugriff Barrierefreiheit direkt beim Login -->
       <div style="margin-top: 30px; padding-top: 20px; border-top: 2px solid var(--border-subtle); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
-        <span style="font-size: 14px; font-weight: bold;"><span class="emoji-icon" aria-hidden="true">👁️ </span>Schnellauswahl Kontrast:</span>
+        <span style="font-size: 14px; font-weight: bold;"><span class="emoji-icon" aria-hidden="true">👁️ </span><span data-i18n="quickContrast">Schnellauswahl Kontrast:</span></span>
         <div style="display: flex; gap: 8px;">
-          <button type="button" class="btn btn-secondary" style="min-height: 38px; padding: 4px 10px; font-size: 13px;" onclick="setThemeDirect('theme-light')">Hell</button>
-          <button type="button" class="btn btn-secondary" style="min-height: 38px; padding: 4px 10px; font-size: 13px;" onclick="setThemeDirect('theme-dark')">Dunkel</button>
-          <button type="button" class="btn btn-secondary" style="min-height: 38px; padding: 4px 10px; font-size: 13px;" onclick="setThemeDirect('theme-high-contrast')">Gelb/Schwarz</button>
+          <button type="button" class="btn btn-secondary" style="min-height: 38px; padding: 4px 10px; font-size: 13px;" onclick="setThemeDirect('theme-light')" data-i18n="contrastLight">Hell</button>
+          <button type="button" class="btn btn-secondary" style="min-height: 38px; padding: 4px 10px; font-size: 13px;" onclick="setThemeDirect('theme-dark')" data-i18n="contrastDark">Dunkel</button>
+          <button type="button" class="btn btn-secondary" style="min-height: 38px; padding: 4px 10px; font-size: 13px;" onclick="setThemeDirect('theme-high-contrast')" data-i18n="contrastHigh">Gelb/Schwarz</button>
         </div>
       </div>
     </section>
@@ -175,7 +175,7 @@
       </button>
       <button id="tab-timetable" class="tab-btn" role="tab" aria-selected="false" aria-controls="view-timetable" onclick="switchTab('timetable')" tabindex="-1">
         <span class="tab-key-hint" aria-hidden="true">2</span>
-        <span><span class="emoji-icon" aria-hidden="true">📅 </span><strong>Stundenplan</strong></span>
+        <span><span class="emoji-icon" aria-hidden="true">📅 </span><strong><span data-i18n="tabTimetable">Stundenplan</span></strong></span>
       </button>
       <button id="tab-exams" class="tab-btn" role="tab" aria-selected="false" aria-controls="view-exams" onclick="switchTab('exams')" tabindex="-1">
         <span class="tab-key-hint" aria-hidden="true">3</span>
@@ -199,11 +199,11 @@
       </button>
       <button id="tab-canteen" class="tab-btn" role="tab" aria-selected="false" aria-controls="view-canteen" onclick="switchTab('canteen')" tabindex="-1">
         <span class="tab-key-hint" aria-hidden="true">8</span>
-        <span><span class="emoji-icon" aria-hidden="true">🍽️ </span><strong>Mensa &amp; Speisepläne</strong></span>
+        <span><span class="emoji-icon" aria-hidden="true">🍽️ </span><strong><span data-i18n="tabCanteen">Mensa &amp; Speisepläne</span></strong></span>
       </button>
       <button id="tab-settings" class="tab-btn" role="tab" aria-selected="false" aria-controls="view-settings" onclick="switchTab('settings')" tabindex="-1">
         <span class="tab-key-hint" aria-hidden="true" id="tab-settings-key-hint">9</span>
-        <span><span class="emoji-icon" aria-hidden="true">⚙️ </span><strong>Konto &amp; Einstellungen</strong></span>
+        <span><span class="emoji-icon" aria-hidden="true">⚙️ </span><strong><span data-i18n="tabSettings">Konto &amp; Einstellungen</span></strong></span>
       </button>
     </div>
   </nav>
@@ -218,8 +218,8 @@
          ======================================================================= -->
     <div id="view-overview" class="view-panel active" role="tabpanel" aria-labelledby="tab-overview">
       <div class="banner-header">
-        <h2 class="banner-title" id="overview-view-title">Übersicht &amp; Tagesstatus</h2>
-        <p class="banner-subtitle">Tagesaktuelle Schulinformationen, Stundenstatus, Warnungen und Fristen auf einen Blick.</p>
+        <h2 class="banner-title" id="overview-view-title" data-i18n="overviewTitle">Übersicht &amp; Tagesstatus</h2>
+        <p class="banner-subtitle" data-i18n="overviewSubtitle">Tagesaktuelle Schulinformationen, Stundenstatus, Warnungen und Fristen auf einen Blick.</p>
       </div>
 
       <!-- =======================================================================
@@ -231,16 +231,16 @@
           <div class="urgent-title-group">
             <span class="urgent-icon" aria-hidden="true"><span class="emoji-icon" aria-hidden="true">📢</span></span>
             <div>
-              <h3 class="urgent-title" id="urgent-card-heading">Tagesnachrichten, Warnungen &amp; Fristen</h3>
-              <p class="urgent-subtitle" id="urgent-card-summary">Tagesaktuelle Schulinformationen, Klausuren-Countdown und Fristen auf einen Blick.</p>
+              <h3 class="urgent-title" id="urgent-card-heading" data-i18n="urgentHeading">Tagesnachrichten, Warnungen &amp; Fristen</h3>
+              <p class="urgent-subtitle" id="urgent-card-summary" data-i18n="urgentSubtitle">Tagesaktuelle Schulinformationen, Klausuren-Countdown und Fristen auf einen Blick.</p>
             </div>
           </div>
           <div style="display: flex; gap: 8px; flex-wrap: wrap;">
             <button type="button" class="btn btn-secondary urgent-tts-btn" onclick="readCombinedOverview()" aria-label="Tagesnachrichten und Warnungen vorlesen (Taste V)">
-              <span class="emoji-icon" aria-hidden="true">🔊 </span>Übersicht vorlesen (V)
+              <span class="emoji-icon" aria-hidden="true">🔊 </span><span data-i18n="readOverviewBtn">Übersicht vorlesen (V)</span>
             </button>
             <button type="button" class="btn btn-primary" onclick="switchTab('timetable')" aria-label="Direkt zum Stundenplan wechseln (Taste 2)">
-              <span class="emoji-icon" aria-hidden="true">📅 </span>Zum Stundenplan (2)
+              <span class="emoji-icon" aria-hidden="true">📅 </span><span data-i18n="goToTimetableBtn">Zum Stundenplan (2)</span>
             </button>
           </div>
         </div>
@@ -271,8 +271,8 @@
       <div class="banner-header">
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
           <div>
-            <h2 class="banner-title" id="timetable-view-title">Stundenplan &amp; Vertretungen</h2>
-            <p class="banner-subtitle">Echte Live-Daten aus WebUntis mit Räumen, Lehrkräften, Vertretungen und Entfällen.</p>
+            <h2 class="banner-title" id="timetable-view-title" data-i18n="timetableTitle">Stundenplan &amp; Vertretungen</h2>
+            <p class="banner-subtitle" data-i18n="timetableSubtitle">Echte Live-Daten aus WebUntis mit Räumen, Lehrkräften, Vertretungen und Entfällen.</p>
           </div>
           <div style="display: flex; gap: 10px; align-items: center;">
             <span id="auto-refresh-timer-badge" class="field-hint" style="font-weight: bold;"></span>
@@ -285,13 +285,13 @@
         <h3 class="sr-only">Wochenauswahl</h3>
         <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
           <button type="button" class="btn btn-secondary" id="btn-week-prev" onclick="changeWeekOffset(-1)" title="Vorherige Woche (Alt + links)" aria-label="Vorherige Schulwoche aufrufen">
-            <span class="emoji-icon" aria-hidden="true">⬅️ </span>Vorherige Woche
+            <span class="emoji-icon" aria-hidden="true">⬅️ </span><span data-i18n="weekPrev">Vorherige Woche</span>
           </button>
           <button type="button" class="btn btn-secondary" id="btn-week-current" onclick="resetWeekOffset()" title="Zur aktuellen Schulwoche zurückkehren (Taste W)" aria-label="Zur aktuellen Schulwoche zurückkehren">
-            <span class="emoji-icon" aria-hidden="true">📍 </span>Diese Woche (W)
+            <span class="emoji-icon" aria-hidden="true">📍 </span><span data-i18n="weekCurrent">Diese Woche (W)</span>
           </button>
           <button type="button" class="btn btn-secondary" id="btn-week-next" onclick="changeWeekOffset(1)" title="Nächste Woche (Alt + rechts)" aria-label="Nächste Schulwoche aufrufen">
-            <span>Nächste Woche </span><span class="emoji-icon" aria-hidden="true">➡️</span>
+            <span data-i18n="weekNext">Nächste Woche </span><span class="emoji-icon" aria-hidden="true">➡️</span>
           </button>
         </div>
         <div>
@@ -306,10 +306,10 @@
         <h3 class="sr-only">Tagesauswahl</h3>
         <div class="day-btn-group" role="group" aria-label="Tag filtern">
           <button type="button" class="day-btn active" id="day-btn-today" data-day="today" onclick="setDayFilter('today')">
-            <span class="emoji-icon" aria-hidden="true">📍 </span><span id="day-label-today">Heute (H)</span>
+            <span class="emoji-icon" aria-hidden="true">📍 </span><span id="day-label-today" data-i18n="dayTodayBtn">Heute (H)</span>
           </button>
           <button type="button" class="day-btn" id="day-btn-tomorrow" data-day="tomorrow" onclick="setDayFilter('tomorrow')">
-            <span class="emoji-icon" aria-hidden="true">➡️ </span><span id="day-label-tomorrow">Morgen</span>
+            <span class="emoji-icon" aria-hidden="true">➡️ </span><span id="day-label-tomorrow" data-i18n="dayTomorrowBtn">Morgen</span>
           </button>
           <button type="button" class="day-btn" id="day-btn-1" data-day="1" onclick="setDayFilter(1)"><span id="day-label-1">Montag</span></button>
           <button type="button" class="day-btn" id="day-btn-2" data-day="2" onclick="setDayFilter(2)"><span id="day-label-2">Dienstag</span></button>
@@ -317,12 +317,12 @@
           <button type="button" class="day-btn" id="day-btn-4" data-day="4" onclick="setDayFilter(4)"><span id="day-label-4">Donnerstag</span></button>
           <button type="button" class="day-btn" id="day-btn-5" data-day="5" onclick="setDayFilter(5)"><span id="day-label-5">Freitag</span></button>
           <button type="button" class="day-btn" id="day-btn-all" data-day="all" onclick="setDayFilter('all')">
-            <span class="emoji-icon" aria-hidden="true">🗓️ </span>Ganze Woche
+            <span class="emoji-icon" aria-hidden="true">🗓️ </span><span data-i18n="dayFullWeekBtn">Ganze Woche</span>
           </button>
         </div>
         <div>
           <button type="button" class="btn btn-secondary" onclick="readTodayTimetable()" title="Diesen Tag laut vorlesen (Taste V)">
-            <span class="emoji-icon" aria-hidden="true">🔊 </span>Tag vorlesen (V)
+            <span class="emoji-icon" aria-hidden="true">🔊 </span><span data-i18n="readDayAloud">Tag vorlesen (V)</span>
           </button>
         </div>
       </section>
@@ -341,8 +341,8 @@
 
       <div class="banner-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
         <div>
-          <h2 class="banner-title" id="exams-heading">Prüfungen, Klausuren &amp; Schultermine</h2>
-          <p class="banner-subtitle" id="exams-schoolyear-subtitle">Komplette Jahresübersicht aller Klausuren und Termine für das gesamte Schuljahr.</p>
+          <h2 class="banner-title" id="exams-heading" data-i18n="examsTitle">Prüfungen, Klausuren &amp; Schultermine</h2>
+          <p class="banner-subtitle" id="exams-schoolyear-subtitle" data-i18n="examsSubtitle">Komplette Jahresübersicht aller Klausuren und Termine für das gesamte Schuljahr.</p>
         </div>
         <div>
           <button type="button" class="btn btn-secondary" onclick="readAllExamsAndEvents()" title="Alle anstehenden Termine laut vorlesen (Taste V)">
@@ -357,16 +357,16 @@
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
           <div class="exam-filter-group" role="group" aria-label="Termin-Filterauswahl">
             <button type="button" class="btn btn-secondary filter-btn active" id="filter-all" onclick="setExamFilter('all')">
-              <span><span class="emoji-icon" aria-hidden="true">📅 </span><strong>Alle Termine</strong> (<span id="count-all">0</span>)</span>
+              <span><span class="emoji-icon" aria-hidden="true">📅 </span><strong><span data-i18n="filterAllExams">Alle Termine</span></strong> (<span id="count-all">0</span>)</span>
             </button>
             <button type="button" class="btn btn-secondary filter-btn" id="filter-exams" onclick="setExamFilter('exams')">
-              <span><span class="emoji-icon" aria-hidden="true">📝 </span><strong>Prüfungen &amp; Klausuren</strong> (<span id="count-exams">0</span>)</span>
+              <span><span class="emoji-icon" aria-hidden="true">📝 </span><strong><span data-i18n="filterOnlyExams">Prüfungen &amp; Klausuren</span></strong> (<span id="count-exams">0</span>)</span>
             </button>
             <button type="button" class="btn btn-secondary filter-btn" id="filter-holidays" onclick="setExamFilter('holidays')">
-              <span><span class="emoji-icon" aria-hidden="true">🏖️ </span><strong>Ferien &amp; Feiertage</strong> (<span id="count-holidays">0</span>)</span>
+              <span><span class="emoji-icon" aria-hidden="true">🏖️ </span><strong><span data-i18n="filterHolidays">Ferien &amp; Feiertage</span></strong> (<span id="count-holidays">0</span>)</span>
             </button>
             <button type="button" class="btn btn-secondary filter-btn" id="filter-upcoming" onclick="setExamFilter('upcoming')">
-              <span><span class="emoji-icon" aria-hidden="true">⏳ </span><strong>Nur anstehend</strong> (<span id="count-upcoming">0</span>)</span>
+              <span><span class="emoji-icon" aria-hidden="true">⏳ </span><strong><span data-i18n="filterUpcoming">Nur anstehend</span></strong> (<span id="count-upcoming">0</span>)</span>
             </button>
             <button type="button" class="btn btn-secondary filter-btn" id="filter-iserv" onclick="setExamFilter('iserv')" style="display: none;">
               <span><span class="emoji-icon" aria-hidden="true">📅 </span><strong>IServ-Termine</strong> (<span id="count-iserv">0</span>)</span>
@@ -393,25 +393,25 @@
       <div class="banner-header">
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
           <div>
-            <h2 class="banner-title">Hausaufgaben, Klassenbucheinträge &amp; Lehrstoff</h2>
-            <p class="banner-subtitle" id="homework-banner-subtitle">Offizielle Klassenbucheinträge, Hausaufgaben und durchgenommener Unterrichtsstoff aus WebUntis.</p>
+            <h2 class="banner-title" data-i18n="homeworkTitle">Hausaufgaben, Klassenbucheinträge &amp; Lehrstoff</h2>
+            <p class="banner-subtitle" id="homework-banner-subtitle" data-i18n="homeworkSubtitle">Offizielle Klassenbucheinträge, Hausaufgaben und durchgenommener Unterrichtsstoff aus WebUntis.</p>
           </div>
           <div style="display: flex; gap: 8px; flex-wrap: wrap;">
             <button type="button" class="btn btn-primary" onclick="openAddHomeworkModal()" id="btn-add-hw" title="Eigene Hausaufgabe eintragen (Taste N)" aria-label="Eigene Hausaufgabe hinzufügen (Taste N)">
-              <span class="emoji-icon" aria-hidden="true">➕ </span><strong>Hausaufgabe hinzufügen (N)</strong>
+              <span class="emoji-icon" aria-hidden="true">➕ </span><strong><span data-i18n="addHomeworkBtn">Hausaufgabe hinzufügen (N)</span></strong>
             </button>
             <button type="button" class="btn btn-secondary" onclick="syncCloudHomework(true)" id="btn-cloud-sync-hw" title="Hausaufgaben jetzt mit der Internet-Cloud abgleichen" aria-label="Hausaufgaben jetzt mit der Internet-Cloud synchronisieren">
-              <span class="emoji-icon" aria-hidden="true">☁️ </span><span>Internet-Sync</span>
+              <span class="emoji-icon" aria-hidden="true">☁️ </span><span data-i18n="syncCloudBtn">Internet-Sync</span>
             </button>
             <button type="button" class="btn btn-secondary" onclick="exportHomeworkJson()" id="btn-export-hw" title="Hausaufgaben als Datei sichern oder mit Android synchronisieren" aria-label="Hausaufgaben teilen oder mit Android synchronisieren">
-              <span class="emoji-icon" aria-hidden="true">📲 </span><span>Teilen / Android</span>
+              <span class="emoji-icon" aria-hidden="true">📲 </span><span data-i18n="exportHwBtn">Teilen / Android</span>
             </button>
             <button type="button" class="btn btn-secondary" onclick="document.getElementById('import-hw-input').click()" id="btn-import-hw" title="Hausaufgaben aus Datei oder Android importieren" aria-label="Hausaufgaben importieren">
-              <span class="emoji-icon" aria-hidden="true">📥 </span><span>Import</span>
+              <span class="emoji-icon" aria-hidden="true">📥 </span><span data-i18n="importHwBtn">Import</span>
             </button>
             <input type="file" id="import-hw-input" style="display:none;" accept=".json" onchange="importHomeworkJson(event)">
             <button type="button" class="btn btn-secondary" onclick="readHomeworkSummary()" title="Aktuelle Auswahl laut vorlesen (Taste V)" aria-label="Hausaufgaben vorlesen (Taste V)">
-              <span class="emoji-icon" aria-hidden="true">🔊 </span><span>Vorlesen (V)</span>
+              <span class="emoji-icon" aria-hidden="true">🔊 </span><span data-i18n="btnReadAloud">Vorlesen (V)</span>
             </button>
           </div>
         </div>
@@ -423,19 +423,19 @@
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
           <div class="exam-filter-group" role="group" aria-label="Hausaufgaben- und Klassenbuch-Filter">
             <button type="button" class="btn btn-secondary filter-btn" id="hw-filter-classreg" onclick="setHomeworkFilter('classreg')">
-              <span><span class="emoji-icon" aria-hidden="true">📋 </span><strong>Klassenbucheinträge</strong> (<span id="hw-count-classreg">2</span>)</span>
+              <span><span class="emoji-icon" aria-hidden="true">📋 </span><strong><span data-i18n="hwFilterClassreg">Klassenbucheinträge</span></strong> (<span id="hw-count-classreg">2</span>)</span>
             </button>
             <button type="button" class="btn btn-secondary filter-btn active" id="hw-filter-pending" onclick="setHomeworkFilter('pending')">
-              <span><span class="emoji-icon" aria-hidden="true">⏳ </span><strong>Offene Aufgaben</strong> (<span id="hw-count-pending">0</span>)</span>
+              <span><span class="emoji-icon" aria-hidden="true">⏳ </span><strong><span data-i18n="hwFilterPending">Offene Aufgaben</span></strong> (<span id="hw-count-pending">0</span>)</span>
             </button>
             <button type="button" class="btn btn-secondary filter-btn" id="hw-filter-all" onclick="setHomeworkFilter('all')">
-              <span><span class="emoji-icon" aria-hidden="true">📝 </span><strong>Alle Hausaufgaben</strong> (<span id="hw-count-all">0</span>)</span>
+              <span><span class="emoji-icon" aria-hidden="true">📝 </span><strong><span data-i18n="hwFilterAll">Alle Hausaufgaben</span></strong> (<span id="hw-count-all">0</span>)</span>
             </button>
             <button type="button" class="btn btn-secondary filter-btn" id="hw-filter-completed" onclick="setHomeworkFilter('completed')">
-              <span><span class="emoji-icon" aria-hidden="true">✅ </span><strong>Erledigt</strong> (<span id="hw-count-completed">0</span>)</span>
+              <span><span class="emoji-icon" aria-hidden="true">✅ </span><strong><span data-i18n="hwFilterCompleted">Erledigt</span></strong> (<span id="hw-count-completed">0</span>)</span>
             </button>
             <button type="button" class="btn btn-secondary filter-btn" id="hw-filter-classbook" onclick="setHomeworkFilter('classbook')">
-              <span><span class="emoji-icon" aria-hidden="true">📖 </span><strong>Durchgenommener Lehrstoff</strong> (<span id="hw-count-classbook">0</span>)</span>
+              <span><span class="emoji-icon" aria-hidden="true">📖 </span><strong><span data-i18n="hwFilterClassbook">Durchgenommener Lehrstoff</span></strong> (<span id="hw-count-classbook">0</span>)</span>
             </button>
             <button type="button" class="btn btn-secondary filter-btn" id="hw-filter-iserv" onclick="setHomeworkFilter('iserv')" style="display: none;">
               <span><span class="emoji-icon" aria-hidden="true">📋 </span><strong>IServ-Aufgaben</strong> (<span id="hw-count-iserv">0</span>)</span>
@@ -459,15 +459,15 @@
       <div class="banner-header">
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
           <div>
-            <h2 class="banner-title">Fehlzeiten &amp; Entschuldigungen</h2>
-            <p class="banner-subtitle">Übersicht aller Fehltage, Fehlstunden und Entschuldigungsstatus aus WebUntis.</p>
+            <h2 class="banner-title" data-i18n="absencesTitle">Fehlzeiten &amp; Entschuldigungen</h2>
+            <p class="banner-subtitle" data-i18n="absencesSubtitle">Übersicht aller Fehltage, Fehlstunden und Entschuldigungsstatus aus WebUntis.</p>
           </div>
           <div style="display: flex; gap: 10px; flex-wrap: wrap;">
             <button type="button" class="btn btn-primary" onclick="toggleAbsenceComposer()" id="btn-compose-absence-toggle">
-              <span class="emoji-icon" aria-hidden="true">✍️ </span><strong>Krankmeldung / Fehlzeit erfassen (K)</strong>
+              <span class="emoji-icon" aria-hidden="true">✍️ </span><strong><span data-i18n="btnAbsenceToggle">Krankmeldung / Fehlzeit erfassen (K)</span></strong>
             </button>
             <button type="button" class="btn btn-secondary" onclick="readAbsencesSummary()" aria-label="Fehlzeiten vorlesen">
-              <span class="emoji-icon" aria-hidden="true">🔊 </span>Fehlzeiten vorlesen (V)
+              <span class="emoji-icon" aria-hidden="true">🔊 </span><span data-i18n="btnReadAbsences">Fehlzeiten vorlesen (V)</span>
             </button>
             <button type="button" class="btn btn-secondary" onclick="performWebUntisSync()" title="Fehlzeiten aus WebUntis aktualisieren">
               <span class="emoji-icon" aria-hidden="true">🔄 </span>Aktualisieren (A)
@@ -579,15 +579,15 @@
       <div class="banner-header">
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
           <div>
-            <h2 class="banner-title" id="messages-view-title">Tagesnachrichten &amp; Mitteilungen</h2>
-            <p class="banner-subtitle">Offizielle Schulinformationen, Tagesnachrichten und Mitteilungen an Lehrkräfte direkt aus WebUntis.</p>
+            <h2 class="banner-title" id="messages-view-title" data-i18n="messagesTitle">Tagesnachrichten &amp; Mitteilungen</h2>
+            <p class="banner-subtitle" data-i18n="messagesSubtitle">Offizielle Schulinformationen, Tagesnachrichten und Mitteilungen an Lehrkräfte direkt aus WebUntis.</p>
           </div>
           <div style="display: flex; gap: 10px; flex-wrap: wrap;">
             <button type="button" class="btn btn-primary" onclick="toggleMessageComposer()" id="btn-compose-toggle">
-              <span class="emoji-icon" aria-hidden="true">✍️ </span><strong>Neue Mitteilung verfassen</strong>
+              <span class="emoji-icon" aria-hidden="true">✍️ </span><strong><span data-i18n="btnComposeToggle">Neue Mitteilung verfassen</span></strong>
             </button>
             <button type="button" class="btn btn-secondary" onclick="readMessagesSummary()" aria-label="Mitteilungen vorlesen">
-              <span class="emoji-icon" aria-hidden="true">🔊 </span>Mitteilungen vorlesen (V)
+              <span class="emoji-icon" aria-hidden="true">🔊 </span><span data-i18n="btnReadMessages">Mitteilungen vorlesen (V)</span>
             </button>
             <button type="button" class="btn btn-secondary" onclick="syncMessagesAndNews()" title="Nachrichten aktualisieren">
               <span class="emoji-icon" aria-hidden="true">🔄 </span>Aktualisieren
@@ -666,15 +666,15 @@
       <div class="banner-header">
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
           <div>
-            <h2 class="banner-title" id="grades-view-title">Noten &amp; Leistungsübersicht</h2>
-            <p class="banner-subtitle">Offizieller WebUntis-Leistungsstand aller Schulfächer direkt aus dem Klassenbuch (vollautomatisch synchronisiert).</p>
+            <h2 class="banner-title" id="grades-view-title" data-i18n="gradesTitle">Noten &amp; Leistungsübersicht</h2>
+            <p class="banner-subtitle" data-i18n="gradesSubtitle">Offizieller WebUntis-Leistungsstand aller Schulfächer direkt aus dem Klassenbuch (vollautomatisch synchronisiert).</p>
           </div>
           <div style="display: flex; gap: 10px; flex-wrap: wrap;">
             <button type="button" class="btn btn-primary" onclick="performWebUntisSync()" id="btn-sync-grades" aria-label="Noten jetzt aus WebUntis synchronisieren">
-              <span class="emoji-icon" aria-hidden="true">🔄 </span><strong>Aus WebUntis abrufen (A)</strong>
+              <span class="emoji-icon" aria-hidden="true">🔄 </span><strong><span data-i18n="btnSyncGrades">Aus WebUntis abrufen (A)</span></strong>
             </button>
             <button type="button" class="btn btn-secondary" onclick="readGradesSummary()" aria-label="Notenübersicht vorlesen">
-              <span class="emoji-icon" aria-hidden="true">🔊 </span>Noten vorlesen (V)
+              <span class="emoji-icon" aria-hidden="true">🔊 </span><span data-i18n="btnReadGrades">Noten vorlesen (V)</span>
             </button>
           </div>
         </div>
@@ -739,15 +739,15 @@
       <div class="banner-header">
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
           <div>
-            <h2 class="banner-title" id="canteen-view-title">Mensa &amp; Speisepläne</h2>
-            <p class="banner-subtitle">Wöchentlicher Speiseplan der Mensa im LWL-Bildungszentrum Soest (Von-Vincke-Schule, BBW &amp; Berufskolleg).</p>
+            <h2 class="banner-title" id="canteen-view-title" data-i18n="canteenTitle">Mensa &amp; Speisepläne</h2>
+            <p class="banner-subtitle" data-i18n="canteenSubtitle">Wöchentlicher Speiseplan der Mensa im LWL-Bildungszentrum Soest (Von-Vincke-Schule, BBW &amp; Berufskolleg).</p>
           </div>
           <div style="display: flex; gap: 10px; flex-wrap: wrap;">
             <button type="button" class="btn btn-primary" onclick="refreshCanteenData()" id="btn-sync-canteen" aria-label="Speiseplan jetzt aus dem Internet aktualisieren">
               <span class="emoji-icon" aria-hidden="true">🔄 </span><strong>Aktualisieren (A)</strong>
             </button>
             <button type="button" class="btn btn-secondary" onclick="readCanteenSummary()" aria-label="Heutigen Speiseplan vorlesen">
-              <span class="emoji-icon" aria-hidden="true">🔊 </span>Speiseplan vorlesen (V)
+              <span class="emoji-icon" aria-hidden="true">🔊 </span><span data-i18n="btnReadCanteen">Speiseplan vorlesen (V)</span>
             </button>
           </div>
         </div>
@@ -797,8 +797,8 @@
     <div id="view-settings" class="view-panel" role="tabpanel" aria-labelledby="tab-settings">
 
       <div class="banner-header">
-        <h2 class="banner-title">Konto &amp; Einstellungen</h2>
-        <p class="banner-subtitle">WebUntis-Verbindung verwalten, Anmeldedaten anpassen und Barrierefreiheit einstellen.</p>
+        <h2 class="banner-title" data-i18n="settingsTitle">Konto &amp; Einstellungen</h2>
+        <p class="banner-subtitle" data-i18n="settingsSubtitle">WebUntis-Verbindung verwalten, Anmeldedaten anpassen und Barrierefreiheit einstellen.</p>
       </div>
 
       <!-- 1. WEBUNTIS KONTO STATUS -->
@@ -811,7 +811,7 @@
             Schule: <strong>LWL-Berufskolleg Soest</strong> (<code>lwl-bk-soest.webuntis.com</code>)
           </p>
           <p style="font-size: var(--font-size-base); margin-bottom: 6px;">
-            Benutzername: <strong id="settings-username-display">-</strong>
+            <span data-i18n="accUsernameLabel">Benutzername:</span> <strong id="settings-username-display">-</strong>
           </p>
           <p style="font-size: var(--font-size-base); color: var(--accent-ok); font-weight: bold;" id="settings-sync-time-display">
             Status: Verbunden &amp; aktiv
@@ -895,13 +895,13 @@
 
       <!-- 2. BARRIEREFREIHEIT & DESIGN -->
       <section class="section-card" aria-labelledby="a11y-cfg-heading">
-        <h3 id="a11y-cfg-heading" style="font-size: var(--font-size-lg); margin-bottom: 6px;"><span class="emoji-icon" aria-hidden="true">👁️ </span>Barrierefreiheit &amp; Kontraste (WCAG 2.2 AAA)</h3>
-        <p class="field-hint">Optimiere Farben, Schriftgrößen und Sprachausgabe für deine Sehbedürfnisse:</p>
+        <h3 id="a11y-cfg-heading" style="font-size: var(--font-size-lg); margin-bottom: 6px;"><span class="emoji-icon" aria-hidden="true">👁️ </span><span data-i18n="a11yHeading">Barrierefreiheit &amp; Kontraste (WCAG 2.2 AAA)</span></h3>
+        <p class="field-hint" data-i18n="a11yHint">Optimiere Farben, Schriftgrößen, Sprache und Sprachausgabe für deine Sehbedürfnisse:</p>
 
         <div class="accessible-form" style="margin-top: 16px;">
           <div class="form-row-2">
             <div class="form-group">
-              <label for="cfg-theme" class="field-label"><strong>Farbschema &amp; Kontrast:</strong></label>
+              <label for="cfg-theme" class="field-label"><strong><span data-i18n="themeLabel">Farbschema &amp; Kontrast:</span></strong></label>
               <select id="cfg-theme" class="large-select" onchange="saveSettings(event)">
                 <option value="theme-light">Standard Hell (Weiß / Dunkelblau)</option>
                 <option value="theme-dark">Dunkelmodus (Schonend für die Augen)</option>
@@ -909,7 +909,7 @@
               </select>
             </div>
             <div class="form-group">
-              <label for="cfg-font-size" class="field-label"><strong>Schriftgröße:</strong></label>
+              <label for="cfg-font-size" class="field-label"><strong><span data-i18n="fontSizeLabel">Schriftgröße:</span></strong></label>
               <select id="cfg-font-size" class="large-select" onchange="saveSettings(event)">
                 <option value="font-normal">Normal (18 Pixel - Standard)</option>
                 <option value="font-large">Groß (22 Pixel - Gut lesbar)</option>
@@ -920,22 +920,35 @@
 
           <div class="form-row-2">
             <div class="form-group">
-              <label for="cfg-tts-rate" class="field-label"><strong>Sprachausgabe: Sprechtempo:</strong></label>
-              <select id="cfg-tts-rate" class="large-select" onchange="saveSettings(event)">
-                <option value="0.8">0.8x (Langsam &amp; sehr deutlich)</option>
-                <option value="1.0" selected>1.0x (Normal)</option>
-                <option value="1.2">1.2x (Zügig)</option>
-                <option value="1.5">1.5x (Schnell für Profis)</option>
+              <label for="cfg-language" class="field-label"><strong><span data-i18n="languageLabel">Sprache / Language:</span></strong></label>
+              <select id="cfg-language" class="large-select" onchange="saveSettings(event)" aria-label="Sprache der Benutzeroberfläche auswählen">
+                <option value="auto" data-i18n="langAuto">Automatisch (Systemsprache) / Automatic (System language)</option>
+                <option value="de" data-i18n="langDe">Deutsch (German)</option>
+                <option value="en" data-i18n="langEn">English (Englisch)</option>
               </select>
             </div>
+            <div class="form-group">
+              <label for="cfg-tts-rate" class="field-label"><strong><span data-i18n="ttsRateLabel">Sprachausgabe: Sprechtempo:</span></strong></label>
+              <select id="cfg-tts-rate" class="large-select" onchange="saveSettings(event)">
+                <option value="0.8" data-i18n="ttsRate08">0.8x (Langsam &amp; sehr deutlich)</option>
+                <option value="1.0" selected data-i18n="ttsRate10">1.0x (Normal)</option>
+                <option value="1.2" data-i18n="ttsRate12">1.2x (Zügig)</option>
+                <option value="1.5" data-i18n="ttsRate15">1.5x (Schnell für Profis)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row-2">
             <div class="form-group" style="display: flex; flex-direction: column; justify-content: center; gap: 8px;">
               <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
                 <input type="checkbox" id="cfg-tts" checked onchange="saveSettings(event)" style="width: 22px; height: 22px;">
-                <span><strong>Sprachausgabe (TTS) aktivierbar</strong></span>
+                <span><strong><span data-i18n="ttsEnabledLabel">Sprachausgabe (TTS) aktivierbar</span></strong></span>
               </label>
+            </div>
+            <div class="form-group" style="display: flex; flex-direction: column; justify-content: center; gap: 8px;">
               <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
                 <input type="checkbox" id="cfg-text-only" onchange="saveSettings(event)" style="width: 22px; height: 22px;">
-                <span><strong>Reiner Textmodus (0 Emojis für NVDA / Braillezeile)</strong></span>
+                <span><strong><span data-i18n="textOnlyModeLabel">Reiner Textmodus (0 Emojis für NVDA / Braillezeile)</span></strong></span>
               </label>
             </div>
           </div>
@@ -1045,8 +1058,8 @@
 
   <!-- FOOTER -->
   <footer class="app-footer">
-    <p><strong>Barrierefreies WebUntis</strong> | Entwickelt für blinde und sehbehinderte Schülerinnen und Schüler</p>
-    <p style="margin-top: 4px;">100% barrierefrei • Optimiert für NVDA, JAWS, Braillezeilen und Windows-Tastatursteuerung (WCAG 2.2 AAA)</p>
+    <p><strong data-i18n="appName">Barrierefreies WebUntis</strong> | <span data-i18n="footerText">Entwickelt für blinde und sehbehinderte Schülerinnen und Schüler</span></p>
+    <p style="margin-top: 4px;" data-i18n="footerSub">100% barrierefrei • Optimiert für NVDA, JAWS, Braillezeilen und Windows-Tastatursteuerung (WCAG 2.2 AAA)</p>
   </footer>
 
   <!-- =========================================================================
@@ -1055,7 +1068,7 @@
   <div id="modal-lesson-details" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-lesson-title" style="display: none;" onclick="handleModalBackdropClick(event)">
     <div class="modal-card" role="document">
       <div class="modal-header">
-        <h3 id="modal-lesson-title" class="modal-title">Stunden-Details</h3>
+        <h3 id="modal-lesson-title" class="modal-title" data-i18n="lessonDetailsTitle">Stunden-Details</h3>
         <button type="button" class="modal-close-btn" onclick="closeLessonDetails()" aria-label="Details schließen (Taste Esc)"><span class="emoji-icon" aria-hidden="true">✕</span></button>
       </div>
       <div class="modal-body" id="modal-lesson-body">
@@ -1063,10 +1076,10 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-primary" id="btn-modal-speak" onclick="speakCurrentLessonDetails()">
-          <span class="emoji-icon" aria-hidden="true">🔊 </span>Details vorlesen (Taste V)
+          <span class="emoji-icon" aria-hidden="true">🔊 </span><span data-i18n="readLessonDetails">Details vorlesen (Taste V)</span>
         </button>
         <button type="button" class="btn btn-secondary" onclick="closeLessonDetails()">
-          Schließen (Esc)
+          <span data-i18n="close">Schließen (Esc)</span>
         </button>
       </div>
     </div>
@@ -1078,20 +1091,20 @@
   <div id="modal-add-grade" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-grade-title" style="display: none;" onclick="handleGradeModalBackdropClick(event)">
     <div class="modal-card" role="document">
       <div class="modal-header">
-        <h3 id="modal-grade-title" class="modal-title">Klausurnote eintragen</h3>
+        <h3 id="modal-grade-title" class="modal-title" data-i18n="gradeModalTitle">Klausurnote eintragen</h3>
         <button type="button" class="modal-close-btn" onclick="closeGradeModal()" aria-label="Modal schließen (Taste Esc)"><span class="emoji-icon" aria-hidden="true">✕</span></button>
       </div>
       <form id="form-save-grade" onsubmit="handleSaveGradeSubmit(event)">
         <div class="modal-body">
           <div class="form-group">
-            <label for="grade-exam-select" class="field-label"><strong>Klausur / Termin auswählen:</strong> <span class="required-star">*</span></label>
+            <label for="grade-exam-select" class="field-label"><strong><span data-i18n="selectExamLabel">Klausur / Termin auswählen:</span></strong> <span class="required-star">*</span></label>
             <select id="grade-exam-select" class="large-select" required onchange="handleGradeExamSelectionChange(event)">
               <!-- Dynamisch mit den 13 Klausuren befüllt -->
             </select>
           </div>
           <div class="form-row-2">
             <div class="form-group">
-              <label for="grade-mark-select" class="field-label"><strong>Erzielte Note:</strong> <span class="required-star">*</span></label>
+              <label for="grade-mark-select" class="field-label"><strong><span data-i18n="gradeAchievedLabel">Erzielte Note:</span></strong> <span class="required-star">*</span></label>
               <select id="grade-mark-select" class="large-select" required>
                 <option value="1.0">1,0 (Sehr gut)</option>
                 <option value="1.3">1,3 (Sehr gut -)</option>
@@ -1108,21 +1121,21 @@
               </select>
             </div>
             <div class="form-group">
-              <label for="grade-points-input" class="field-label"><strong>Punkte / Prozent (optional):</strong></label>
+              <label for="grade-points-input" class="field-label"><strong><span data-i18n="gradePointsLabel">Punkte / Prozent (optional):</span></strong></label>
               <input type="text" id="grade-points-input" class="large-input" placeholder="z. B. 45 / 50 Pkt (90%)">
             </div>
           </div>
           <div class="form-group">
-            <label for="grade-note-input" class="field-label"><strong>Bemerkung der Lehrkraft (optional):</strong></label>
+            <label for="grade-note-input" class="field-label"><strong><span data-i18n="gradeNoteLabel">Bemerkung der Lehrkraft (optional):</span></strong></label>
             <input type="text" id="grade-note-input" class="large-input" placeholder="z. B. Gute Argumentation in Teil 2">
           </div>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" onclick="closeGradeModal()">
-            Abbrechen (Esc)
+            <span data-i18n="cancel">Abbrechen (Esc)</span>
           </button>
           <button type="submit" class="btn btn-primary" id="btn-save-grade-submit">
-            <span class="emoji-icon" aria-hidden="true">💾 </span><strong>Note speichern</strong>
+            <span class="emoji-icon" aria-hidden="true">💾 </span><strong><span data-i18n="saveGradeBtn">Note speichern</span></strong>
           </button>
         </div>
       </form>
@@ -1136,36 +1149,36 @@
     <div class="modal-card" role="document">
       <div class="modal-header">
         <h3 id="modal-hw-title" class="modal-title">
-          <span class="emoji-icon" aria-hidden="true">➕ </span>Hausaufgabe hinzufügen
+          <span class="emoji-icon" aria-hidden="true">➕ </span><span data-i18n="hwModalTitle">Hausaufgabe hinzufügen</span>
         </h3>
         <button type="button" class="modal-close-btn" onclick="closeAddHomeworkModal()" aria-label="Modal schließen (Taste Esc)"><span class="emoji-icon" aria-hidden="true">✕</span></button>
       </div>
       <form id="form-add-homework" onsubmit="handleSaveHomeworkSubmit(event)">
         <div class="modal-body">
           <div class="form-group">
-            <label for="hw-input-subject" class="field-label"><strong>Schulfach:</strong> <span class="required-star">*</span></label>
+            <label for="hw-input-subject" class="field-label"><strong><span data-i18n="hwSubjectLabel">Schulfach:</span></strong> <span class="required-star">*</span></label>
             <select id="hw-input-subject" class="large-select" required>
               <!-- Dynamisch mit Schulfächern befüllt -->
             </select>
           </div>
           <div class="form-group">
-            <label for="hw-input-date" class="field-label"><strong>Zu erledigen bis (Fälligkeitsdatum):</strong> <span class="required-star">*</span></label>
+            <label for="hw-input-date" class="field-label"><strong><span data-i18n="hwDueDateLabel">Zu erledigen bis (Fälligkeitsdatum):</span></strong> <span class="required-star">*</span></label>
             <input type="date" id="hw-input-date" class="large-input" required>
             <div style="display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap;">
-              <button type="button" class="btn btn-secondary" style="font-size: 13px; padding: 4px 10px;" onclick="setHwQuickDate(1)">Morgen</button>
-              <button type="button" class="btn btn-secondary" style="font-size: 13px; padding: 4px 10px;" onclick="setHwQuickDate(2)">Übermorgen</button>
-              <button type="button" class="btn btn-secondary" style="font-size: 13px; padding: 4px 10px;" onclick="setHwQuickDate(7)">In 1 Woche</button>
+              <button type="button" class="btn btn-secondary" style="font-size: 13px; padding: 4px 10px;" onclick="setHwQuickDate(1)" data-i18n="hwTomorrow">Morgen</button>
+              <button type="button" class="btn btn-secondary" style="font-size: 13px; padding: 4px 10px;" onclick="setHwQuickDate(2)" data-i18n="hwDayAfter">Übermorgen</button>
+              <button type="button" class="btn btn-secondary" style="font-size: 13px; padding: 4px 10px;" onclick="setHwQuickDate(7)" data-i18n="hwInWeek">In 1 Woche</button>
             </div>
           </div>
           <div class="form-group">
-            <label for="hw-input-text" class="field-label"><strong>Aufgabe / Beschreibung:</strong> <span class="required-star">*</span></label>
+            <label for="hw-input-text" class="field-label"><strong><span data-i18n="hwTextLabel">Aufgabe / Beschreibung:</span></strong> <span class="required-star">*</span></label>
             <textarea id="hw-input-text" class="large-input" rows="3" placeholder="z. B. Buch Seite 45 Nr. 3 und 4 bearbeiten" required style="resize: vertical;"></textarea>
           </div>
           <div class="form-group">
-            <label for="hw-input-scope" class="field-label"><strong>Sichtbarkeit / Speicherort:</strong></label>
+            <label for="hw-input-scope" class="field-label"><strong><span data-i18n="hwScopeLabel">Sichtbarkeit / Speicherort:</span></strong></label>
             <select id="hw-input-scope" class="large-select">
-              <option value="private" selected>[Privat] Nur für mich (Persönliche Notiz)</option>
-              <option value="class" id="hw-scope-class-opt">[Klasse] Für meine Klasse</option>
+              <option value="private" selected data-i18n="hwScopePrivate">[Privat] Nur für mich (Persönliche Notiz)</option>
+              <option value="class" id="hw-scope-class-opt" data-i18n="hwScopeClass">[Klasse] Für meine Klasse</option>
             </select>
             <p class="field-hint" style="margin-top: 6px;">
               Wähle „Für meine Klasse“, wenn die Hausaufgabe für deine gesamte Klasse gilt und mit Klassenkameraden oder der Android-App geteilt werden soll.
@@ -1174,10 +1187,10 @@
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" onclick="closeAddHomeworkModal()">
-            Abbrechen (Esc)
+            <span data-i18n="cancel">Abbrechen (Esc)</span>
           </button>
           <button type="submit" class="btn btn-primary" id="btn-save-hw-submit">
-            <span class="emoji-icon" aria-hidden="true">💾 </span><strong>Hausaufgabe speichern</strong>
+            <span class="emoji-icon" aria-hidden="true">💾 </span><strong><span data-i18n="saveHwBtn">Hausaufgabe speichern</span></strong>
           </button>
         </div>
       </form>
