@@ -1,7 +1,7 @@
 {
   "source": "LWL-Von-Vincke-Schule Soest & BBW Soest",
   "sourceUrl": "https://www.lwl-von-vincke-schule.de/de/aktuelles/speiseplaene/",
-  "lastUpdated": "30.10.2026, 11:03 Uhr",
+  "lastUpdated": "02.11.2026, 12:54 Uhr",
   "weeks": [
     {
       "weekId": "kw42",
@@ -165,7 +165,7 @@
       "kw": 44,
       "label": "Kalenderwoche 44 (26.10. – 30.10.2026 - Herbstferien NRW)",
       "dateRange": "26.10. bis 30.10.2026",
-      "isCurrent": true,
+      "isCurrent": false,
       "days": [
         {
           "day": "Montag",
@@ -214,7 +214,7 @@
       "kw": 45,
       "label": "Kalenderwoche 45 (02.11. – 05.11.2026)",
       "dateRange": "02.11. bis 05.11.2026",
-      "isCurrent": false,
+      "isCurrent": true,
       "days": [
         {
           "day": "Montag",
