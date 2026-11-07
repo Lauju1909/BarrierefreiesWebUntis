@@ -46,7 +46,7 @@ jobs:
           TODAY=$(date +%Y-%m-%d)
           jq --arg ver "$NEW_VER" --arg date "$TODAY" '.version = $ver | .buildDate = $date' version.json > version.tmp.json && mv version.tmp.json version.json
           
-          # Synchronize version across all JS, HTML, and Python files
+          # Synchronize version across all JS, HTML, Cargo, and Python files
           if [ -f app.js ]; then
             sed -i -E "s/const CURRENT_APP_VERSION = 'v[0-9.]+';/const CURRENT_APP_VERSION = 'v$NEW_VER';/g" app.js
           fi
@@ -57,6 +57,9 @@ jobs:
               sed -i -E "s/(Installierte Version:\s*<[^>]+>v?)[0-9]+\.[0-9]+\.[0-9]+/\1$NEW_VER/g" "$html"
             fi
           done
+          if [ -f Cargo.toml ]; then
+            sed -i -E "s/^version = \"[0-9.]+\"/version = \"$NEW_VER\"/g" Cargo.toml
+          fi
           if [ -f main.py ]; then
             sed -i -E "s/version="%\(prog\)s [0-9.]+"/version="%\(prog\)s $NEW_VER"/g" main.py
           fi
@@ -66,6 +69,8 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add version.json
+          [ -f Cargo.toml ] && git add Cargo.toml
+          [ -f Cargo.lock ] && git add Cargo.lock
           [ -f app.js ] && git add app.js
           [ -f main.py ] && git add main.py
           for html in *.html; do
@@ -84,7 +89,7 @@ jobs:
           echo "version=$CURRENT_VER" >> $GITHUB_OUTPUT
 
   build-windows:
-    name: Build Windows EXE
+    name: Build Windows EXE (Rust Edition)
     runs-on: windows-latest
     needs: bump-version
     steps:
@@ -93,17 +98,18 @@ jobs:
         with:
           ref: main
 
-      - name: Compile Windows EXEs with csc.exe
+      - name: Setup Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Compile Windows Binaries with Cargo
+        run: cargo build --release
+
+      - name: Copy Built Executables
         shell: pwsh
         run: |
-          $csc = "C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe"
-          Write-Host "Compiling Barrierefreies_WebUntis.exe..."
-          & $csc /r:System.IO.Compression.dll /r:System.IO.Compression.FileSystem.dll /r:System.Xml.dll /resource:index.html /resource:style.css /resource:app.js /resource:canteen_seed.json /resource:version.json /target:winexe /out:Barrierefreies_WebUntis.exe Program.cs
-          if (Test-Path FeedbackProgram.cs) {
-            Write-Host "Compiling Feedback_Zentrale.exe..."
-            & $csc /target:winexe /out:Feedback_Zentrale.exe FeedbackProgram.cs
-          }
-          Write-Host "Windows compilation successful!"
+          Copy-Item "target\release\Barrierefreies_WebUntis.exe" -Destination ".\Barrierefreies_WebUntis.exe" -Force
+          Copy-Item "target\release\Feedback_Zentrale.exe" -Destination ".\Feedback_Zentrale.exe" -Force
+          Write-Host "Windows Rust compilation successful!"
 
       - name: Upload Windows Artifact
         uses: actions/upload-artifact@v4
@@ -114,7 +120,7 @@ jobs:
             Feedback_Zentrale.exe
 
   build-linux:
-    name: Build Linux Executable
+    name: Build Linux Executable (Rust Edition)
     runs-on: ubuntu-latest
     needs: bump-version
     steps:
@@ -123,23 +129,14 @@ jobs:
         with:
           ref: main
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-
-      - name: Install PyInstaller
-        run: pip install pyinstaller
+      - name: Setup Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
 
       - name: Build Linux Standalone Executable
         run: |
-          pyinstaller --noconfirm --onefile --name Barrierefreies_WebUntis-Linux \
-            --add-data "index.html:." \
-            --add-data "style.css:." \
-            --add-data "app.js:." \
-            --add-data "canteen_seed.json:." \
-            --add-data "version.json:." \
-            server.py
+          cargo build --release
+          mkdir -p dist
+          cp target/release/Barrierefreies_WebUntis dist/Barrierefreies_WebUntis-Linux
           chmod +x dist/Barrierefreies_WebUntis-Linux
 
       - name: Upload Linux Artifact
