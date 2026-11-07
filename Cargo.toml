@@ -1,6 +1,6 @@
 [package]
 name = "barrierefreies_webuntis"
-version = "1.9.38"
+version = "1.9.40"
 edition = "2021"
 authors = ["Lauju1909"]
 description = "Barrierefreies WebUntis - WCAG 2.2 AAA & NVDA-Optimiert (High-Performance Rust Edition)"
