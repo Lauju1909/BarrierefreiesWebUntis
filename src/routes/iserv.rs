@@ -29,13 +29,13 @@ pub async fn iserv_handler(
 
     {
         let mut iserv_guard = state.iserv.write().await;
-        if let Some(s) = srv_hdr {
+        if let Some(s) = srv_hdr.filter(|s| !s.trim().is_empty()) {
             iserv_guard.host = s.trim().replace("https://", "").replace("http://", "").trim_end_matches('/').into();
         }
-        if let Some(u) = user_hdr {
+        if let Some(u) = user_hdr.filter(|u| !u.trim().is_empty()) {
             iserv_guard.user = u.trim().into();
         }
-        if let Some(p) = pass_hdr {
+        if let Some(p) = pass_hdr.filter(|p| !p.trim().is_empty()) {
             iserv_guard.pass = p.trim().into();
         }
     }
@@ -60,6 +60,27 @@ async fn handle_status(state: AppState) -> Response {
         "server": iserv_guard.host,
         "user": iserv_guard.user
     })).into_response()
+}
+
+fn is_iserv_login_page(url_str: &str, body_str: &str) -> bool {
+    url_str.contains("/iserv/auth/login")
+        || url_str.contains("/iserv/app/login")
+        || (body_str.contains("name=\"_username\"") && body_str.contains("name=\"_password\""))
+}
+
+pub fn clean_html_text(raw: &str) -> String {
+    let re_strip = Regex::new(r#"<[^>]+>"#).unwrap();
+    let stripped = re_strip.replace_all(raw, " ");
+    let decoded = stripped
+        .replace("&nbsp;", " ")
+        .replace("&amp;", "&")
+        .replace("&quot;", "\"")
+        .replace("&#039;", "'")
+        .replace("&apos;", "'")
+        .replace("&lt;", "<")
+        .replace("&gt;", ">");
+    let re_ws = Regex::new(r#"\s+"#).unwrap();
+    re_ws.replace_all(&decoded, " ").trim().to_string()
 }
 
 async fn ensure_login(state: &AppState, srv: &str, user: &str, pass: &str) -> Result<(), String> {
@@ -88,9 +109,21 @@ async fn ensure_login(state: &AppState, srv: &str, user: &str, pass: &str) -> Re
         return Err("Anmeldung fehlgeschlagen! Bitte überprüfe Server, Benutzername und Passwort.".into());
     }
 
-    // Follow /iserv/
+    // Follow /iserv/ and optional meta-refresh redirect (matching Program.cs)
     let home_url = format!("https://{}/iserv/", host);
-    let _ = state.http_client.get(&home_url).send().await;
+    if let Ok(home_resp) = state.http_client.get(&home_url).send().await {
+        let home_html = home_resp.text().await.unwrap_or_default();
+        let re_meta = Regex::new(r#"(?i)url=([^"'>\s]+)"#).unwrap();
+        if let Some(caps) = re_meta.captures(&home_html) {
+            let redir = caps[1].replace("&amp;", "&");
+            let full_redir = if redir.starts_with("http") {
+                redir
+            } else {
+                format!("https://{}{}", host, if redir.starts_with('/') { "" } else { "/" }).to_string() + &redir
+            };
+            let _ = state.http_client.get(&full_redir).send().await;
+        }
+    }
 
     let mut iserv_guard = state.iserv.write().await;
     iserv_guard.host = host;
@@ -109,9 +142,9 @@ async fn handle_login(state: AppState, body: Option<IServLoginBody>) -> Response
     drop(iserv_guard);
 
     if let Some(b) = body {
-        if let Some(s) = b.server.as_deref() { srv = s.into(); }
-        if let Some(u) = b.username.as_deref() { user = u.into(); }
-        if let Some(p) = b.password.as_deref() { pass = p.into(); }
+        if let Some(s) = b.server.as_deref().filter(|s| !s.trim().is_empty()) { srv = s.into(); }
+        if let Some(u) = b.username.as_deref().filter(|u| !u.trim().is_empty()) { user = u.into(); }
+        if let Some(p) = b.password.as_deref().filter(|p| !p.trim().is_empty()) { pass = p.into(); }
     }
 
     match ensure_login(&state, &srv, &user, &pass).await {
@@ -150,33 +183,45 @@ async fn handle_emails(state: AppState) -> Response {
         host
     );
 
-    match state.http_client.get(&url)
-        .header("X-Requested-With", "XMLHttpRequest")
-        .header("Referer", format!("https://{}/iserv/mail", host))
-        .send()
-        .await
-    {
-        Ok(resp) => {
-            let content = resp.text().await.unwrap_or_default();
-            let trimmed = content.trim();
-
-            if trimmed.starts_with('{') || trimmed.starts_with('[') {
-                if let Ok(val) = serde_json::from_str::<serde_json::Value>(trimmed) {
-                    return AxumJson(json!({"success": true, "data": val})).into_response();
+    for attempt in 0..2 {
+        match state.http_client.get(&url)
+            .header("X-Requested-With", "XMLHttpRequest")
+            .header("Referer", format!("https://{}/iserv/mail", host))
+            .send()
+            .await
+        {
+            Ok(resp) => {
+                let final_url = resp.url().to_string();
+                let content = resp.text().await.unwrap_or_default();
+                if attempt == 0 && is_iserv_login_page(&final_url, &content) {
+                    if ensure_login(&state, &host, &user, &pass).await.is_ok() {
+                        continue;
+                    }
                 }
-            }
+                let trimmed = content.trim();
 
-            let re = Regex::new(r#"(?i)<script[^>]*id=["']php-data["'][^>]*>([\s\S]*?)</script>"#).unwrap();
-            if let Some(caps) = re.captures(&content) {
-                if let Ok(val) = serde_json::from_str::<serde_json::Value>(caps[1].trim()) {
-                    return AxumJson(json!({"success": true, "data": val})).into_response();
+                if trimmed.starts_with('{') || trimmed.starts_with('[') {
+                    if let Ok(val) = serde_json::from_str::<serde_json::Value>(trimmed) {
+                        return AxumJson(json!({"success": true, "data": val})).into_response();
+                    }
                 }
-            }
 
-            AxumJson(json!({"success": true, "data": {"data": []}})).into_response()
+                let re = Regex::new(r#"(?i)<script[^>]*id=["']php-data["'][^>]*>([\s\S]*?)</script>"#).unwrap();
+                if let Some(caps) = re.captures(&content) {
+                    if let Ok(val) = serde_json::from_str::<serde_json::Value>(caps[1].trim()) {
+                        return AxumJson(json!({"success": true, "data": val})).into_response();
+                    }
+                }
+
+                return AxumJson(json!({"success": true, "data": {"data": []}})).into_response();
+            }
+            Err(e) => {
+                return AxumJson(json!({"success": false, "error": e.to_string()})).into_response();
+            }
         }
-        Err(e) => AxumJson(json!({"success": false, "error": e.to_string()})).into_response(),
     }
+
+    AxumJson(json!({"success": true, "data": {"data": []}})).into_response()
 }
 
 async fn handle_calendar(state: AppState) -> Response {
@@ -194,7 +239,17 @@ async fn handle_calendar(state: AppState) -> Response {
     let url_upcoming = format!("https://{}/iserv/calendar/api/upcoming", host);
     let mut upcoming_val = json!([]);
     if let Ok(resp) = state.http_client.get(&url_upcoming).send().await {
-        if let Ok(val) = resp.json::<serde_json::Value>().await {
+        let final_url = resp.url().to_string();
+        let text = resp.text().await.unwrap_or_default();
+        if is_iserv_login_page(&final_url, &text) {
+            if ensure_login(&state, &host, &user, &pass).await.is_ok() {
+                if let Ok(r2) = state.http_client.get(&url_upcoming).send().await {
+                    if let Ok(val) = r2.json::<serde_json::Value>().await {
+                        upcoming_val = val;
+                    }
+                }
+            }
+        } else if let Ok(val) = serde_json::from_str::<serde_json::Value>(&text) {
             upcoming_val = val;
         }
     }
@@ -234,53 +289,75 @@ async fn handle_exercises(state: AppState) -> Response {
     }
 
     let url = format!("https://{}/iserv/exercise", host);
-    match state.http_client.get(&url).send().await {
-        Ok(resp) => {
-            let html = resp.text().await.unwrap_or_default();
-            let re_php = Regex::new(r#"(?i)<script[^>]*id=["']php-data["'][^>]*>([\s\S]*?)</script>"#).unwrap();
-            if let Some(caps) = re_php.captures(&html) {
-                if let Ok(val) = serde_json::from_str::<serde_json::Value>(caps[1].trim()) {
-                    return AxumJson(json!({"success": true, "data": val})).into_response();
+    for attempt in 0..2 {
+        match state.http_client.get(&url).send().await {
+            Ok(resp) => {
+                let final_url = resp.url().to_string();
+                let html = resp.text().await.unwrap_or_default();
+                if attempt == 0 && is_iserv_login_page(&final_url, &html) {
+                    if ensure_login(&state, &host, &user, &pass).await.is_ok() {
+                        continue;
+                    }
                 }
+                let re_php = Regex::new(r#"(?i)<script[^>]*id=["']php-data["'][^>]*>([\s\S]*?)</script>"#).unwrap();
+                if let Some(caps) = re_php.captures(&html) {
+                    if let Ok(val) = serde_json::from_str::<serde_json::Value>(caps[1].trim()) {
+                        return AxumJson(json!({"success": true, "data": val})).into_response();
+                    }
+                }
+
+                // Fallback table parse
+                let re_row = Regex::new(r#"(?i)<tr[^>]*>([\s\S]*?)</tr>"#).unwrap();
+                let re_col = Regex::new(r#"(?i)<td[^>]*>([\s\S]*?)</td>"#).unwrap();
+                let re_link = Regex::new(r#"href=["']([^"']+)["']"#).unwrap();
+
+                let mut list = Vec::new();
+                let mut count = 0;
+                for row in re_row.captures_iter(&html) {
+                    let r_text = &row[1];
+                    if r_text.contains("<th") {
+                        continue;
+                    }
+                    let cols: Vec<String> = re_col.captures_iter(r_text)
+                        .map(|c| clean_html_text(&c[1]))
+                        .collect();
+
+                    if cols.len() >= 3 {
+                        count += 1;
+                        let link = re_link.captures(r_text).map(|l| l[1].to_string()).unwrap_or_default();
+                        list.push(json!({
+                            "id": format!("ex-{}", count),
+                            "title": cols.first().unwrap_or(&"".into()),
+                            "subject": cols.get(1).unwrap_or(&"".into()),
+                            "start": cols.get(2).unwrap_or(&"".into()),
+                            "end": cols.get(3).unwrap_or(&"".into()),
+                            "status": cols.get(4).unwrap_or(&"".into()),
+                            "link": link
+                        }));
+                    }
+                }
+
+                return AxumJson(json!({
+                    "success": true,
+                    "exercises": list
+                })).into_response();
             }
-
-            // Fallback table parse
-            let re_row = Regex::new(r#"(?i)<tr[^>]*>([\s\S]*?)</tr>"#).unwrap();
-            let re_col = Regex::new(r#"(?i)<td[^>]*>([\s\S]*?)</td>"#).unwrap();
-            let re_link = Regex::new(r#"href=["']([^"']+)["']"#).unwrap();
-            let re_strip = Regex::new(r#"<[^>]+>"#).unwrap();
-
-            let mut list = Vec::new();
-            let mut count = 0;
-            for row in re_row.captures_iter(&html) {
-                let r_text = &row[1];
-                if r_text.contains("<th") {
-                    continue;
-                }
-                let cols: Vec<String> = re_col.captures_iter(r_text)
-                    .map(|c| re_strip.replace_all(&c[1], " ").trim().to_string())
-                    .collect();
-
-                if cols.len() >= 3 {
-                    count += 1;
-                    let link = re_link.captures(r_text).map(|l| l[1].to_string()).unwrap_or_default();
-                    list.push(json!({
-                        "id": format!("ex-{}", count),
-                        "title": cols.get(0).unwrap_or(&"".into()),
-                        "subject": cols.get(1).unwrap_or(&"".into()),
-                        "start": cols.get(2).unwrap_or(&"".into()),
-                        "end": cols.get(3).unwrap_or(&"".into()),
-                        "status": cols.get(4).unwrap_or(&"".into()),
-                        "link": link
-                    }));
-                }
-            }
-
-            AxumJson(json!({
-                "success": true,
-                "exercises": list
-            })).into_response()
+            Err(e) => return AxumJson(json!({"success": false, "error": e.to_string()})).into_response(),
         }
-        Err(e) => AxumJson(json!({"success": false, "error": e.to_string()})).into_response(),
+    }
+
+    AxumJson(json!({"success": true, "exercises": []})).into_response()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_clean_html_text() {
+        assert_eq!(
+            clean_html_text("<td>Mathe &amp; Physik&nbsp;<b>Test</b></td>"),
+            "Mathe & Physik Test"
+        );
     }
 }

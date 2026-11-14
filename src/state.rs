@@ -5,6 +5,8 @@ use std::sync::Arc;
 use std::time::Instant;
 use tokio::sync::{broadcast, RwLock};
 
+pub const EMBEDDED_VERSION_JSON: &str = include_str!("../version.json");
+
 #[derive(Default)]
 pub struct UntisAuthState {
     pub user: String,
@@ -40,6 +42,44 @@ pub struct AppState {
     pub iserv: Arc<RwLock<IServAuthState>>,
     pub canteen: Arc<RwLock<CanteenCache>>,
     pub shutdown_tx: broadcast::Sender<()>,
+}
+
+pub fn extract_version_from_json(content: &str) -> Option<String> {
+    if let Ok(val) = serde_json::from_str::<serde_json::Value>(content) {
+        if let Some(v) = val.get("version").and_then(|v| v.as_str()) {
+            let trimmed = v.trim().trim_start_matches('v').trim();
+            if !trimmed.is_empty() {
+                return Some(trimmed.to_string());
+            }
+        }
+    }
+    let re = regex::Regex::new(r#""version"\s*:\s*"v?([^"]+)""#).ok()?;
+    let caps = re.captures(content)?;
+    Some(caps[1].trim().to_string())
+}
+
+pub fn is_newer_version(remote: &str, local: &str) -> bool {
+    let parse_parts = |s: &str| -> Vec<u64> {
+        s.trim()
+            .trim_start_matches('v')
+            .split('.')
+            .map(|p| p.parse::<u64>().unwrap_or(0))
+            .collect()
+    };
+    let r = parse_parts(remote);
+    let l = parse_parts(local);
+    let max_len = r.len().max(l.len());
+    for i in 0..max_len {
+        let rv = *r.get(i).unwrap_or(&0);
+        let lv = *l.get(i).unwrap_or(&0);
+        if rv > lv {
+            return true;
+        }
+        if rv < lv {
+            return false;
+        }
+    }
+    false
 }
 
 impl AppState {
@@ -97,18 +137,22 @@ impl AppState {
     }
 
     pub fn get_local_version(&self) -> String {
+        let embedded_ver = extract_version_from_json(EMBEDDED_VERSION_JSON)
+            .unwrap_or_else(|| "1.9.39".to_string());
+
         let v_path = self.base_dir.join("version.json");
         if let Ok(content) = fs::read_to_string(&v_path) {
-            let re = regex::Regex::new(r#""version"\s*:\s*"v?([^"]+)""#).unwrap();
-            if let Some(caps) = re.captures(&content) {
-                return caps[1].trim().to_string();
+            if let Some(disk_ver) = extract_version_from_json(&content) {
+                if is_newer_version(&disk_ver, &embedded_ver) {
+                    return disk_ver;
+                }
             }
         }
-        "1.9.38".to_string()
+        embedded_ver
     }
 }
 
-fn dirs_sys_fallback() -> Option<PathBuf> {
+pub fn dirs_sys_fallback() -> Option<PathBuf> {
     #[cfg(target_os = "windows")]
     {
         if let Ok(userprofile) = std::env::var("USERPROFILE") {
@@ -119,4 +163,29 @@ fn dirs_sys_fallback() -> Option<PathBuf> {
         }
     }
     None
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_extract_version_from_json() {
+        assert_eq!(
+            extract_version_from_json(r#"{"version": "1.9.39", "build": 42}"#),
+            Some("1.9.39".to_string())
+        );
+        assert_eq!(
+            extract_version_from_json(r#"{"version": "v2.0.1"}"#),
+            Some("2.0.1".to_string())
+        );
+    }
+
+    #[test]
+    fn test_is_newer_version() {
+        assert!(is_newer_version("1.9.40", "1.9.39"));
+        assert!(is_newer_version("v2.0.0", "1.9.99"));
+        assert!(!is_newer_version("1.9.39", "1.9.39"));
+        assert!(!is_newer_version("1.9.38", "1.9.39"));
+    }
 }

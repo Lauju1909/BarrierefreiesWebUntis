@@ -5,6 +5,7 @@ mod routes;
 mod state;
 mod totp;
 
+use std::fs;
 use std::net::SocketAddr;
 use std::path::{Path, PathBuf};
 use std::time::Duration;
@@ -25,6 +26,19 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let exe_path = std::env::current_exe().unwrap_or_else(|_| PathBuf::from("."));
     let base_dir = exe_path.parent().unwrap_or_else(|| Path::new(".")).to_path_buf();
+
+    // Clean up temporary update artifacts from previous updates
+    for old_name in [
+        "Barrierefreies_WebUntis.exe.old",
+        "Barrierefreies_WebUntis_Update.exe",
+        "Feedback_Zentrale.exe.old",
+        "Feedback_Zentrale_Update.exe",
+    ] {
+        let p = base_dir.join(old_name);
+        if p.is_file() {
+            let _ = fs::remove_file(p);
+        }
+    }
 
     // 1. Check if an instance is already running on port 48250
     if is_port_in_use(DEFAULT_PORT).await {
@@ -60,7 +74,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // 3. Setup state & router
     let (shutdown_tx, _) = broadcast::channel::<()>(1);
     let app_state = AppState::new(base_dir.clone(), active_port, shutdown_tx.clone());
-    app_state.log_untis(&format!("=== PROGRAM START (Rust Edition) v{} on port {} ===", app_state.get_local_version(), active_port));
+    app_state.log_untis(&format!(
+        "=== PROGRAM START (Rust Edition) v{} on port {} ===",
+        app_state.get_local_version(),
+        active_port
+    ));
 
     let app = create_router(app_state.clone());
 

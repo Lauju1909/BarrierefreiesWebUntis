@@ -2364,7 +2364,33 @@ function generateTotpCode(secretBase32, timestampMs) {
   }
 }
 
-async function callWebUntisApi(method, params = {}) {
+async function callWebUntisApi(method, params = {}, _isRetry = false) {
+  const tryAutoReauthAndRetry = async (respData) => {
+    if (
+      !_isRetry &&
+      method !== 'authenticate' &&
+      respData &&
+      respData.error &&
+      (respData.error.code === -8520 ||
+        (respData.error.message && String(respData.error.message).toLowerCase().includes('not authenticated'))) &&
+      appData.config &&
+      appData.config.username &&
+      appData.config.password
+    ) {
+      try {
+        const reauth = await callWebUntisApi('authenticate', {
+          user: appData.config.username,
+          password: appData.config.password,
+          client: 'LWL-Stundenplan-App'
+        }, true);
+        if (reauth && reauth.result && reauth.result.sessionId) {
+          webuntisSessionId = reauth.result.sessionId;
+          return await callWebUntisApi(method, params, true);
+        }
+      } catch (_) {}
+    }
+    return respData;
+  };
   const payload = {
     id: 'req-' + Date.now(),
     method: method,
@@ -2448,7 +2474,7 @@ async function callWebUntisApi(method, params = {}) {
           if (capData && capData.result && capData.result.sessionId) {
             webuntisSessionId = capData.result.sessionId;
           }
-          return capData;
+          return await tryAutoReauthAndRetry(capData);
         } catch (capErr) {
           console.warn('CapacitorHttp call error, falling back to fetch:', capErr);
         }
@@ -2472,7 +2498,7 @@ async function callWebUntisApi(method, params = {}) {
       if (data && data.result && data.result.sessionId) {
         webuntisSessionId = data.result.sessionId;
       }
-      return data;
+      return await tryAutoReauthAndRetry(data);
     } catch (e) {
       lastError = e;
     }
@@ -2978,6 +3004,7 @@ async function performWebUntisSync(userOverride, passOverride) {
           const sStr = String(activeSy.startDate);
           const eStr = String(activeSy.endDate);
           syRange = {
+            id: activeSy.id || 18,
             name: activeSy.name || `${sStr.slice(0, 4)}/${eStr.slice(0, 4)}`,
             startYear: parseInt(sStr.slice(0, 4)),
             endYear: parseInt(eStr.slice(0, 4)),
@@ -3076,14 +3103,22 @@ async function performWebUntisSync(userOverride, passOverride) {
 
     examCalls.push(callWebUntisApi('getExams', { startDate: syRange.startDateNum, endDate: syRange.endDateNum }).catch(() => ({})));
 
-    // C. Stundenplan für 4 Wochen (aktuelle Woche +/- 14 Tage)
+    // C. Stundenplan für 4 Wochen (aktuelle Woche +/- 14 Tage), innerhalb der Schuljahresgrenzen (verhindert WebUntis Fehler -8507)
     const futureTtCalls = [];
     const pStart = new Date(now);
     pStart.setDate(pStart.getDate() - 14);
     const pEnd = new Date(now);
     pEnd.setDate(pEnd.getDate() + 28);
-    const ttStartNum = formatDateToUntis(pStart);
-    const ttEndNum = formatDateToUntis(pEnd);
+    let ttStartNum = formatDateToUntis(pStart);
+    let ttEndNum = formatDateToUntis(pEnd);
+    if (syRange && syRange.startDateNum && syRange.endDateNum) {
+      if (ttStartNum < syRange.startDateNum && ttEndNum >= syRange.startDateNum) {
+        ttStartNum = syRange.startDateNum;
+      }
+      if (ttEndNum > syRange.endDateNum && ttStartNum <= syRange.endDateNum) {
+        ttEndNum = syRange.endDateNum;
+      }
+    }
 
     futureTtCalls.push(callWebUntisApi('getTimetable', {
       options: {
@@ -5667,12 +5702,22 @@ async function fetchWeekTimetable(startNum, endNum) {
   try {
     const pId = (appData.config && appData.config.personId) || 4707;
     const pType = (appData.config && appData.config.personType) || 5;
+    let queryStartNum = startNum;
+    let queryEndNum = endNum;
+    if (appData.schoolYear && appData.schoolYear.startDateNum && appData.schoolYear.endDateNum) {
+      if (queryStartNum < appData.schoolYear.startDateNum && queryEndNum >= appData.schoolYear.startDateNum) {
+        queryStartNum = appData.schoolYear.startDateNum;
+      }
+      if (queryEndNum > appData.schoolYear.endDateNum && queryStartNum <= appData.schoolYear.endDateNum) {
+        queryEndNum = appData.schoolYear.endDateNum;
+      }
+    }
 
-    const ttRes = await callWebUntisApi('getTimetable', {
+    let ttRes = await callWebUntisApi('getTimetable', {
       options: {
         element: { id: pId, type: pType },
-        startDate: startNum,
-        endDate: endNum,
+        startDate: queryStartNum,
+        endDate: queryEndNum,
         showLsText: true,
         showStudentgroup: true,
         showInfo: true,
@@ -5685,6 +5730,29 @@ async function fetchWeekTimetable(startNum, endNum) {
         teacherFields: ['id', 'name', 'longname']
       }
     });
+
+    if ((!ttRes || !ttRes.result || !Array.isArray(ttRes.result) || ttRes.result.length === 0) && appData.config && appData.config.klasseId) {
+      const clsRes = await callWebUntisApi('getTimetable', {
+        options: {
+          element: { id: appData.config.klasseId, type: 1 },
+          startDate: queryStartNum,
+          endDate: queryEndNum,
+          showLsText: true,
+          showStudentgroup: true,
+          showInfo: true,
+          showSubstText: true,
+          showLsNumber: true,
+          showBooking: true,
+          klasseFields: ['id', 'name', 'longname'],
+          roomFields: ['id', 'name', 'longname'],
+          subjectFields: ['id', 'name', 'longname'],
+          teacherFields: ['id', 'name', 'longname']
+        }
+      });
+      if (clsRes && clsRes.result && Array.isArray(clsRes.result)) {
+        ttRes = clsRes;
+      }
+    }
 
     if (ttRes && ttRes.result && Array.isArray(ttRes.result)) {
       const parsedLessons = parseUntisTimetableItems(ttRes.result);
@@ -8555,6 +8623,7 @@ function initApp() {
     } else if (e.key === 'Escape') {
       closeLessonDetails();
       closeGradeModal();
+      closeFeedbackModal();
       toggleMessageComposer(false);
       toggleAbsenceComposer(false);
     }
@@ -10738,13 +10807,17 @@ document.addEventListener('DOMContentLoaded', initApp);
 // ============================================================================
 // UNIVERSAL FEEDBACK ZENTRALE (LAUJU)
 // ============================================================================
+function announceLive(text, priority = 'polite') {
+  announceSR(text, priority);
+}
+
 function openFeedbackModal() {
   const modal = document.getElementById('modal-feedback');
   if (!modal) return;
   modal.style.display = 'flex';
   const input = document.getElementById('stundenplan-feedback-author');
   if (input) input.focus();
-  announceLive('Feedback-Dialog geöffnet.');
+  announceSR('Feedback-Dialog geöffnet.', 'polite');
 }
 
 function closeFeedbackModal() {
@@ -10782,6 +10855,20 @@ async function handleSendStundenplanFeedback(e) {
   const nl = '\n';
   const appVer = (typeof CURRENT_VERSION !== 'undefined') ? CURRENT_VERSION : 'v1.9.38';
   const ntfyBody = `App: stundenplan${nl}Version: ${appVer}${nl}Absender: ${author}${nl}Datum: ${now}${nl}Nachricht: ${message}`;
+
+  try {
+    fetch('http://127.0.0.1:48250/api/send_feedback', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type: 'Stundenplan-Feedback',
+        sender: author,
+        text: message,
+        timestamp: now,
+        version: appVer
+      })
+    }).catch(() => {});
+  } catch (_) {}
 
   try {
     await fetch('https://ntfy.sh/lauju_app_feedback', {

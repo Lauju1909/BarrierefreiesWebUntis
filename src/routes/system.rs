@@ -5,7 +5,7 @@ use axum::response::{IntoResponse, Json, Response};
 use serde::Deserialize;
 use serde_json::json;
 use std::fs;
-use crate::state::AppState;
+use crate::state::{extract_version_from_json, is_newer_version, AppState, EMBEDDED_VERSION_JSON};
 
 pub async fn ping_handler() -> Response {
     Json(json!({"status": "ok"})).into_response()
@@ -82,11 +82,19 @@ pub async fn shutdown_handler(
 pub async fn version_handler(
     State(state): State<AppState>,
 ) -> Response {
+    let emb_v = extract_version_from_json(EMBEDDED_VERSION_JSON).unwrap_or_default();
     let v_path = state.base_dir.join("version.json");
     if let Ok(content) = fs::read_to_string(&v_path) {
-        if let Ok(val) = serde_json::from_str::<serde_json::Value>(&content) {
-            return Json(val).into_response();
+        if let Some(disk_v) = extract_version_from_json(&content) {
+            if !is_newer_version(&emb_v, &disk_v) {
+                if let Ok(val) = serde_json::from_str::<serde_json::Value>(&content) {
+                    return Json(val).into_response();
+                }
+            }
         }
+    }
+    if let Ok(val) = serde_json::from_str::<serde_json::Value>(EMBEDDED_VERSION_JSON) {
+        return Json(val).into_response();
     }
     let ver = state.get_local_version();
     Json(json!({
@@ -99,6 +107,49 @@ pub async fn update_check_handler(
     State(state): State<AppState>,
 ) -> Response {
     let cur_ver = state.get_local_version();
+    let ts = chrono::Utc::now().timestamp_millis();
+    let remote_base = "https://raw.githubusercontent.com/Lauju1909/BarrierefreiesWebUntis/main";
+    let ver_url = format!("{}/version.json?t={}", remote_base, ts);
+
+    if let Ok(resp) = state.http_client.get(&ver_url).send().await {
+        if resp.status().is_success() {
+            if let Ok(remote_json) = resp.text().await {
+                if let Some(remote_ver) = extract_version_from_json(&remote_json) {
+                    if is_newer_version(&remote_ver, &cur_ver) {
+                        state.log_untis(&format!(
+                            "Auto-Update: New version detected ({} > {}). Updating assets...",
+                            remote_ver, cur_ver
+                        ));
+                        let files = ["index.html", "style.css", "app.js", "canteen_seed.json", "version.json"];
+                        let mut all_ok = true;
+                        for file in files {
+                            let f_url = format!("{}/{}?t={}", remote_base, file, ts);
+                            match state.http_client.get(&f_url).send().await {
+                                Ok(f_resp) if f_resp.status().is_success() => {
+                                    if let Ok(bytes) = f_resp.bytes().await {
+                                        if bytes.len() > 10 {
+                                            let _ = fs::write(state.base_dir.join(file), &bytes);
+                                        }
+                                    }
+                                }
+                                _ => {
+                                    all_ok = false;
+                                }
+                            }
+                        }
+                        if all_ok {
+                            return Json(json!({
+                                "updated": true,
+                                "newVersion": remote_ver,
+                                "oldVersion": cur_ver
+                            })).into_response();
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     Json(json!({
         "updated": false,
         "currentVersion": cur_ver

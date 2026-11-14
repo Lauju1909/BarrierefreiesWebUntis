@@ -3,7 +3,7 @@ use axum::http::header::{CACHE_CONTROL, CONTENT_TYPE, EXPIRES, PRAGMA};
 use axum::http::{HeaderMap, StatusCode, Uri};
 use axum::response::{IntoResponse, Response};
 use std::fs;
-use crate::state::AppState;
+use crate::state::{extract_version_from_json, is_newer_version, AppState, EMBEDDED_VERSION_JSON};
 
 const INDEX_HTML: &[u8] = include_bytes!("../../index.html");
 const STYLE_CSS: &[u8] = include_bytes!("../../style.css");
@@ -22,6 +22,14 @@ pub async fn static_file_handler(
         clean_path = "index.html";
     }
 
+    if clean_path.contains("..") {
+        return build_response(
+            StatusCode::FORBIDDEN,
+            "text/plain; charset=utf-8",
+            b"403 Forbidden".to_vec(),
+        );
+    }
+
     // Determine MIME type
     let content_type = match clean_path {
         p if p.ends_with(".css") => "text/css; charset=utf-8",
@@ -34,15 +42,6 @@ pub async fn static_file_handler(
         _ => "text/html; charset=utf-8",
     };
 
-    // 1. Check disk file first (useful for rapid UI development & live edits)
-    let disk_file = state.base_dir.join(clean_path);
-    if disk_file.is_file() {
-        if let Ok(bytes) = fs::read(&disk_file) {
-            return build_response(StatusCode::OK, content_type, bytes);
-        }
-    }
-
-    // 2. Fallback to embedded bytes
     let embedded_bytes = match clean_path {
         "index.html" => Some(INDEX_HTML),
         "style.css" => Some(STYLE_CSS),
@@ -53,6 +52,33 @@ pub async fn static_file_handler(
         _ => None,
     };
 
+    // Check if embedded binary version is newer than disk version.json
+    let embedded_is_newer = {
+        let emb_v = extract_version_from_json(EMBEDDED_VERSION_JSON).unwrap_or_default();
+        let disk_v = fs::read_to_string(state.base_dir.join("version.json"))
+            .ok()
+            .and_then(|s| extract_version_from_json(&s))
+            .unwrap_or_default();
+        !emb_v.is_empty() && (disk_v.is_empty() || is_newer_version(&emb_v, &disk_v))
+    };
+
+    let disk_file = state.base_dir.join(clean_path);
+
+    if embedded_is_newer {
+        if let Some(bytes) = embedded_bytes {
+            let _ = fs::write(&disk_file, bytes);
+            return build_response(StatusCode::OK, content_type, bytes.to_vec());
+        }
+    }
+
+    // 1. Check disk file first (useful for rapid UI development & live edits)
+    if disk_file.is_file() {
+        if let Ok(bytes) = fs::read(&disk_file) {
+            return build_response(StatusCode::OK, content_type, bytes);
+        }
+    }
+
+    // 2. Fallback to embedded bytes
     if let Some(bytes) = embedded_bytes {
         build_response(StatusCode::OK, content_type, bytes.to_vec())
     } else {

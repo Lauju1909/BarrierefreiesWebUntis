@@ -59,3 +59,156 @@ pub fn create_router(state: AppState) -> Router {
         .layer(cors)
         .with_state(state)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use axum::body::{to_bytes, Body};
+    use axum::http::{Request, StatusCode};
+    use tokio::sync::broadcast;
+    use tower::ServiceExt;
+
+    fn make_test_state() -> (AppState, std::path::PathBuf) {
+        let tmp = std::env::temp_dir().join(format!("untis_test_{}", std::process::id()));
+        let _ = std::fs::create_dir_all(&tmp);
+        let (tx, _) = broadcast::channel(1);
+        (AppState::new(tmp.clone(), 48250, tx), tmp)
+    }
+
+    #[tokio::test]
+    async fn test_ping_and_version_endpoints() {
+        let (state, tmp) = make_test_state();
+        let app = create_router(state);
+
+        let resp = app
+            .clone()
+            .oneshot(Request::builder().uri("/api/ping").body(Body::empty()).unwrap())
+            .await
+            .unwrap();
+        assert_eq!(resp.status(), StatusCode::OK);
+        let bytes = to_bytes(resp.into_body(), usize::MAX).await.unwrap();
+        let json: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
+        assert_eq!(json["status"], "ok");
+
+        let resp_ver = app
+            .oneshot(Request::builder().uri("/api/version").body(Body::empty()).unwrap())
+            .await
+            .unwrap();
+        assert_eq!(resp_ver.status(), StatusCode::OK);
+        let ver_bytes = to_bytes(resp_ver.into_body(), usize::MAX).await.unwrap();
+        let ver_json: serde_json::Value = serde_json::from_slice(&ver_bytes).unwrap();
+        assert!(ver_json.get("version").is_some());
+
+        let _ = std::fs::remove_dir_all(tmp);
+    }
+
+    #[tokio::test]
+    async fn test_otp_and_iserv_status() {
+        let (state, tmp) = make_test_state();
+        let app = create_router(state);
+
+        let resp = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .uri("/api/untis/otp?secret=JBSWY3DPEHPK3PXP")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(resp.status(), StatusCode::OK);
+        let bytes = to_bytes(resp.into_body(), usize::MAX).await.unwrap();
+        let json: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
+        assert_eq!(json["otpStr"].as_str().unwrap().len(), 6);
+
+        let resp_iserv = app
+            .oneshot(
+                Request::builder()
+                    .uri("/api/iserv/status")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(resp_iserv.status(), StatusCode::OK);
+        let iserv_bytes = to_bytes(resp_iserv.into_body(), usize::MAX).await.unwrap();
+        let iserv_json: serde_json::Value = serde_json::from_slice(&iserv_bytes).unwrap();
+        assert_eq!(iserv_json["success"], true);
+
+        let _ = std::fs::remove_dir_all(tmp);
+    }
+
+    #[tokio::test]
+    async fn test_homework_and_static_files() {
+        let (state, tmp) = make_test_state();
+        let app = create_router(state);
+
+        // Invalid JSON rejected
+        let bad_post = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/api/cloud_sync")
+                    .body(Body::from("not json"))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(bad_post.status(), StatusCode::BAD_REQUEST);
+
+        // Valid JSON saved
+        let good_payload = r#"{"classes":{"ITG":{"1":true}},"users":{}}"#;
+        let good_post = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/api/cloud_sync")
+                    .body(Body::from(good_payload))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(good_post.status(), StatusCode::OK);
+
+        let get_hw = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .uri("/api/cloud_sync")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(get_hw.status(), StatusCode::OK);
+        let hw_bytes = to_bytes(get_hw.into_body(), usize::MAX).await.unwrap();
+        assert_eq!(std::str::from_utf8(&hw_bytes).unwrap(), good_payload);
+
+        // Static files: /index.html and /app.js
+        let idx_resp = app
+            .clone()
+            .oneshot(Request::builder().uri("/index.html").body(Body::empty()).unwrap())
+            .await
+            .unwrap();
+        assert_eq!(idx_resp.status(), StatusCode::OK);
+
+        let js_resp = app
+            .clone()
+            .oneshot(Request::builder().uri("/app.js").body(Body::empty()).unwrap())
+            .await
+            .unwrap();
+        assert_eq!(js_resp.status(), StatusCode::OK);
+
+        // Path traversal blocked
+        let trav_resp = app
+            .oneshot(Request::builder().uri("/..%2FCargo.toml").body(Body::empty()).unwrap())
+            .await
+            .unwrap();
+        assert!(trav_resp.status() == StatusCode::NOT_FOUND || trav_resp.status() == StatusCode::FORBIDDEN);
+
+        let _ = std::fs::remove_dir_all(tmp);
+    }
+}

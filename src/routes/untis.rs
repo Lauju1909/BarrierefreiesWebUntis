@@ -1,6 +1,6 @@
 use axum::body::Bytes;
 use axum::extract::{Query, State};
-use axum::http::{HeaderMap, Method, StatusCode};
+use axum::http::{HeaderMap, HeaderValue, Method, StatusCode};
 use axum::response::{IntoResponse, Json, Response};
 use regex::Regex;
 use serde::Deserialize;
@@ -74,7 +74,10 @@ pub async fn mobile_auth_handler(
         if let Ok(resp_json) = resp.json::<serde_json::Value>().await {
             if let Some(res_str) = resp_json.get("result").and_then(|v| v.as_str()) {
                 untis_guard.secret = res_str.to_string();
-                state.log_untis(&format!("App Shared Secret obtained: {}***", &untis_guard.secret.chars().take(4).collect::<String>()));
+                state.log_untis(&format!(
+                    "App Shared Secret obtained: {}***",
+                    &untis_guard.secret.chars().take(4).collect::<String>()
+                ));
             }
         }
     }
@@ -102,8 +105,8 @@ pub async fn mobile_auth_handler(
 
         if let Ok(resp) = state.http_client.post(&tok_url).json(&tok_body).send().await {
             if let Ok(tok_json) = resp.json::<serde_json::Value>().await {
-                if let Some(token) = tok_json.get("token").and_then(|v| v.as_str()) {
-                    untis_guard.jwt = token.to_string();
+                if let Some(token) = extract_jwt_from_auth_response(&tok_json) {
+                    untis_guard.jwt = token;
                 }
             }
         }
@@ -128,21 +131,8 @@ pub async fn mobile_auth_handler(
 
     // Step 4: Extract person_id from JWT payload if present
     if !untis_guard.jwt.is_empty() {
-        let parts: Vec<&str> = untis_guard.jwt.split('.').collect();
-        if parts.len() >= 2 {
-            let mut payload = parts[1].replace('-', "+").replace('_', "/");
-            let pad = 4 - (payload.len() % 4);
-            if pad < 4 {
-                payload.push_str(&"=".repeat(pad));
-            }
-            // Decode payload using base64
-            if let Ok(decoded) = base32_or_b64_decode(&payload) {
-                if let Ok(claims) = serde_json::from_slice::<serde_json::Value>(&decoded) {
-                    if let Some(pid) = claims.get("person_id").and_then(|v| v.as_i64()) {
-                        untis_guard.person_id = pid;
-                    }
-                }
-            }
+        if let Some(pid) = extract_person_id_from_jwt(&untis_guard.jwt) {
+            untis_guard.person_id = pid;
         }
     }
 
@@ -155,8 +145,58 @@ pub async fn mobile_auth_handler(
     })).into_response()
 }
 
-fn base32_or_b64_decode(input: &str) -> Result<Vec<u8>, ()> {
-    // Standard Base64 decode
+pub fn extract_jwt_from_auth_response(tok_json: &serde_json::Value) -> Option<String> {
+    tok_json
+        .get("result")
+        .and_then(|r| r.get("token"))
+        .and_then(|v| v.as_str())
+        .or_else(|| tok_json.get("token").and_then(|v| v.as_str()))
+        .or_else(|| tok_json.get("jwt").and_then(|v| v.as_str()))
+        .filter(|s| !s.is_empty())
+        .map(|s| s.to_string())
+}
+
+pub fn extract_person_id_from_jwt(jwt: &str) -> Option<i64> {
+    let parts: Vec<&str> = jwt.split('.').collect();
+    if parts.len() < 2 {
+        return None;
+    }
+    let mut payload = parts[1].replace('-', "+").replace('_', "/");
+    let pad = 4 - (payload.len() % 4);
+    if pad < 4 {
+        payload.push_str(&"=".repeat(pad));
+    }
+    let decoded = base64_decode(&payload).ok()?;
+    let claims = serde_json::from_slice::<serde_json::Value>(&decoded).ok()?;
+    claims.get("person_id").and_then(|v| v.as_i64())
+}
+
+pub fn base64_encode(input: &[u8]) -> String {
+    const B64_CHARS: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    let mut out = String::with_capacity((input.len() + 2) / 3 * 4);
+    for chunk in input.chunks(3) {
+        let b0 = chunk[0] as u32;
+        let b1 = if chunk.len() > 1 { chunk[1] as u32 } else { 0 };
+        let b2 = if chunk.len() > 2 { chunk[2] as u32 } else { 0 };
+        let triple = (b0 << 16) | (b1 << 8) | b2;
+
+        out.push(B64_CHARS[((triple >> 18) & 0x3F) as usize] as char);
+        out.push(B64_CHARS[((triple >> 12) & 0x3F) as usize] as char);
+        if chunk.len() > 1 {
+            out.push(B64_CHARS[((triple >> 6) & 0x3F) as usize] as char);
+        } else {
+            out.push('=');
+        }
+        if chunk.len() > 2 {
+            out.push(B64_CHARS[(triple & 0x3F) as usize] as char);
+        } else {
+            out.push('=');
+        }
+    }
+    out
+}
+
+pub fn base64_decode(input: &str) -> Result<Vec<u8>, ()> {
     const B64_CHARS: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
     let input = input.trim_end_matches('=');
     let mut out = Vec::new();
@@ -245,8 +285,14 @@ pub async fn webuntis_proxy_handler(
     let untis_secret = headers.get("x-untis-secret").and_then(|v| v.to_str().ok()).unwrap_or(&untis_guard.secret);
     let untis_user = headers.get("x-untis-user").and_then(|v| v.to_str().ok()).unwrap_or(&untis_guard.user);
 
-    let srv = server_hdr.unwrap_or(if !untis_guard.server.is_empty() { &untis_guard.server } else { "lwl-bk-soest.webuntis.com" });
-    let sch = school_hdr.unwrap_or(if !untis_guard.school.is_empty() { &untis_guard.school } else { "lwl-bk-soest" });
+    let srv = server_hdr
+        .filter(|s| !s.is_empty())
+        .unwrap_or(if !untis_guard.server.is_empty() { &untis_guard.server } else { "lwl-bk-soest.webuntis.com" })
+        .to_string();
+    let sch = school_hdr
+        .filter(|s| !s.is_empty())
+        .unwrap_or(if !untis_guard.school.is_empty() { &untis_guard.school } else { "lwl-bk-soest" })
+        .to_string();
 
     let mut body_vec = body.to_vec();
     let mut final_ep = custom_ep.unwrap_or("").to_string();
@@ -294,7 +340,7 @@ pub async fn webuntis_proxy_handler(
         }
         if !ep.contains("school=") {
             let sep = if ep.contains('?') { '&' } else { '?' };
-            ep = format!("{}{}{}school={}", ep, sep, if ep.ends_with('?') || ep.ends_with('&') { "" } else { "" }, sch);
+            ep = format!("{}{}school={}", ep, sep, sch);
         }
         if ep.contains("jsonrpc_intern.do") {
             if !ep.contains("v=") { ep.push_str("&v=a6.7.0"); }
@@ -302,13 +348,20 @@ pub async fn webuntis_proxy_handler(
             if !ep.contains("s=") { ep.push_str(&format!("&s={}", srv)); }
         }
         format!("https://{}/WebUntis{}", srv, ep)
-    } else if let Some(sid) = session_id {
+    } else if let Some(sid) = session_id.filter(|s| !s.is_empty()) {
         format!("https://{}/WebUntis/jsonrpc.do;jsessionid={}?school={}", srv, sid, sch)
     } else {
         format!("https://{}/WebUntis/jsonrpc.do?school={}", srv, sch)
     };
 
     drop(untis_guard);
+
+    if let Ok(req_str) = std::str::from_utf8(&body_vec) {
+        let re_pw = Regex::new(r#""password"\s*:\s*"[^"]*""#).unwrap();
+        let safe_req = re_pw.replace_all(req_str, r#""password":"***""#);
+        let snippet: String = safe_req.chars().take(500).collect();
+        state.log_untis(&format!("REQ [{}] {} | Body: {}", method, target_url, snippet));
+    }
 
     let mut req_builder = state.http_client.request(method, &target_url)
         .header("User-Agent", "WebUntis/Mobile (Android; de)")
@@ -321,7 +374,7 @@ pub async fn webuntis_proxy_handler(
     let sy_id = headers.get("x-webuntis-api-school-year-id").and_then(|v| v.to_str().ok()).unwrap_or("18");
     req_builder = req_builder.header("x-webuntis-api-school-year-id", sy_id);
 
-    if let Some(auth) = headers.get("authorization").and_then(|v| v.to_str().ok()) {
+    if let Some(auth) = headers.get("authorization").and_then(|v| v.to_str().ok()).filter(|a| !a.is_empty()) {
         req_builder = req_builder.header("Authorization", auth);
     } else {
         let untis_guard = state.untis.read().await;
@@ -330,8 +383,9 @@ pub async fn webuntis_proxy_handler(
         }
     }
 
-    let mut cookie_header = format!("Tenant-Id={}; schoolname=_bHdsLWJrLXNvZXN0", tenant_id);
-    if let Some(sid) = session_id {
+    let school_b64 = base64_encode(sch.as_bytes());
+    let mut cookie_header = format!("Tenant-Id={}; schoolname=_{}", tenant_id, school_b64);
+    if let Some(sid) = session_id.filter(|s| !s.is_empty()) {
         cookie_header.push_str(&format!("; JSESSIONID={}", sid));
     }
     req_builder = req_builder.header("Cookie", cookie_header);
@@ -349,12 +403,25 @@ pub async fn webuntis_proxy_handler(
             } else {
                 out_headers.insert("content-type", "application/json; charset=utf-8".parse().unwrap());
             }
-            if let Some(cookie) = resp.headers().get("set-cookie") {
-                out_headers.insert("x-set-cookie", cookie.clone());
-                out_headers.insert("set-cookie", cookie.clone());
+
+            let mut all_cookies = Vec::new();
+            for cookie_val in resp.headers().get_all("set-cookie") {
+                out_headers.append("set-cookie", cookie_val.clone());
+                if let Ok(c_str) = cookie_val.to_str() {
+                    all_cookies.push(c_str.to_string());
+                }
+            }
+            if !all_cookies.is_empty() {
+                if let Ok(joined) = HeaderValue::from_str(&all_cookies.join("; ")) {
+                    out_headers.insert("x-set-cookie", joined);
+                }
             }
 
             let resp_bytes = resp.bytes().await.unwrap_or_default();
+            if let Ok(resp_str) = std::str::from_utf8(&resp_bytes) {
+                let snippet: String = resp_str.chars().take(600).collect();
+                state.log_untis(&format!("RESP [{}] {} | Body: {}", status.as_u16(), target_url, snippet));
+            }
             (status, out_headers, resp_bytes).into_response()
         }
         Err(err) => {
@@ -372,5 +439,36 @@ pub async fn webuntis_proxy_handler(
                 })),
             ).into_response()
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_base64_encode_decode() {
+        assert_eq!(base64_encode(b"lwl-bk-soest"), "bHdsLWJrLXNvZXN0");
+        let decoded = base64_decode("bHdsLWJrLXNvZXN0").unwrap();
+        assert_eq!(decoded, b"lwl-bk-soest");
+    }
+
+    #[test]
+    fn test_extract_jwt_from_auth_response() {
+        let rpc_resp = json!({
+            "jsonrpc": "2.0",
+            "id": "untis-mobile-android-6.7.0",
+            "result": {
+                "token": "eyJhbGciOiJSUzI1NiJ9.eyJwZXJzb25faWQiOjQ3MDd9.sig"
+            }
+        });
+        assert_eq!(
+            extract_jwt_from_auth_response(&rpc_resp),
+            Some("eyJhbGciOiJSUzI1NiJ9.eyJwZXJzb25faWQiOjQ3MDd9.sig".to_string())
+        );
+        assert_eq!(
+            extract_person_id_from_jwt("eyJhbGciOiJSUzI1NiJ9.eyJwZXJzb25faWQiOjQ3MDd9.sig"),
+            Some(4707)
+        );
     }
 }

@@ -3,17 +3,28 @@ use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use serde_json::json;
 use std::fs;
-use crate::state::AppState;
+use crate::state::{dirs_sys_fallback, AppState};
 
 pub async fn get_homework_handler(
     State(state): State<AppState>,
 ) -> Response {
     let hw_file = state.base_dir.join("custom_homework.json");
-    let content = if hw_file.is_file() {
-        fs::read_to_string(hw_file).unwrap_or_else(|_| r#"{"classes":{},"users":{}}"#.into())
-    } else {
-        r#"{"classes":{},"users":{}}"#.to_string()
-    };
+    let mut content = String::new();
+
+    if hw_file.is_file() {
+        content = fs::read_to_string(&hw_file).unwrap_or_default();
+    }
+    if content.trim().is_empty() {
+        if let Some(docs) = dirs_sys_fallback() {
+            let doc_file = docs.join("custom_homework.json");
+            if doc_file.is_file() {
+                content = fs::read_to_string(&doc_file).unwrap_or_default();
+            }
+        }
+    }
+    if content.trim().is_empty() || serde_json::from_str::<serde_json::Value>(&content).is_err() {
+        content = r#"{"classes":{},"users":{}}"#.to_string();
+    }
 
     (
         StatusCode::OK,
@@ -26,18 +37,26 @@ pub async fn post_homework_handler(
     State(state): State<AppState>,
     body: String,
 ) -> Response {
-    let hw_file = state.base_dir.join("custom_homework.json");
-    let _ = fs::write(&hw_file, &body);
+    let trimmed = body.trim();
+    if trimmed.is_empty() || serde_json::from_str::<serde_json::Value>(trimmed).is_err() {
+        return (
+            StatusCode::BAD_REQUEST,
+            [("content-type", "application/json; charset=utf-8")],
+            json!({"saved": false, "error": "Ungültiges JSON-Format"}).to_string(),
+        ).into_response();
+    }
 
-    #[cfg(target_os = "windows")]
-    if let Ok(userprofile) = std::env::var("USERPROFILE") {
-        let doc_file = std::path::Path::new(&userprofile).join("Documents").join("custom_homework.json");
-        let _ = fs::write(doc_file, &body);
+    let hw_file = state.base_dir.join("custom_homework.json");
+    let _ = fs::write(&hw_file, trimmed);
+
+    if let Some(docs) = dirs_sys_fallback() {
+        let doc_file = docs.join("custom_homework.json");
+        let _ = fs::write(doc_file, trimmed);
     }
 
     // Background sync to Gist
     let state_clone = state.clone();
-    let body_clone = body.clone();
+    let body_clone = trimmed.to_string();
     tokio::spawn(async move {
         let gist_id = "e66b5c70ca5ea38585985e43f2976fe8";
         let token_file = state_clone.base_dir.join("cloud_token.txt");
