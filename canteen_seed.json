@@ -1,7 +1,7 @@
 {
   "source": "LWL-Von-Vincke-Schule Soest & BBW Soest",
   "sourceUrl": "https://www.lwl-von-vincke-schule.de/de/aktuelles/speiseplaene/",
-  "lastUpdated": "13.11.2026, 12:41 Uhr",
+  "lastUpdated": "16.11.2026, 13:11 Uhr",
   "weeks": [
     {
       "weekId": "kw42",
@@ -410,7 +410,7 @@
       "kw": 46,
       "label": "Kalenderwoche 46 (09.11. – 13.11.2026)",
       "dateRange": "09.11. bis 13.11.2026",
-      "isCurrent": true,
+      "isCurrent": false,
       "days": [
         {
           "day": "Montag",
@@ -469,7 +469,7 @@
       "kw": 47,
       "label": "Kalenderwoche 47 (16.11. – 20.11.2026)",
       "dateRange": "16.11. bis 20.11.2026",
-      "isCurrent": false,
+      "isCurrent": true,
       "days": [
         {
           "day": "Montag",
