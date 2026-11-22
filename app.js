@@ -10378,7 +10378,33 @@ function getFullCanteenWeeksList(canteenData) {
   });
 }
 
+function getSmartDefaultCanteenWeekId(allWeeks) {
+  const now = new Date();
+  const curKw = getISOWeekNumber(now);
+  const dow = now.getDay(); // 0=So, 5=Fr, 6=Sa
+  const isWeekendOrFriAfternoon = (dow === 0 || dow === 6 || (dow === 5 && now.getHours() >= 15));
+  if (isWeekendOrFriAfternoon) {
+    const nextWid = 'kw' + (curKw + 1);
+    if (allWeeks && allWeeks.some(w => w.weekId === nextWid && w.hasData)) {
+      return nextWid;
+    }
+  }
+  const curWid = 'kw' + curKw;
+  if (allWeeks && allWeeks.some(w => w.weekId === curWid && w.hasData)) {
+    return curWid;
+  }
+  // Fallback: neueste verfügbare Woche mit Daten >= curKw, sonst curWid
+  if (allWeeks) {
+    const upcoming = allWeeks.find(w => w.kw >= curKw && w.hasData);
+    if (upcoming) return upcoming.weekId;
+    const latestWithData = [...allWeeks].reverse().find(w => w.hasData);
+    if (latestWithData) return latestWithData.weekId;
+  }
+  return curWid;
+}
+
 function setCanteenWeek(weekId, fromSelect = false) {
+  window._canteenWeekManuallySelected = true;
   if (appData.selectedCanteenWeek === weekId) return;
   appData.selectedCanteenWeek = weekId;
   saveAppData();
@@ -10428,11 +10454,16 @@ function renderCanteenView(fromSelect = false) {
 
   // 1. Wochenauswahl-Dropdown synchronisieren
   const curKw = getISOWeekNumber();
-  const curWeekId = 'kw' + curKw;
+  const smartWeekId = getSmartDefaultCanteenWeekId(allWeeks);
   let selectedWeekId = appData.selectedCanteenWeek;
-  if (!selectedWeekId || !allWeeks.some(w => w.weekId === selectedWeekId) || (selectedWeekId === 'kw38' && curKw !== 38)) {
-    const currentWk = allWeeks.find(w => w.isCurrent) || allWeeks.find(w => w.weekId === curWeekId) || allWeeks[0];
-    selectedWeekId = currentWk ? currentWk.weekId : curWeekId;
+  const savedKwNum = selectedWeekId ? parseInt(String(selectedWeekId).replace(/^kw/i, ''), 10) : 0;
+  const smartKwNum = parseInt(String(smartWeekId).replace(/^kw/i, ''), 10) || curKw;
+  if (
+    !selectedWeekId ||
+    !allWeeks.some(w => w.weekId === selectedWeekId) ||
+    (!window._canteenWeekManuallySelected && savedKwNum < smartKwNum)
+  ) {
+    selectedWeekId = smartWeekId;
     appData.selectedCanteenWeek = selectedWeekId;
   }
 
@@ -10771,15 +10802,18 @@ async function refreshCanteenData(silent = false) {
     if (freshData) {
       appData.canteen = freshData;
       getCanteenData(); // Merged alle Wochen aus DEFAULT_CANTEEN_DATA zusammen
-      const curKw = getISOWeekNumber();
-      if (!appData.selectedCanteenWeek || appData.selectedCanteenWeek === 'kw38') {
-        appData.selectedCanteenWeek = 'kw' + curKw;
+      const allWeeksNow = getFullCanteenWeeksList(appData.canteen);
+      const smartWid = getSmartDefaultCanteenWeekId(allWeeksNow);
+      const curSelectedObj = allWeeksNow.find(w => w.weekId === appData.selectedCanteenWeek);
+      if (!appData.selectedCanteenWeek || !window._canteenWeekManuallySelected || !curSelectedObj || !curSelectedObj.hasData) {
+        appData.selectedCanteenWeek = smartWid;
       }
+      const activeKwLabel = String(appData.selectedCanteenWeek).replace(/^kw/i, '');
       saveAppData();
       renderCanteenView();
       if (!silent) {
         const totalW = (appData.canteen && Array.isArray(appData.canteen.weeks)) ? appData.canteen.weeks.length : freshData.weeks.length;
-        const successMsg = `Mensa-Speisepläne erfolgreich aktualisiert (${totalW} Wochen verfügbar. KW ${curKw} aktiv).`;
+        const successMsg = `Mensa-Speisepläne erfolgreich aktualisiert (${totalW} Wochen verfügbar. KW ${activeKwLabel} aktiv).`;
         speak(successMsg, true);
         announceSR(successMsg, 'assertive');
       }
