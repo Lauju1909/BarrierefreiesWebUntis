@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "22.11.2026, 18:26 Uhr",
+  "lastUpdated": "23.11.2026, 15:27 Uhr",
   "source": "LWL-Von-Vincke-Schule Soest",
   "sourceUrl": "https://www.lwl-von-vincke-schule.de/de/aktuelles/speiseplane/",
   "weeks": [
@@ -518,157 +518,157 @@
           "menu3": "Knusprige Pizza Margherita mit Tomaten und Mozzarella G,M\nBunter Blattsalat\nJoghurt-Dessert M"
         }
       ],
-      "isCurrent": true,
+      "isCurrent": false,
       "kw": 47,
       "label": "Kalenderwoche 47 (16.11. – 20.11.2026)",
       "weekId": "kw47"
     },
     {
+      "weekId": "kw48",
+      "kw": 48,
+      "label": "Diese Woche: KW 48 (23.11. – 26.11.2026)",
       "dateRange": "23.11.2026 bis 26.11.2026",
+      "isCurrent": true,
       "days": [
         {
-          "breakfast": "Gouda",
-          "date": "23.11.2026",
           "day": "Montag",
-          "dinner": "Geflügelfrisch wurst, Geflügel dauerwurst",
-          "extra": "Eine Salattheke mit diversen Salaten und Dressinge, steht zur Selbstbedienung für Sie bereit",
+          "date": "23.11.2026",
+          "breakfast": "Gouda",
           "menu1": "Hähnchencrossies G,M,E\nfruchtige Currysoße M\nReis\ngemischter Salat\nmit Joghurtdressing M\nObstsalat",
           "menu2": "Hähnchencrossies G,M,E\nfruchtige Currysoße M\nReis\ngemischter Salat\nmit Joghurtdressing M\nObstsalat",
-          "menu3": "Gemüseknusperrösti S,H,G,E\nFrischkäse-Kräuterdip M\nReis\ngemischter Salatteller\nmit Joghurtdressing M\nObstsalat"
+          "menu3": "Gemüseknusperrösti S,H,G,E\nFrischkäse-Kräuterdip M\nReis\ngemischter Salatteller\nmit Joghurtdressing M\nObstsalat",
+          "extra": "Eine Salattheke mit diversen Salaten und Dressinge, steht zur Selbstbedienung für Sie bereit",
+          "dinner": "Geflügelfrisch wurst, Geflügel dauerwurst"
         },
         {
-          "breakfast": "Edamer",
-          "date": "24.11.2026",
           "day": "Dienstag",
-          "dinner": "Mozzarella\nBitte über den Tagesanforderungsschein bestellen",
-          "extra": "Tagessuppe",
+          "date": "24.11.2026",
+          "breakfast": "Edamer",
           "menu1": "Fischfilet gebacken E,G,\nTomatencremesoße\nKartoffelplätzchen\nGurkensalat\nVanillecreme mit Sahne M",
           "menu2": "Geflügelhacksteak\nTomatencremesoße\nKartoffelplätzchen\nGurkensalat\nVanillecreme mit Sahne M",
-          "menu3": "5 Gemüse-Maultaschen\nBlumenkohl-Schnittlauchcremesauce\nPfannengemüse Pastinake, Möhre und Kohlrabi\nG,E,C,M Vanillecreme mit Sahne M"
+          "menu3": "5 Gemüse-Maultaschen\nBlumenkohl-Schnittlauchcremesauce\nPfannengemüse Pastinake, Möhre und Kohlrabi\nG,E,C,M Vanillecreme mit Sahne M",
+          "extra": "Tagessuppe",
+          "dinner": "Mozzarella\nBitte über den Tagesanforderungsschein bestellen"
         },
         {
-          "breakfast": "Tilsiter\nFruchtjoghurt oder Fruchtquark speise",
-          "date": "25.11.2026",
           "day": "Mittwoch",
-          "dinner": "Coleslaw\namerikanischer Krautsalat. Weißkohl, Möhre, Joghurt-Majonnaisedressing M",
-          "extra": "Eine Salattheke mit diversen Salaten und Dressinge, steht zur Selbstbedienung für Sie bereit",
+          "date": "25.11.2026",
+          "breakfast": "Tilsiter\nFruchtjoghurt oder Fruchtquark speise",
           "menu1": "Wirsingrouladen mit Hackfleischfüllung,\nKartoffelpürre,\ndunkle Bratensauce,\nglasierte Möhren A,C,F,G,I\nBerliner",
           "menu2": "Hähnchenroulade\nKartoffelpürre,\ndunkle Bratensauce,\nglasierte Möhren A,C,F,G,I\nBerliner",
-          "menu3": "Tortellini mit Ricottafüllung\nfruchtige Paprika-Tomatensoße M,G,C,E,D\nSalatbeilage mit Thousend Islanddressing M,C,\nBerliner"
+          "menu3": "Tortellini mit Ricottafüllung\nfruchtige Paprika-Tomatensoße M,G,C,E,D\nSalatbeilage mit Thousend Islanddressing M,C,\nBerliner",
+          "extra": "Eine Salattheke mit diversen Salaten und Dressinge, steht zur Selbstbedienung für Sie bereit",
+          "dinner": "Coleslaw\namerikanischer Krautsalat. Weißkohl, Möhre, Joghurt-Majonnaisedressing M"
         },
         {
-          "breakfast": "Butterkäse oder\nMaasdamer",
-          "date": "26.11.2026",
           "day": "Donnerstag",
-          "dinner": "",
-          "extra": "26",
+          "date": "26.11.2026",
+          "breakfast": "Butterkäse oder\nMaasdamer",
           "menu1": "Linseneintopf\nmit Kartoffeln, Wurzelgemüse\nBockwurst\nSenf A,G,I,J\nObst",
           "menu2": "Linseneintopf\nmit Kartoffeln, Wurzelgemüse\nGeflügelbockwurst\nSenf A,G,I,J\nObst",
-          "menu3": "Süßkartoffel-Schupfnudel-Topf\nverschiedene Gemüse, gebratene Sojawürfel\nGemüse-Veloûte M,G,E,A,C\nObst"
+          "menu3": "Süßkartoffel-Schupfnudel-Topf\nverschiedene Gemüse, gebratene Sojawürfel\nGemüse-Veloûte M,G,E,A,C\nObst",
+          "extra": "",
+          "dinner": "Geflügelfrisch wurst, Geflügel dauerwurst"
         }
-      ],
-      "isCurrent": false,
-      "kw": 48,
-      "label": "KW 48 (23.11. – 26.11.2026)",
-      "weekId": "kw48"
+      ]
     },
     {
-      "dateRange": "30.11.2026 bis 03.12.2026",
-      "days": [
-        {
-          "breakfast": "Gouda",
-          "date": "30.11.2026",
-          "day": "Montag",
-          "dinner": "Geflügelfrisch- wurst, Geflügel dauerwurst",
-          "extra": "Eine Salattheke mit diversen Salaten und Dressinge stehen zur Selbstbedienung für Sie bereit",
-          "menu1": "paniert, gebackenes Schollefilet E,G,\nRahmkartoffeln M\nGurkensalat in Joghurt-Dilldressing M\nFruchtjoghurt M",
-          "menu2": "gefüllte Geflügelroulade G,E,\nBratensoße\nWirsinggemüse M\nKartoffelpüree M\nFruchtjoghurt M",
-          "menu3": "5 gebackene Gemüsestäbchen G;C\nHollandaise E,M\nWirsinggemüse M\nKartoffelpüree M\nFruchtjoghurt M"
-        },
-        {
-          "breakfast": "Edamer",
-          "date": "01.12.2026",
-          "day": "Dienstag",
-          "dinner": "Camembert\nBitte über den Tagesanforderungsschein bestellen.",
-          "extra": "Tagessuppe",
-          "menu1": "Nudeln G,E\nSchinkensahnesoße M;5\nEisbergsalat\nKräuterjoghurtdressing M\nBerliner Krapfen",
-          "menu2": "Nudeln G,E\nSchinkensahnesoße M;5\nEisbergsalat\nKräuterjoghurtdressing M\nBerline Krapfen",
-          "menu3": "Blätterteigtasche mit Ratatouille gefüllt G,E,M\nPaprika-Zucchinigemüse C\nRosmarinkartoffeln C\nBerliner Krapfen"
-        },
-        {
-          "breakfast": "Tilsiter\nFruchtjoghurt oder Fruchtquark speise",
-          "date": "02.12.2026",
-          "day": "Mittwoch",
-          "dinner": "Panierte Fleischwurst G",
-          "extra": "Eine Salattheke mit diversen Salaten und Dressinge stehen zur Selbstbedienung für Sie bereit",
-          "menu1": "Wildgulasch in kräftiger Wildsoße L,\nSpätzle E G,\nRotkohl,\nWildpreiselbeeren\nSpekulatiuscreme G M",
-          "menu2": "Hähnchengeschnetzeltes in Rahm,\nSpätzle E G\nFeldsalat an Joghurtdressing\nSpekulatiuscreme G M",
-          "menu3": "Pilzragout,\nSemmelknödel G E,\nRotkohl,\nSpekulatiuscreme G M"
-        },
-        {
-          "breakfast": "Butterkäse oder\nMaasdamer",
-          "date": "03.12.2026",
-          "day": "Donnerstag",
-          "dinner": "",
-          "extra": "40",
-          "menu1": "Pizza\nTomatensoße, Thunfisch, Zwiebeln, Käse M,F,G\nSalatbeilage M\nKirschgötterspeise mit Vanillesauce M",
-          "menu2": "Pizza\nTomatensoße, Truthahnsalami, Zwiebeln, Paprika, Käse\nSalatbeilage M\nKirschgötterspeise mit Vanillesauce M",
-          "menu3": "Pizza\nTomatensoße, Käse\nSalatbeilage M\nKirschgötterspeise mit Vanillesauce M"
-        }
-      ],
-      "isCurrent": false,
+      "weekId": "kw49",
       "kw": 49,
       "label": "KW 49 (30.11. – 03.12.2026)",
-      "weekId": "kw49"
-    },
-    {
-      "dateRange": "07.12.2026 bis 10.12.2026",
+      "dateRange": "30.11.2026 bis 03.12.2026",
+      "isCurrent": false,
       "days": [
         {
-          "breakfast": "Gouda",
-          "date": "07.12.2026",
           "day": "Montag",
-          "dinner": "Geflügelfrisch wurst, Geflügel dauerwurst",
-          "extra": "Eine Salattheke mit diversen Salaten und Dressinge steht zur Selbsbedienung, für Sie bereit",
-          "menu1": "Currywurst\nSchweinebratwurst mit pikanter Soße\nPommes-frites\nSalatbeilage Sauerrahmdressing M,C\nHeidelbeerjoghurt M",
-          "menu2": "Currywurst\nGeflügelbratwurst mit pikanter Soße\nPommes-frites\nSalatbeilage Sauerrahmdressing\nHeidelbeerjoghurt M",
-          "menu3": "vegetarische Currywurst\nvegetarische Bratwurst mit pikanter Soße\nPommes-frites\nSalatbeilage Sauerrahmdressing M,C\nHeidelbeerjoghurt M"
+          "date": "30.11.2026",
+          "breakfast": "Gouda",
+          "menu1": "paniert, gebackenes Schollefilet E,G,\nRahmkartoffeln M\nGurkensalat in Joghurt-Dilldressing M\nFruchtjoghurt M",
+          "menu2": "gefüllte Geflügelroulade G,E,\nBratensoße\nWirsinggemüse M\nKartoffelpüree M\nFruchtjoghurt M",
+          "menu3": "5 gebackene Gemüsestäbchen G;C\nHollandaise E,M\nWirsinggemüse M\nKartoffelpüree M\nFruchtjoghurt M",
+          "extra": "Eine Salattheke mit diversen Salaten und Dressinge stehen zur Selbstbedienung für Sie bereit",
+          "dinner": "Geflügelfrisch- wurst, Geflügel dauerwurst"
         },
         {
-          "breakfast": "Edamer",
-          "date": "08.12.2026",
           "day": "Dienstag",
-          "dinner": "Geflügelfrisch wurst, Geflügel dauerwurst",
+          "date": "01.12.2026",
+          "breakfast": "Edamer",
+          "menu1": "Nudeln G,E\nSchinkensahnesoße M;5\nEisbergsalat\nKräuterjoghurtdressing M\nBerliner Krapfen",
+          "menu2": "Nudeln G,E\nSchinkensahnesoße M;5\nEisbergsalat\nKräuterjoghurtdressing M\nBerline Krapfen",
+          "menu3": "Blätterteigtasche mit Ratatouille gefüllt G,E,M\nPaprika-Zucchinigemüse C\nRosmarinkartoffeln C\nBerliner Krapfen",
           "extra": "Tagessuppe",
-          "menu1": "hausgemachte Lasagne G;C;M\nRinderhackfleischsoße mit Gemüse, Bechamelsoße, mit Käse gratiniert\nSalatbeilage mit Joghurtdressing M\nRote Grütze mit Vanillesoße M",
-          "menu2": "hausgemachte Lasagne G;C;M\nRinderhackfleischsoße mit Gemüse, Bechamelsoße, mit Käse gratiniert\nSalatbeilage mit Joghurtdressing M\nRote Grütze mit Vanillesoße M",
-          "menu3": "Milchreis M\nmit Kirschen\noder Zimt und Zucker\nRote Grütze mit Vanillesoße M"
+          "dinner": "Camembert\nBitte über den Tagesanforderungsschein bestellen."
         },
         {
-          "breakfast": "Tilsiter\nFruchtjoghurt oder Fruchtquark speise",
-          "date": "09.12.2026",
           "day": "Mittwoch",
-          "dinner": "Backcamembert",
-          "extra": "Eine Salattheke mit diversen Salaten und Dressinge steht zur Selbsbedienung, für Sie bereit",
-          "menu1": "Knusprig Entenkeule an Entensoße,\nRahmwirsing M\nServiettenknödel G E\nBratapfel-Dessert M",
-          "menu2": "Knusprig Entenkeule an Entensoße,\nRahmwirsing M\nServiettenknödel G E\nBratapfel-Dessert M",
-          "menu3": "Spinat-Ricotta-Cannelloni\nMit cremiger Tomatensoße und Käse überbacken E G\nBratapfel-Dessert M"
+          "date": "02.12.2026",
+          "breakfast": "Tilsiter\nFruchtjoghurt oder Fruchtquark speise",
+          "menu1": "Wildgulasch in kräftiger Wildsoße L,\nSpätzle E G,\nRotkohl,\nWildpreiselbeeren\nSpekulatiuscreme G M",
+          "menu2": "Hähnchengeschnetzeltes in Rahm,\nSpätzle E G\nFeldsalat an Joghurtdressing\nSpekulatiuscreme G M",
+          "menu3": "Pilzragout,\nSemmelknödel G E,\nRotkohl,\nSpekulatiuscreme G M",
+          "extra": "Eine Salattheke mit diversen Salaten und Dressinge stehen zur Selbstbedienung für Sie bereit",
+          "dinner": "Panierte Fleischwurst G"
         },
         {
-          "breakfast": "Butterkäse oder Maasdamer",
-          "date": "10.12.2026",
           "day": "Donnerstag",
-          "dinner": "",
-          "extra": "38",
-          "menu1": "Gefüllter Wrap mit\ngebratene Hähnchenbruststreifen,\nSalat, Kirschtomaten, Gurken\nSüßsauer Sauce G,M\nObst",
-          "menu2": "Gefüllter Wrap mit Thunfisch,\nReis, Salat, Mais, rote Zwiebel,\nSchmand G,M\nObst",
-          "menu3": "Gefüllter Wrap mit Falafel\nGemischter Salat, Paprika, Mais,\nCeasar- Dressing G,M\nObst"
+          "date": "03.12.2026",
+          "breakfast": "Butterkäse oder\nMaasdamer",
+          "menu1": "Pizza\nTomatensoße, Thunfisch, Zwiebeln, Käse M,F,G\nSalatbeilage M\nKirschgötterspeise mit Vanillesauce M",
+          "menu2": "Pizza\nTomatensoße, Truthahnsalami, Zwiebeln, Paprika, Käse\nSalatbeilage M\nKirschgötterspeise mit Vanillesauce M",
+          "menu3": "Pizza\nTomatensoße, Käse\nSalatbeilage M\nKirschgötterspeise mit Vanillesauce M",
+          "extra": "",
+          "dinner": "Geflügelfrisch- wurst, Geflügel dauerwurst"
         }
-      ],
-      "isCurrent": false,
+      ]
+    },
+    {
+      "weekId": "kw50",
       "kw": 50,
       "label": "KW 50 (07.12. – 10.12.2026)",
-      "weekId": "kw50"
+      "dateRange": "07.12.2026 bis 10.12.2026",
+      "isCurrent": false,
+      "days": [
+        {
+          "day": "Montag",
+          "date": "07.12.2026",
+          "breakfast": "Gouda",
+          "menu1": "Currywurst\nSchweinebratwurst mit pikanter Soße\nPommes-frites\nSalatbeilage Sauerrahmdressing M,C\nHeidelbeerjoghurt M",
+          "menu2": "Currywurst\nGeflügelbratwurst mit pikanter Soße\nPommes-frites\nSalatbeilage Sauerrahmdressing\nHeidelbeerjoghurt M",
+          "menu3": "vegetarische Currywurst\nvegetarische Bratwurst mit pikanter Soße\nPommes-frites\nSalatbeilage Sauerrahmdressing M,C\nHeidelbeerjoghurt M",
+          "extra": "Eine Salattheke mit diversen Salaten und Dressinge steht zur Selbsbedienung, für Sie bereit",
+          "dinner": "Geflügelfrisch wurst, Geflügel dauerwurst"
+        },
+        {
+          "day": "Dienstag",
+          "date": "08.12.2026",
+          "breakfast": "Edamer",
+          "menu1": "hausgemachte Lasagne G;C;M\nRinderhackfleischsoße mit Gemüse, Bechamelsoße, mit Käse gratiniert\nSalatbeilage mit Joghurtdressing M\nRote Grütze mit Vanillesoße M",
+          "menu2": "hausgemachte Lasagne G;C;M\nRinderhackfleischsoße mit Gemüse, Bechamelsoße, mit Käse gratiniert\nSalatbeilage mit Joghurtdressing M\nRote Grütze mit Vanillesoße M",
+          "menu3": "Milchreis M\nmit Kirschen\noder Zimt und Zucker\nRote Grütze mit Vanillesoße M",
+          "extra": "Tagessuppe",
+          "dinner": "Geflügelfrisch wurst, Geflügel dauerwurst"
+        },
+        {
+          "day": "Mittwoch",
+          "date": "09.12.2026",
+          "breakfast": "Tilsiter\nFruchtjoghurt oder Fruchtquark speise",
+          "menu1": "Knusprig Entenkeule an Entensoße,\nRahmwirsing M\nServiettenknödel G E\nBratapfel-Dessert M",
+          "menu2": "Knusprig Entenkeule an Entensoße,\nRahmwirsing M\nServiettenknödel G E\nBratapfel-Dessert M",
+          "menu3": "Spinat-Ricotta-Cannelloni\nMit cremiger Tomatensoße und Käse überbacken E G\nBratapfel-Dessert M",
+          "extra": "Eine Salattheke mit diversen Salaten und Dressinge steht zur Selbsbedienung, für Sie bereit",
+          "dinner": "Backcamembert"
+        },
+        {
+          "day": "Donnerstag",
+          "date": "10.12.2026",
+          "breakfast": "Butterkäse oder Maasdamer",
+          "menu1": "Gefüllter Wrap mit\ngebratene Hähnchenbruststreifen,\nSalat, Kirschtomaten, Gurken\nSüßsauer Sauce G,M\nObst",
+          "menu2": "Gefüllter Wrap mit Thunfisch,\nReis, Salat, Mais, rote Zwiebel,\nSchmand G,M\nObst",
+          "menu3": "Gefüllter Wrap mit Falafel\nGemischter Salat, Paprika, Mais,\nCeasar- Dressing G,M\nObst",
+          "extra": "",
+          "dinner": "Geflügelfrisch wurst, Geflügel dauerwurst"
+        }
+      ]
     }
   ]
 }
